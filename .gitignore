@@ -73,3 +73,14 @@ crashlytics-build.properties
 # Temporary auto-generated Android Assets
 /[Aa]ssets/[Ss]treamingAssets/aa.meta
 /[Aa]ssets/[Ss]treamingAssets/aa/*
+
+# Addressables build outputs (Generated)
+[Aa]ssets/AddressableAssetsData/*/BuildScript*
+[Aa]ssets/AddressableAssetsData/*/AssetBundle*
+[Aa]ssets/AddressableAssetsData/*/catalog*.json
+[Aa]ssets/AddressableAssetsData/*/catalog*.hash
+[Aa]ssets/AddressableAssetsData/*/*.bin*
+
+Assets/SourcePrefabs/
+
+SourcePrefabs/
