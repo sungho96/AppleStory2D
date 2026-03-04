@@ -81,6 +81,6 @@ crashlytics-build.properties
 [Aa]ssets/AddressableAssetsData/*/catalog*.hash
 [Aa]ssets/AddressableAssetsData/*/*.bin*
 
-Assets/_SourcePrefabs/
+Assets/_Project/
 
 SourcePrefabs/
