@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Collections.Generic;
 using Assets.HeroEditor4D.Common.Scripts.CharacterScripts;
 using Assets.HeroEditor4D.Common.Scripts.Enums;
 using UnityEngine;
@@ -12,167 +11,437 @@ public class PlayerController2D : MonoBehaviour
     [Header("Jump")]
     [SerializeField] private float jumpVelocity = 12f;
 
-    [Header("Climb")]
+    [Header("Ladder")]
     [SerializeField] private float climbSpeed = 4f;
+    [SerializeField] private float ladderAlignSpeed = 20f;
+    [SerializeField] private float ladderTopEnterInset = 0.65f;
+    [SerializeField] private float ladderTopExitOffset = 0.08f;
+    [SerializeField] private float ladderCenterEnterTolerance = 1.0f;
+    [SerializeField] private float ladderPlatformIgnoreTime = 0.6f;
+    [SerializeField] private float ladderTopReenterBlockTime = 0.15f;
+
+    [Header("Detection")]
+    [SerializeField] private LayerMask groundMask;
     [SerializeField] private LayerMask ladderMask;
-    [SerializeField] private float ladderTopSnapExtra = 0.15f;
-    [SerializeField] private float ladderGrabCooldown = 0.05f;
+    [SerializeField] private LayerMask ladderTopMask;
+    [SerializeField] private Vector2 ladderCheckBoxSize = new Vector2(0.8f, 1.8f);
+    [SerializeField] private Vector2 ladderTopCheckBoxSize = new Vector2(1.2f, 0.5f);
+    [SerializeField] private float ladderTopCheckYOffset = 0.1f;
 
     [Header("Ground Check")]
     [SerializeField] private Transform groundCheck;
     [SerializeField] private float groundCheckDistance = 0.15f;
-    [SerializeField] private LayerMask groundMask;
 
     [Header("Player")]
     [SerializeField] private AnimationManager animationManager;
 
     private Rigidbody2D rb;
-    private bool canClimb;             // 사다리 트리거 안에 들어왔는지
-    private bool isOnLadder;           // 현재 사다리 상태인지
-    private float defaultGravity;      // 사다리 중력 0 처리 후 복구용
-    private float lastLadderGrabTime;  // 사다리 재진입 쿨다운용 시간
+    private CapsuleCollider2D playerCol;
+    private float defaultGravityScale;
+
+    private float moveInput;
+    private float verticalInput;
+
+    private bool isGrounded;
+    private bool isClimbing;
+    private bool blockTopEnter;
+
+    private Collider2D currentGroundCollider;
+    private Collider2D currentLadderCollider;
+    private Collider2D currentLadderTopCollider;
+
+    private Coroutine ignoreGroundRoutine;
+    private Coroutine topBlockRoutine;
 
     private enum FacingDir { Left, Right, Back, Front }
 
-    private Transform tLeft, tRight, tFront, tBack;
+    private Transform tLeft;
+    private Transform tRight;
+    private Transform tFront;
+    private Transform tBack;
     private FacingDir currentDir = FacingDir.Right;
 
-    private Collider2D bodyCol;
-
-    /// <summary>
-    /// 컴포넌트/참조 초기 캐싱.
-    /// - Rigidbody2D/기본 중력값 캐싱
-    /// - 방향 오브젝트(Left/Right/Front/Back) 참조 캐싱 및 초기 적용
-    /// - AnimationManager/groundCheck 자동 연결(없을 때만)
-    /// </summary>
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
-        bodyCol = GetComponent<Collider2D>();
-        defaultGravity = rb.gravityScale;
+        playerCol = GetComponent<CapsuleCollider2D>();
+        defaultGravityScale = rb.gravityScale;
 
         CacheDirectionTransforms();
         ApplyDirection();
 
-        if (animationManager == null) animationManager = GetComponent<AnimationManager>();
+        if (animationManager == null)
+            animationManager = GetComponent<AnimationManager>();
+    }
 
-        if (groundCheck == null)
+    private void Update()
+    {
+        moveInput = Input.GetAxisRaw("Horizontal");
+        verticalInput = Input.GetAxisRaw("Vertical");
+
+        CheckGround();
+        RefreshLadderContacts();
+        HandleLadderEnterFromTop();
+        HandleLadderEnterFromBody();
+        HandleLadderTopExit();
+
+        if (!isClimbing)
         {
-            var t = transform.Find("GroundCheck");
-            if (t != null) groundCheck = t;
+            if (moveInput > 0.01f)
+                SetFacing(true);
+            else if (moveInput < -0.01f)
+                SetFacing(false);
+
+            UpdateAnimationState(moveInput);
+        }
+
+        HandleJump();
+    }
+
+    private void FixedUpdate()
+    {
+        if (isClimbing)
+        {
+            HandleClimbMove();
+        }
+        else
+        {
+            HandleNormalMove();
         }
     }
 
-    /// <summary>
-    /// 입력 기반 상태 처리(Update).
-    /// - 사다리 진입/등반/탈출 처리
-    /// - 일반 이동 방향/애니/점프 처리
-    /// </summary>
-    private void Update()
+    private void HandleNormalMove()
     {
-        float x = Input.GetAxisRaw("Horizontal");
-        float y = Input.GetAxisRaw("Vertical");
+        rb.velocity = new Vector2(moveInput * moveSpeed, rb.velocity.y);
+    }
 
-        // 사다리 진입: 사다리 영역 + 위/아래 입력 + 쿨다운 통과
-        if (!isOnLadder && canClimb && Mathf.Abs(y) > 0.01f && Time.time - lastLadderGrabTime > ladderGrabCooldown)
+    private void HandleClimbMove()
+    {
+        if (currentLadderCollider == null)
         {
-            isOnLadder = true;
-            lastLadderGrabTime = Time.time;
+            StopClimbing();
+            return;
         }
 
-        // 사다리 상태: 중력 제거 + 수직 이동 + 꼭대기 스냅/바닥 탈출/점프 탈출
-        if (isOnLadder)
+        SetDirection(FacingDir.Back);
+
+        if (animationManager != null)
         {
-            // 꼭대기 스냅은 "위로 올라갈 때만" 체크
-            // 꼭대기 스냅은 "위로 올라갈 때만" 조금 더 일찍 체크
-            if (y > 0.01f)
-            {
-                Vector2 origin = rb.position + Vector2.up * 0.5f;
-                RaycastHit2D hit = Physics2D.Raycast(origin, Vector2.up, 0.6f, groundMask);
-
-                if (hit.collider != null)
-                {
-                    float playerHalfHeight = 0f;
-                    if (bodyCol != null)
-                        playerHalfHeight = bodyCol.bounds.extents.y;
-
-                    float targetY = hit.collider.bounds.max.y + playerHalfHeight + ladderTopSnapExtra;
-
-                    isOnLadder = false;
-                    canClimb = false;
-                    rb.gravityScale = defaultGravity;
-                    rb.velocity = Vector2.zero;
-                    rb.position = new Vector2(rb.position.x, targetY);
-
-                    SetDirection(FacingDir.Right);
-                    return;
-                }
-            }
-
-            // 사다리 중엔 수평 이동을 막고, 방향은 뒤(Back)로 고정
-            SetDirection(FacingDir.Back);
-            rb.gravityScale = 0f;
-
-            float vy = (Mathf.Abs(y) > 0.01f) ? y * climbSpeed : 0f;
-            rb.velocity = new Vector2(0f, vy);
-
-            // 내려가다 바닥/발판 감지 시 사다리 종료
-            if (y < -0.01f && IsGrounded())
-            {
-                isOnLadder = false;
-                rb.gravityScale = defaultGravity;
-                SetDirection(FacingDir.Right);
-                return;
-            }
-
-            // 애니: 등반 전용 상태 대신 Run/Idle로 처리
-            if (animationManager != null)
-            {
-                if (Mathf.Abs(y) > 0.01f) animationManager.SetState(CharacterState.Run);
-                else animationManager.SetState(CharacterState.Idle);
-            }
-
-            // 사다리에서 점프로 탈출
-            if (Input.GetKeyDown(KeyCode.Space))
-            {
-                isOnLadder = false;
-                rb.gravityScale = defaultGravity;
-                rb.velocity = new Vector2(rb.velocity.x, jumpVelocity);
-            }
-
-            return; // 사다리 중엔 일반 이동/점프 로직을 실행하지 않음
+            if (Mathf.Abs(verticalInput) > 0.01f)
+                animationManager.SetState(CharacterState.Run);
+            else
+                animationManager.SetState(CharacterState.Idle);
         }
 
-        // 일반 상태: 이동 방향(좌/우)
-        if (x > 0.01f) SetFacing(true);
-        else if (x < -0.01f) SetFacing(false);
+        Bounds ladderBounds = currentLadderCollider.bounds;
+        Bounds playerBounds = playerCol.bounds;
 
-        // 일반 상태: 애니(이동/대기)
-        UpdateAnimationState(x);
+        bool outOfLadderX = Mathf.Abs(playerBounds.center.x - ladderBounds.center.x) > (ladderBounds.extents.x + 0.8f);
+        bool outOfLadderY = playerBounds.max.y < ladderBounds.min.y - 0.5f || playerBounds.min.y > ladderBounds.max.y + 0.5f;
 
-        // 일반 상태: 점프(지면일 때만)
-        if (Input.GetKeyDown(KeyCode.Space) && IsGrounded())
+        if (outOfLadderX || outOfLadderY)
+        {
+            StopClimbing();
+            return;
+        }
+
+        Vector3 pos = transform.position;
+        pos.x = Mathf.Lerp(pos.x, ladderBounds.center.x, ladderAlignSpeed * Time.fixedDeltaTime);
+
+        float feetOffsetFromTransform = playerCol.bounds.min.y - transform.position.y;
+        float currentFeetY = transform.position.y + feetOffsetFromTransform;
+        float maxFeetY = ladderBounds.max.y - 0.02f;
+
+        if (currentFeetY > maxFeetY)
+        {
+            pos.y = maxFeetY - feetOffsetFromTransform;
+            transform.position = pos;
+            rb.velocity = new Vector2(0f, Mathf.Min(0f, verticalInput * climbSpeed));
+            return;
+        }
+
+        transform.position = pos;
+
+        float climbY = verticalInput * climbSpeed;
+        rb.velocity = new Vector2(0f, climbY);
+    }
+
+    private void HandleJump()
+    {
+        if (!Input.GetButtonDown("Jump"))
+            return;
+
+        if (isClimbing)
+        {
+            StopClimbing();
+            rb.velocity = new Vector2(rb.velocity.x, jumpVelocity);
+            return;
+        }
+
+        if (isGrounded)
         {
             rb.velocity = new Vector2(rb.velocity.x, jumpVelocity);
         }
     }
 
-    /// <summary>
-    /// 물리 이동 처리(FixedUpdate).
-    /// - 사다리 상태가 아닐 때만 수평 속도 적용
-    /// </summary>
-    private void FixedUpdate()
+    private void HandleLadderEnterFromBody()
     {
-        if (isOnLadder) return;
+        if (isClimbing)
+            return;
 
-        float x = Input.GetAxisRaw("Horizontal");
-        rb.velocity = new Vector2(x * moveSpeed, rb.velocity.y);
+        if (currentLadderCollider == null)
+            return;
+
+        // 아래에서 위로 올라갈 때만 Body 진입 허용
+        if (verticalInput <= 0.01f)
+            return;
+
+        StartClimbing(false);
     }
 
-    /// <summary>
-    /// 방향 표시용 자식 오브젝트(Left/Right/Front/Back) 캐싱.
-    /// - 존재하지 않는 방향 오브젝트는 null로 유지
-    /// </summary>
+    private void HandleLadderEnterFromTop()
+    {
+        if (isClimbing)
+            return;
+
+        if (blockTopEnter)
+            return;
+
+        if (currentLadderTopCollider == null)
+            return;
+
+        if (verticalInput >= -0.01f)
+            return;
+
+        ResolveLadderFromTop();
+
+        if (currentLadderCollider == null)
+            return;
+
+        float ladderCenterX = currentLadderCollider.bounds.center.x;
+        float playerCenterX = playerCol.bounds.center.x;
+        float distanceToCenter = Mathf.Abs(playerCenterX - ladderCenterX);
+
+        if (distanceToCenter > ladderCenterEnterTolerance)
+            return;
+
+        StartClimbing(true);
+    }
+
+    private void HandleLadderTopExit()
+    {
+        if (!isClimbing)
+            return;
+
+        if (currentLadderCollider == null)
+            return;
+
+        if (currentLadderTopCollider == null)
+            return;
+
+        if (verticalInput <= 0.01f)
+            return;
+
+        Bounds ladderBounds = currentLadderCollider.bounds;
+
+        float feetOffsetFromTransform = playerCol.bounds.min.y - transform.position.y;
+        float currentFeetY = transform.position.y + feetOffsetFromTransform;
+
+        float topExitThresholdY = ladderBounds.max.y - 0.15f;
+
+        if (currentFeetY < topExitThresholdY)
+            return;
+
+        ExitLadderToTopGround();
+    }
+
+    private void StartClimbing(bool fromTop)
+    {
+        if (currentLadderCollider == null)
+            return;
+
+        isClimbing = true;
+        rb.gravityScale = 0f;
+        rb.velocity = Vector2.zero;
+
+        Bounds ladderBounds = currentLadderCollider.bounds;
+
+        Vector3 pos = transform.position;
+        pos.x = ladderBounds.center.x;
+
+        if (fromTop)
+        {
+            float feetOffsetFromTransform = playerCol.bounds.min.y - transform.position.y;
+            float targetFeetY = ladderBounds.max.y - ladderTopEnterInset;
+            pos.y = targetFeetY - feetOffsetFromTransform;
+
+            transform.position = pos;
+
+            if (currentGroundCollider != null)
+            {
+                if (ignoreGroundRoutine != null)
+                    StopCoroutine(ignoreGroundRoutine);
+
+                ignoreGroundRoutine = StartCoroutine(
+                    IgnoreCollisionTemporarily(currentGroundCollider, ladderPlatformIgnoreTime)
+                );
+            }
+
+            rb.velocity = new Vector2(0f, -climbSpeed);
+            return;
+        }
+
+        transform.position = pos;
+    }
+
+    private void StopClimbing()
+    {
+        isClimbing = false;
+        rb.gravityScale = defaultGravityScale;
+    }
+
+    private void ExitLadderToTopGround()
+    {
+        Bounds ladderBounds = currentLadderCollider.bounds;
+
+        float feetOffsetFromTransform = playerCol.bounds.min.y - transform.position.y;
+
+        Vector3 pos = transform.position;
+        pos.x = ladderBounds.center.x;
+
+        float targetFeetY = ladderBounds.max.y + ladderTopExitOffset;
+        pos.y = targetFeetY - feetOffsetFromTransform;
+
+        transform.position = pos;
+
+        StopClimbing();
+        rb.velocity = Vector2.zero;
+
+        if (topBlockRoutine != null)
+            StopCoroutine(topBlockRoutine);
+
+        topBlockRoutine = StartCoroutine(BlockTopEnterTemporarily());
+    }
+
+    private void RefreshLadderContacts()
+    {
+        Bounds playerBounds = playerCol.bounds;
+
+        Vector2 ladderCheckCenter = playerBounds.center;
+        Collider2D foundLadder = Physics2D.OverlapBox(
+            ladderCheckCenter,
+            ladderCheckBoxSize,
+            0f,
+            ladderMask
+        );
+
+        Vector2 topCheckCenter = new Vector2(
+            playerBounds.center.x,
+            playerBounds.min.y + ladderTopCheckYOffset
+        );
+
+        Collider2D foundTop = Physics2D.OverlapBox(
+            topCheckCenter,
+            ladderTopCheckBoxSize,
+            0f,
+            ladderTopMask
+        );
+
+        if (foundLadder != null)
+        {
+            currentLadderCollider = foundLadder;
+        }
+        else
+        {
+            if (!isClimbing)
+                currentLadderCollider = null;
+        }
+
+        if (foundTop != null)
+        {
+            currentLadderTopCollider = foundTop;
+        }
+        else
+        {
+            if (!isClimbing)
+                currentLadderTopCollider = null;
+        }
+
+        if (currentLadderTopCollider != null && currentLadderCollider == null)
+        {
+            ResolveLadderFromTop();
+        }
+    }
+
+    private void ResolveLadderFromTop()
+    {
+        if (currentLadderTopCollider == null)
+            return;
+
+        Transform t = currentLadderTopCollider.transform;
+
+        while (t != null)
+        {
+            if (((1 << t.gameObject.layer) & ladderMask) != 0)
+            {
+                Collider2D col = t.GetComponent<Collider2D>();
+                if (col != null)
+                {
+                    currentLadderCollider = col;
+                    return;
+                }
+            }
+
+            t = t.parent;
+        }
+    }
+
+    private void CheckGround()
+    {
+        currentGroundCollider = null;
+
+        if (groundCheck == null)
+        {
+            isGrounded = false;
+            return;
+        }
+
+        RaycastHit2D hit = Physics2D.Raycast(
+            groundCheck.position,
+            Vector2.down,
+            groundCheckDistance,
+            groundMask
+        );
+
+        isGrounded = hit.collider != null;
+        currentGroundCollider = hit.collider;
+    }
+
+    private IEnumerator IgnoreCollisionTemporarily(Collider2D targetCollider, float duration)
+    {
+        if (targetCollider == null)
+            yield break;
+
+        Physics2D.IgnoreCollision(playerCol, targetCollider, true);
+
+        yield return new WaitForSeconds(duration);
+
+        if (playerCol != null && targetCollider != null)
+        {
+            Physics2D.IgnoreCollision(playerCol, targetCollider, false);
+        }
+
+        ignoreGroundRoutine = null;
+    }
+
+    private IEnumerator BlockTopEnterTemporarily()
+    {
+        blockTopEnter = true;
+        yield return new WaitForSeconds(ladderTopReenterBlockTime);
+        blockTopEnter = false;
+        topBlockRoutine = null;
+    }
+
     private void CacheDirectionTransforms()
     {
         tLeft = transform.Find("Left");
@@ -181,25 +450,10 @@ public class PlayerController2D : MonoBehaviour
         tBack = transform.Find("Back");
     }
 
-    /// <summary>
-    /// 지면 체크.
-    /// - GroundCheck 기준으로 아래로 Raycast하여 groundMask 충돌 여부 확인
-    /// </summary>
-    private bool IsGrounded()
-    {
-        if (groundCheck == null) return false;
-
-        RaycastHit2D hit = Physics2D.Raycast(groundCheck.position, Vector2.down, groundCheckDistance, groundMask);
-        return hit.collider != null;
-    }
-
-    /// <summary>
-    /// 이동 입력 기반 애니 상태 갱신.
-    /// - 수평 입력이 있으면 Run, 없으면 Idle
-    /// </summary>
     private void UpdateAnimationState(float xInput)
     {
-        if (animationManager == null) return;
+        if (animationManager == null)
+            return;
 
         if (Mathf.Abs(xInput) > 0.01f)
             animationManager.SetState(CharacterState.Run);
@@ -207,20 +461,12 @@ public class PlayerController2D : MonoBehaviour
             animationManager.SetState(CharacterState.Idle);
     }
 
-    /// <summary>
-    /// 방향 상태 변경 후 표시 적용.
-    /// - Left/Right/Front/Back 중 현재 방향만 활성화
-    /// </summary>
     private void SetDirection(FacingDir dir)
     {
         currentDir = dir;
         ApplyDirection();
     }
 
-    /// <summary>
-    /// 현재 방향에 맞는 오브젝트만 활성화.
-    /// - 각 방향 오브젝트가 존재할 때만 SetActive 수행
-    /// </summary>
     private void ApplyDirection()
     {
         if (tLeft != null) tLeft.gameObject.SetActive(currentDir == FacingDir.Left);
@@ -229,50 +475,38 @@ public class PlayerController2D : MonoBehaviour
         if (tBack != null) tBack.gameObject.SetActive(currentDir == FacingDir.Back);
     }
 
-    /// <summary>
-    /// 좌/우 바라보기 전환.
-    /// </summary>
     private void SetFacing(bool facingRight)
     {
         SetDirection(facingRight ? FacingDir.Right : FacingDir.Left);
     }
 
-    /// <summary>
-    /// 사다리 트리거 진입 처리.
-    /// - ladderMask에 해당하는 레이어면 등반 가능 상태(canClimb)로 전환
-    /// </summary>
-    private void OnTriggerEnter2D(Collider2D other)
-    {
-        if (((1 << other.gameObject.layer) & ladderMask) != 0)
-            canClimb = true;
-    }
-
-    /// <summary>
-    /// 사다리 트리거 이탈 처리.
-    /// - 등반 가능 상태 해제
-    /// - 사다리 상태였다면 강제 종료 후 중력/방향 복구
-    /// </summary>
-    private void OnTriggerExit2D(Collider2D other)
-    {
-        if (((1 << other.gameObject.layer) & ladderMask) != 0)
-        {
-            canClimb = false;
-            isOnLadder = false;
-            rb.gravityScale = defaultGravity;
-            SetDirection(FacingDir.Right);
-        }
-    }
-
-#if UNITY_EDITOR
-    /// <summary>
-    /// GroundCheck Raycast 범위를 Scene에서 확인하기 위한 Gizmo.
-    /// </summary>
     private void OnDrawGizmosSelected()
     {
-        if (groundCheck == null) return;
+        CapsuleCollider2D col = GetComponent<CapsuleCollider2D>();
+        if (col != null)
+        {
+            Bounds b = col.bounds;
 
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawLine(groundCheck.position, groundCheck.position + Vector3.down * groundCheckDistance);
+            Gizmos.color = Color.cyan;
+            Gizmos.DrawWireCube(b.center, ladderCheckBoxSize);
+
+            Vector3 topCenter = new Vector3(
+                b.center.x,
+                b.min.y + ladderTopCheckYOffset,
+                0f
+            );
+
+            Gizmos.color = Color.yellow;
+            Gizmos.DrawWireCube(topCenter, ladderTopCheckBoxSize);
+        }
+
+        if (groundCheck != null)
+        {
+            Gizmos.color = Color.green;
+            Vector3 start = groundCheck.position;
+            Vector3 end = groundCheck.position + Vector3.down * groundCheckDistance;
+            Gizmos.DrawLine(start, end);
+            Gizmos.DrawWireSphere(end, 0.03f);
+        }
     }
-#endif
 }

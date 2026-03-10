@@ -1,13 +1,10 @@
 fileFormatVersion: 2
-guid: a4b9e135614ea8946b5d4fa4b97abfa7
+guid: eb4c1af9376aa1f4ea373a055fd29cbb
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -8921811215267831592
-    second: sprite_07_0
-  - first:
-      213: -3028244758160490583
-    second: sprite_07_1
+      213: 1355049154085859054
+    second: platform_09_0
   externalObjects: {}
   serializedVersion: 12
   mipmaps:
@@ -50,7 +47,7 @@ TextureImporter:
   lightmap: 0
   compressionQuality: 50
   spriteMode: 2
-  spriteExtrude: 0
+  spriteExtrude: 1
   spriteMeshType: 1
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
@@ -101,13 +98,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: sprite_07_0
+      name: platform_09_0
       rect:
         serializedVersion: 2
-        x: 0
-        y: 0
-        width: 132
-        height: 19
+        x: 11
+        y: 11
+        width: 418
+        height: 190
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -115,29 +112,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 8d06dd038fb5f2480800000000000000
-      internalID: -8921811215267831592
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: sprite_07_1
-      rect:
-        serializedVersion: 2
-        x: 6
-        y: 6
-        width: 514
-        height: 309
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 9afb7e0df6389f5d0800000000000000
-      internalID: -3028244758160490583
+      spriteID: eee2b7ab60a1ec210800000000000000
+      internalID: 1355049154085859054
       vertices: []
       indices: 
       edges: []
@@ -153,8 +129,7 @@ TextureImporter:
     weights: []
     secondaryTextures: []
     nameFileIdTable:
-      sprite_07_0: -8921811215267831592
-      sprite_07_1: -3028244758160490583
+      platform_09_0: 1355049154085859054
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

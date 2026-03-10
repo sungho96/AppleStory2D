@@ -3696,7 +3696,7 @@ Transform:
   m_GameObject: {fileID: 2057704771140471491}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 1.49, y: -0.04, z: -0.00212964}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -6889,7 +6889,7 @@ Transform:
   m_GameObject: {fileID: 3414285964381607897}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1.5, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -11138,7 +11138,7 @@ Transform:
   m_GameObject: {fileID: 5592294833353407611}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 1.5, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -12567,7 +12567,7 @@ Transform:
   m_GameObject: {fileID: 6398115876501937726}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 1.5, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -15347,7 +15347,7 @@ GameObject:
   - component: {fileID: 9022707804635894680}
   - component: {fileID: 3747159885613898228}
   - component: {fileID: 1262381800652168579}
-  - component: {fileID: 4721509136421872835}
+  - component: {fileID: 7224375001734147463}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -15704,10 +15704,10 @@ CapsuleCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 1.515032, y: 0.96762323}
+  m_Offset: {x: 0, y: 0.96762323}
   m_Size: {x: 0.5803957, y: 2.0742102}
   m_Direction: 0
---- !u!114 &4721509136421872835
+--- !u!114 &7224375001734147463
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -15716,23 +15716,33 @@ MonoBehaviour:
   m_GameObject: {fileID: 7540131496875148918}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c1ccb777c50e8754cb3975abc883acd0, type: 3}
+  m_Script: {fileID: 11500000, guid: ba7ef703160e6514bbbc2dc3836e00bd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   moveSpeed: 6
   jumpVelocity: 12
   climbSpeed: 4
-  ladderMask:
-    serializedVersion: 2
-    m_Bits: 512
-  ladderTopSnapExtra: 0.15
-  ladderGrabCooldown: 0.05
-  groundCheck: {fileID: 1574154052429718496}
-  groundCheckDistance: 0.15
+  ladderAlignSpeed: 20
+  ladderTopEnterInset: 0.15
+  ladderTopExitOffset: 0.08
+  ladderCenterEnterTolerance: 0.45
+  ladderPlatformIgnoreTime: 0.2
+  ladderTopReenterBlockTime: 0.15
   groundMask:
     serializedVersion: 2
-    m_Bits: 384
-  animationManager: {fileID: 3280000191478180616}
+    m_Bits: 0
+  ladderMask:
+    serializedVersion: 2
+    m_Bits: 0
+  ladderTopMask:
+    serializedVersion: 2
+    m_Bits: 0
+  ladderCheckBoxSize: {x: 0.8, y: 1.8}
+  ladderTopCheckBoxSize: {x: 1.2, y: 0.5}
+  ladderTopCheckYOffset: 0.1
+  groundCheck: {fileID: 0}
+  groundCheckDistance: 0.15
+  animationManager: {fileID: 0}
 --- !u!1 &7570741826955583570
 GameObject:
   m_ObjectHideFlags: 0
@@ -18729,7 +18739,7 @@ Transform:
   m_GameObject: {fileID: 9008824377164102898}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 1.5, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
   m_ConstrainProportionsScale: 0
   m_Children:
