@@ -6,11 +6,13 @@ TagManager:
   tags:
   - LadderTop
   - Ladder
+  - Arrow
+  - Enemy
   layers:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - 
+  - Enemy
   - Water
   - UI
   - Player

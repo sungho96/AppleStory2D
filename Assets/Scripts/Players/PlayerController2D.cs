@@ -35,6 +35,12 @@ public class PlayerController2D : MonoBehaviour
     [Header("Player")]
     [SerializeField] private AnimationManager animationManager;
 
+    [Header("KnockBack")]
+    [SerializeField] private float knockbackDuration = 0.2f;
+
+    [Header("Hit")]
+    [SerializeField] private float hitCooldown = 1f;
+
     private Rigidbody2D rb;
     private CapsuleCollider2D playerCol;
     private float defaultGravityScale;
@@ -53,6 +59,12 @@ public class PlayerController2D : MonoBehaviour
     private Coroutine ignoreGroundRoutine;
     private Coroutine topBlockRoutine;
 
+    private bool isHitCooldown;
+    private SpriteRenderer[] renderers;
+
+    private int playerLayer;
+    private int enemyLayer;
+
     private enum FacingDir { Left, Right, Back, Front }
 
     private Transform tLeft;
@@ -61,6 +73,14 @@ public class PlayerController2D : MonoBehaviour
     private Transform tBack;
     private FacingDir currentDir = FacingDir.Right;
 
+    private bool isKnockback;
+    /// <summary>
+    /// 컴포넌트/기본값 캐싱.
+    /// - Rigidbody2D / CapsuleCollider2D 캐싱
+    /// - 기본 중력값 저장(사다리 중력 0 처리 후 복구용)
+    /// - 방향 오브젝트(Left/Right/Front/Back) 캐싱 및 초기 적용
+    /// - AnimationManager 자동 연결(없을 때만)
+    /// </summary>
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
@@ -72,8 +92,22 @@ public class PlayerController2D : MonoBehaviour
 
         if (animationManager == null)
             animationManager = GetComponent<AnimationManager>();
+
+        renderers = GetComponentsInChildren<SpriteRenderer>(true);
+
+        playerLayer = LayerMask.NameToLayer("Player");
+        enemyLayer = LayerMask.NameToLayer("Enemey");
+
     }
 
+    /// <summary>
+    /// 입력/감지 기반 상태 처리.
+    /// - 바닥 체크, 사다리 접촉 갱신
+    /// - 위에서 내려가기/몸통으로 올라가기 진입 처리
+    /// - 꼭대기 탈출 처리
+    /// - 일반 상태일 때만 방향/이동 애니 갱신
+    /// - 점프(일반/사다리 탈출) 처리
+    /// </summary>
     private void Update()
     {
         moveInput = Input.GetAxisRaw("Horizontal");
@@ -81,6 +115,7 @@ public class PlayerController2D : MonoBehaviour
 
         CheckGround();
         RefreshLadderContacts();
+
         HandleLadderEnterFromTop();
         HandleLadderEnterFromBody();
         HandleLadderTopExit();
@@ -98,6 +133,11 @@ public class PlayerController2D : MonoBehaviour
         HandleJump();
     }
 
+    /// <summary>
+    /// 물리 이동 처리.
+    /// - 사다리 상태면 등반 이동
+    /// - 일반 상태면 수평 이동
+    /// </summary>
     private void FixedUpdate()
     {
         if (isClimbing)
@@ -110,11 +150,13 @@ public class PlayerController2D : MonoBehaviour
         }
     }
 
-    private void HandleNormalMove()
-    {
-        rb.velocity = new Vector2(moveInput * moveSpeed, rb.velocity.y);
-    }
-
+    /// <summary>
+    /// 사다리 상태 등반 이동.
+    /// - 사다리 중심으로 x를 보간 정렬
+    /// - y 입력으로 등반 속도 적용
+    /// - 사다리 범위를 벗어나면 등반 종료
+    /// - 꼭대기 근처에서 발 위치를 제한(클램프)
+    /// </summary>
     private void HandleClimbMove()
     {
         if (currentLadderCollider == null)
@@ -156,6 +198,7 @@ public class PlayerController2D : MonoBehaviour
         {
             pos.y = maxFeetY - feetOffsetFromTransform;
             transform.position = pos;
+
             rb.velocity = new Vector2(0f, Mathf.Min(0f, verticalInput * climbSpeed));
             return;
         }
@@ -166,6 +209,11 @@ public class PlayerController2D : MonoBehaviour
         rb.velocity = new Vector2(0f, climbY);
     }
 
+    /// <summary>
+    /// 점프 처리.
+    /// - 사다리 중 점프: 등반 종료 후 점프
+    /// - 일반 점프: 바닥 상태일 때만 점프
+    /// </summary>
     private void HandleJump()
     {
         if (!Input.GetButtonDown("Jump"))
@@ -184,6 +232,10 @@ public class PlayerController2D : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 몸통 구간에서 사다리 진입(아래→위로 올라가기).
+    /// - 사다리 접촉 상태 + 위 입력일 때만 진입
+    /// </summary>
     private void HandleLadderEnterFromBody()
     {
         if (isClimbing)
@@ -192,13 +244,17 @@ public class PlayerController2D : MonoBehaviour
         if (currentLadderCollider == null)
             return;
 
-        // 아래에서 위로 올라갈 때만 Body 진입 허용
         if (verticalInput <= 0.01f)
             return;
 
         StartClimbing(false);
     }
 
+    /// <summary>
+    /// 꼭대기에서 사다리 진입(위→아래로 내려가기).
+    /// - 꼭대기 감지 + 아래 입력일 때만 진입
+    /// - 사다리 중심과의 x 오차가 허용 범위 이내일 때만 진입
+    /// </summary>
     private void HandleLadderEnterFromTop()
     {
         if (isClimbing)
@@ -228,6 +284,11 @@ public class PlayerController2D : MonoBehaviour
         StartClimbing(true);
     }
 
+    /// <summary>
+    /// 사다리 꼭대기 탈출(올라가기).
+    /// - 사다리 상태 + 꼭대기 감지 + 위 입력 조건에서
+    /// - 발 위치가 일정 임계치 이상이면 꼭대기 위치로 스냅 후 등반 종료
+    /// </summary>
     private void HandleLadderTopExit()
     {
         if (!isClimbing)
@@ -255,6 +316,12 @@ public class PlayerController2D : MonoBehaviour
         ExitLadderToTopGround();
     }
 
+    /// <summary>
+    /// 등반 시작 공통 처리.
+    /// - 중력 제거, 속도 초기화
+    /// - 사다리 중심으로 x 정렬
+    /// - fromTop이면 상단 진입 높이 보정 + 잠시 바닥 충돌 무시
+    /// </summary>
     private void StartClimbing(bool fromTop)
     {
         if (currentLadderCollider == null)
@@ -294,12 +361,21 @@ public class PlayerController2D : MonoBehaviour
         transform.position = pos;
     }
 
+    /// <summary>
+    /// 등반 종료 처리.
+    /// - 중력값 복구
+    /// </summary>
     private void StopClimbing()
     {
         isClimbing = false;
         rb.gravityScale = defaultGravityScale;
     }
 
+    /// <summary>
+    /// 꼭대기 탈출 위치 보정.
+    /// - 발 기준으로 사다리 상단보다 살짝 위로 스냅
+    /// - 재진입 방지 블록 코루틴 시작
+    /// </summary>
     private void ExitLadderToTopGround()
     {
         Bounds ladderBounds = currentLadderCollider.bounds;
@@ -323,6 +399,11 @@ public class PlayerController2D : MonoBehaviour
         topBlockRoutine = StartCoroutine(BlockTopEnterTemporarily());
     }
 
+    /// <summary>
+    /// 사다리/꼭대기 접촉 갱신.
+    /// - 플레이어 주변 OverlapBox로 사다리 본체/꼭대기 감지
+    /// - 꼭대기만 감지된 경우, 상위 트랜스폼을 타고 올라가 사다리 본체 콜라이더를 찾아 연결
+    /// </summary>
     private void RefreshLadderContacts()
     {
         Bounds playerBounds = playerCol.bounds;
@@ -373,6 +454,10 @@ public class PlayerController2D : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 꼭대기 콜라이더 기준으로 사다리 본체 콜라이더 찾기.
+    /// - 부모 트랜스폼을 타고 올라가면서 ladderMask 레이어의 Collider2D를 탐색
+    /// </summary>
     private void ResolveLadderFromTop()
     {
         if (currentLadderTopCollider == null)
@@ -396,6 +481,11 @@ public class PlayerController2D : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 바닥 체크.
+    /// - GroundCheck 기준 아래 Raycast로 지면 충돌 여부 갱신
+    /// - 현재 밟고 있는 바닥 Collider를 저장(상단 진입 시 충돌 무시 처리에 사용)
+    /// </summary>
     private void CheckGround()
     {
         currentGroundCollider = null;
@@ -417,6 +507,10 @@ public class PlayerController2D : MonoBehaviour
         currentGroundCollider = hit.collider;
     }
 
+    /// <summary>
+    /// 바닥(발판) 충돌을 잠시 무시하는 처리.
+    /// - 위에서 내려가기 시작할 때 상단 발판에 걸리는 현상을 방지
+    /// </summary>
     private IEnumerator IgnoreCollisionTemporarily(Collider2D targetCollider, float duration)
     {
         if (targetCollider == null)
@@ -434,6 +528,10 @@ public class PlayerController2D : MonoBehaviour
         ignoreGroundRoutine = null;
     }
 
+    /// <summary>
+    /// 꼭대기 탈출 직후 재진입(아래로 다시 진입)을 잠시 막는 처리.
+    /// - ladderTopReenterBlockTime 동안 blockTopEnter 유지
+    /// </summary>
     private IEnumerator BlockTopEnterTemporarily()
     {
         blockTopEnter = true;
@@ -442,6 +540,9 @@ public class PlayerController2D : MonoBehaviour
         topBlockRoutine = null;
     }
 
+    /// <summary>
+    /// 방향 표시용 자식 오브젝트(Left/Right/Front/Back) 캐싱.
+    /// </summary>
     private void CacheDirectionTransforms()
     {
         tLeft = transform.Find("Left");
@@ -450,6 +551,10 @@ public class PlayerController2D : MonoBehaviour
         tBack = transform.Find("Back");
     }
 
+    /// <summary>
+    /// 이동 입력 기반 애니 상태 갱신(일반 상태에서만 호출).
+    /// - 수평 입력 있으면 Run, 없으면 Idle
+    /// </summary>
     private void UpdateAnimationState(float xInput)
     {
         if (animationManager == null)
@@ -461,12 +566,18 @@ public class PlayerController2D : MonoBehaviour
             animationManager.SetState(CharacterState.Idle);
     }
 
+    /// <summary>
+    /// 방향 상태 변경 후 표시 적용.
+    /// </summary>
     private void SetDirection(FacingDir dir)
     {
         currentDir = dir;
         ApplyDirection();
     }
 
+    /// <summary>
+    /// 현재 방향에 맞는 오브젝트만 활성화.
+    /// </summary>
     private void ApplyDirection()
     {
         if (tLeft != null) tLeft.gameObject.SetActive(currentDir == FacingDir.Left);
@@ -475,11 +586,18 @@ public class PlayerController2D : MonoBehaviour
         if (tBack != null) tBack.gameObject.SetActive(currentDir == FacingDir.Back);
     }
 
+    /// <summary>
+    /// 좌/우 바라보기 전환(일반 상태에서만 사용).
+    /// </summary>
     private void SetFacing(bool facingRight)
     {
         SetDirection(facingRight ? FacingDir.Right : FacingDir.Left);
     }
 
+    /// <summary>
+    /// 디버그 Gizmo.
+    /// - 사다리 감지 OverlapBox 2종(본체/꼭대기)과 GroundCheck Ray를 시각화
+    /// </summary>
     private void OnDrawGizmosSelected()
     {
         CapsuleCollider2D col = GetComponent<CapsuleCollider2D>();
@@ -507,6 +625,96 @@ public class PlayerController2D : MonoBehaviour
             Vector3 end = groundCheck.position + Vector3.down * groundCheckDistance;
             Gizmos.DrawLine(start, end);
             Gizmos.DrawWireSphere(end, 0.03f);
+        }
+    }
+    public float GetHorizontalFacingDir()
+    {
+        if (currentDir == FacingDir.Left)
+            return -1f;
+
+        return 1f;
+    }
+
+    public void ApplyKnockback(Vector2 force)
+    {
+        if (isKnockback || isHitCooldown)
+            return;
+
+        StopClimbing();
+        StartCoroutine(CoKnockback(force));
+    }
+
+    private IEnumerator CoKnockback(Vector2 force)
+    {
+        isKnockback = true;
+        isHitCooldown = true;
+
+        SetDamageCooldownVisual(true);
+        SetEnemyCollisionEnabled(false);
+
+        rb.velocity = Vector2.zero;
+        rb.AddForce(force, ForceMode2D.Impulse);
+
+        yield return new WaitForSeconds(knockbackDuration);
+        isKnockback = false;
+
+        yield return new WaitForSeconds(hitCooldown);
+
+        isHitCooldown = false;
+        SetDamageCooldownVisual(false);
+        SetEnemyCollisionEnabled(true);
+    }
+    private void HandleNormalMove()
+    {
+        if (isKnockback)
+            return;
+
+        rb.velocity = new Vector2(moveInput * moveSpeed, rb.velocity.y);
+    }
+
+    private void SetDamageCooldownVisual(bool active)
+    {
+        if (renderers == null)
+            return;
+        Color targetColor = active
+            ? new Color(0.6f, 0.6f, 0.6f, 0.6f)
+            : Color.white;
+
+        foreach (SpriteRenderer sr in renderers)
+        {
+            if (sr != null)
+                sr.color = targetColor;
+        }
+    }
+
+    private void SetEnemyCollisionEnabled(bool enabled)
+    {
+        Collider2D[] playerCols = GetComponentsInChildren<Collider2D>(true);
+
+        int enemyLayer = LayerMask.NameToLayer("Enemy");
+        if (enemyLayer == -1)
+        {
+            Debug.LogWarning("Enemy 레이어가 없습니다.");
+            return;
+        }
+
+        Collider2D[] allCols = Object.FindObjectsByType<Collider2D>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+
+        foreach (Collider2D playerCol in playerCols)
+        {
+            if (playerCol == null)
+                continue;
+
+            foreach (Collider2D otherCol in allCols)
+            {
+                if (otherCol == null)
+                    continue;
+
+                if (otherCol.gameObject.layer != enemyLayer)
+                    continue;
+
+                Physics2D.IgnoreCollision(playerCol, otherCol, !enabled);
+            }
         }
     }
 }
