@@ -15380,6 +15380,11 @@ GameObject:
   - component: {fileID: 1262381800652168579}
   - component: {fileID: 7224375001734147463}
   - component: {fileID: 3197061422020926529}
+  - component: {fileID: 268150137115684623}
+  - component: {fileID: 4910311054295029632}
+  - component: {fileID: 6644943936061090762}
+  - component: {fileID: 4856803503507890905}
+  - component: {fileID: 7822624666821371382}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -15752,31 +15757,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ba7ef703160e6514bbbc2dc3836e00bd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moveSpeed: 6
-  jumpVelocity: 12
-  climbSpeed: 4
-  ladderAlignSpeed: 20
-  ladderTopEnterInset: 0.65
-  ladderTopExitOffset: 0.08
-  ladderCenterEnterTolerance: 1
-  ladderPlatformIgnoreTime: 0.6
-  ladderTopReenterBlockTime: 0.15
-  groundMask:
-    serializedVersion: 2
-    m_Bits: 384
-  ladderMask:
-    serializedVersion: 2
-    m_Bits: 512
-  ladderTopMask:
-    serializedVersion: 2
-    m_Bits: 1024
-  ladderCheckBoxSize: {x: 0.8, y: 1.8}
-  ladderTopCheckBoxSize: {x: 1.2, y: 0.5}
-  ladderTopCheckYOffset: 0.1
-  groundCheck: {fileID: 1574154052429718496}
-  groundCheckDistance: 0.15
-  animationManager: {fileID: 0}
-  knockbackDuration: 0.2
+  animationManager: {fileID: 3280000191478180616}
 --- !u!114 &3197061422020926529
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -15793,7 +15774,96 @@ MonoBehaviour:
   arrowPrefab: {fileID: 0}
   firePoint: {fileID: 0}
   arrowSpeed: 12
-  playerController: {fileID: 0}
+  playerController: {fileID: 7224375001734147463}
+--- !u!114 &268150137115684623
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7540131496875148918}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2e2b4b2c3539fe546bc117759725c3ef, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &4910311054295029632
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7540131496875148918}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 55b934dbcb440434495a528f17bcb6ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  knockbackDuration: 0.2
+  hitCooldown: 1
+  enemyLayerName: Enemy
+--- !u!114 &6644943936061090762
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7540131496875148918}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b0e492625a9159846a59f18509d615bf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  climbSpeed: 4
+  ladderAlignSpeed: 20
+  ladderTopEnterInset: 0.65
+  ladderTopExitOffset: 0.08
+  ladderCenterEnterTolerance: 1
+  ladderPlatformIgnoreTime: 0.6
+  ladderTopReenterBlockTime: 0.15
+  groundMask:
+    serializedVersion: 2
+    m_Bits: 128
+  ladderMask:
+    serializedVersion: 2
+    m_Bits: 512
+  ladderTopMask:
+    serializedVersion: 2
+    m_Bits: 1024
+  ladderCheckBoxSize: {x: 0.8, y: 1.8}
+  ladderTopCheckBoxSize: {x: 1.2, y: 0.5}
+  ladderTopCheckYOffset: 0.1
+  groundCheck: {fileID: 1574154052429718496}
+  groundCheckDistance: 0.15
+--- !u!114 &4856803503507890905
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7540131496875148918}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 711b0788eb1a08442b96812788d666de, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  moveSpeed: 6
+  jumpVelocity: 12
+--- !u!114 &7822624666821371382
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7540131496875148918}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4ad7dbf5f42b17499830164341f3619, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxHp: 100
+  currentHp: 0
+  hitReaction: {fileID: 4910311054295029632}
 --- !u!1 &7570741826955583570
 GameObject:
   m_ObjectHideFlags: 0
