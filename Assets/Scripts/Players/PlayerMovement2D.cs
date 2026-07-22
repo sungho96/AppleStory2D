@@ -17,6 +17,16 @@ public class PlayerMovement2D : MonoBehaviour
 
     private Rigidbody2D rb;
 
+    //기본값 1 = 원래 속도
+    // 1.5 = 50% 증가
+    private float moveSpeedMultiplier = 1f;
+
+    /// <summary>
+    /// 현제 실제 이동속도,
+    /// 기본 이동속도 * 버프 배율
+    /// </summary>
+    public float CurrentMoveSpeed => moveSpeed * moveSpeedMultiplier;
+
     /// <summary>
     /// 외부에서 Rigidbody2D 전달받아 초기화.
     /// </summary>
@@ -37,7 +47,22 @@ public class PlayerMovement2D : MonoBehaviour
         if (blockMove)
             return;
 
-        rb.velocity = new Vector2(moveInput * moveSpeed, rb.velocity.y);
+        rb.velocity = new Vector2(moveInput * CurrentMoveSpeed, rb.velocity.y);
+    }
+    /// <summary>
+    /// 이동속도 배율 적용
+    /// 1.5 입력시 50% 증가
+    /// </summary>
+    public void SetMoveSpeedMultiplier(float multiplier)
+    {
+        moveSpeedMultiplier = Mathf.Max(0f, multiplier);
+    }
+    /// <summary>
+    /// 이동속도를  기본 상태로 복구.
+    /// </summary>
+    public void ResetmoveSpeedMultiplier()
+    {
+        moveSpeedMultiplier = 1f;
     }
 
     /// <summary>

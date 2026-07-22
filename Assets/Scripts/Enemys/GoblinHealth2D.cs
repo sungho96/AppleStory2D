@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class GoblinHealth2D : MonoBehaviour
 {
@@ -12,11 +13,20 @@ public class GoblinHealth2D : MonoBehaviour
     [SerializeField] private Color hitColor = Color.red;   // 피격 시 잠시 변경할 색상
     [SerializeField] private float hitColorDuration = 0.2f; // 피격 색상 유지 시간
     [SerializeField] private float hitStunDuration = 0.25f; // 피격 경직 관련 시간값 (현재 이 스크립트에서는 직접 사용하지 않음)
+    [SerializeField] private Slider hpSlider;
+
+    [Header("Death Effect")]
+    [SerializeField] private float deathDuration = 0.5f;
+    [SerializeField] private float deathRotateZ = 25f;
+    [SerializeField] private float deathFloatY = 0.2f;
 
     private GoblinController2D goblinController; // 이동/넉백/경직 처리를 맡는 컨트롤러 참조
     private SpriteRenderer[] renderers;          // 자신 및 자식에 있는 모든 SpriteRenderer
     private Color[] originalColors;              // 각 SpriteRenderer의 원래 색상 저장용
     private bool isHitStun;                      // 피격 경직 상태용 변수 (현재 이 스크립트에서는 직접 사용하지 않음)
+
+    [SerializeField] private int expReward = 3;   // 처치 시 지급 EXP(메이플식: 몬스터가 보상값 소유)
+    private bool isDead;                          // 중복 처치/중복 EXP 지급 방지
 
     /// <summary>
     /// 초기 참조 캐싱.
@@ -35,32 +45,45 @@ public class GoblinHealth2D : MonoBehaviour
             if (renderers[i] != null)
                 originalColors[i] = renderers[i].color;
         }
+
+        if (hpSlider == null) hpSlider = GetComponentInChildren<Slider>(true);
     }
 
-    /// <summary>
-    /// 시작 시 체력을 최대 체력으로 초기화.
-    /// - 스폰 직후 currentHp를 maxHp 기준으로 맞춤
-    /// </summary>
     void Start()
     {
         currentHp = maxHp;
+        SyncHpUI();
     }
 
-    /// <summary>
-    /// 데미지 처리.
-    /// - 현재 체력에서 damage만큼 차감
-    /// - 체력이 0 이하가 되면 오브젝트 제거
-    /// - 생존 시 피격 색상 효과 실행
-    /// - GoblinController2D가 있으면 경직/넉백 연출도 함께 호출
-    /// </summary>
     public void TakeDamage(int damage, float hitDir)
     {
+        if (isDead) return;
+
         currentHp -= damage;
-        Debug.Log($"currentHp:{currentHp}");
+
+        SyncHpUI();
 
         if (currentHp <= 0)
         {
-            Destroy(gameObject);
+            isDead = true;
+
+            StartCoroutine(CoDie());
+
+            // 1) 슬라이더 정리(시각적으로 0 고정)
+            currentHp = 0;
+            if (hpSlider != null)
+                hpSlider.value = 0f;
+
+            // 2) EXP 지급(정석: 몬스터가 죽을 때 지급)
+            GameObject player = GameObject.FindGameObjectWithTag("Player");
+            if (player != null)
+            {
+                PlayerStats stats = player.GetComponent<PlayerStats>();
+                if (stats != null)
+                    stats.AddEXP(expReward);
+            }
+
+
             return;
         }
 
@@ -73,6 +96,70 @@ public class GoblinHealth2D : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 사망 연출 코루틴.
+    /// - 컨트롤러/충돌/물리 동작을 정지
+    /// - 살짝 기울이며 위로 이동
+    /// - 알파값을 줄여 사라지게 처리
+    /// - 연출 종료 후 오브젝트 제거
+    /// </summary>
+    private IEnumerator CoDie()
+    {
+        if (goblinController != null)
+            goblinController.enabled = false;
+
+        Collider2D[] cols = GetComponentsInChildren<Collider2D>(true);
+        foreach (Collider2D col in cols)
+        {
+            if (col != null)
+                col.enabled = false;
+        }
+
+        Rigidbody2D rb = GetComponent<Rigidbody2D>();
+        if (rb != null)
+        {
+            rb.velocity = Vector2.zero;
+            rb.bodyType = RigidbodyType2D.Kinematic;
+        }
+
+        Vector3 startPos = transform.position;
+        Quaternion startRot = transform.rotation;
+
+        Vector3 endPos = startPos + Vector3.up * deathFloatY;
+        Quaternion endRot = Quaternion.Euler(0f, 0f, deathRotateZ);
+
+        float elapsed = 0f;
+
+        while (elapsed < deathDuration)
+        {
+            float t = elapsed / deathDuration;
+
+            transform.position = Vector3.Lerp(startPos, endPos, t);
+            transform.rotation = Quaternion.Lerp(startRot, endRot, t);
+
+            for (int i = 0; i < renderers.Length; i++)
+            {
+                if (renderers[i] == null)
+                    continue;
+
+                Color c = renderers[i].color;
+                c.a = Mathf.Lerp(originalColors[i].a, 0f, t);
+                renderers[i].color = c;
+            }
+
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        Destroy(gameObject);
+    }
+    private void SyncHpUI()
+    {
+        if (hpSlider == null) return;
+
+        float ratio = maxHp > 0 ? Mathf.Clamp01(currentHp / (float)maxHp) : 0f;
+        hpSlider.value = ratio;
+    }
     /// <summary>
     /// 피격 색상 연출 코루틴.
     /// - 모든 SpriteRenderer를 hitColor로 잠시 변경

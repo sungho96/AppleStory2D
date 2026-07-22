@@ -156,25 +156,28 @@ public class PlayerController2D : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// 애니메이션 상태 갱신.
-    /// - 사다리 중이면 세로 입력 기준
-    /// - 일반 상태면 수평 입력 기준
-    /// </summary>
     private void UpdateAnimationState()
     {
         if (animationManager == null)
             return;
 
-        // 넉백 중일 때는 일단 Idle 유지
+        // 현재 바라보는 방향
+        // 왼쪽이면 true, 오른쪽이면 false
+        bool facingLeft = GetHorizontalFacingDir() < 0f;
+
+        // 넉백 중
         if (hitReaction != null && hitReaction.IsKnockback)
         {
+            animationManager.SetJump(false, facingLeft);
             animationManager.SetState(CharacterState.Idle);
             return;
         }
 
+        // 사다리 중
         if (ladder != null && ladder.IsClimbing)
         {
+            animationManager.SetJump(false, facingLeft);
+
             if (Mathf.Abs(verticalInput) > 0.01f)
                 animationManager.SetState(CharacterState.Run);
             else
@@ -183,6 +186,20 @@ public class PlayerController2D : MonoBehaviour
             return;
         }
 
+        // 공중 여부
+        bool isAirborne = ladder != null && !ladder.IsGrounded;
+
+        // 공중이면 현재 바라보는 방향에 맞는 점프 애니메이션 실행
+        if (isAirborne)
+        {
+            animationManager.SetJump(true, facingLeft);
+            return;
+        }
+
+        // 착지하면 JumpL / JumpR 모두 해제
+        animationManager.SetJump(false, facingLeft);
+
+        // 착지 후 Idle / Run
         if (Mathf.Abs(moveInput) > 0.01f)
             animationManager.SetState(CharacterState.Run);
         else

@@ -11,6 +11,11 @@ public class PlayerAttack2D : MonoBehaviour
     [SerializeField] private float arrowSpeed = 12f;         // 화살 속도
     [SerializeField] private PlayerController2D playerController; // 바라보는 방향 참조용
 
+    [Header("Attack Speed")]
+    [SerializeField] private float baseAttackDelay = 0.4f;
+
+    private float attackSpeedMultiplier = 1f;
+
     private bool isAttacking; // 연타 방지 (공격 중 추가 입력 차단 플래그)
 
     /// <summary>
@@ -51,8 +56,10 @@ public class PlayerAttack2D : MonoBehaviour
         yield return null;                 // 1프레임 유지
         animator.SetBool("ShotBow", false); // 애니 트리거 OFF
 
-        // 애니메이션 재생 시간 동안 입력 잠금 유지
-        yield return new WaitForSeconds(0.4f);
+        float currentAttackDelay =
+            baseAttackDelay / attackSpeedMultiplier;
+
+        yield return new WaitForSeconds(currentAttackDelay);
 
         isAttacking = false; // 공격 종료 → 입력 해제
     }
@@ -114,5 +121,21 @@ public class PlayerAttack2D : MonoBehaviour
         {
             rb.velocity = new Vector2(dir * arrowSpeed, 0f);
         }
+    }
+    /// <summary>
+    /// 공격속도 배율 적용.
+    /// 1.5 입력 시 공격 대기시간이 약 33% 감소합니다.
+    /// </summary>
+    public void SetAttackSpeedMultiplier(float multiplier)
+    {
+        attackSpeedMultiplier = Mathf.Max(0.1f, multiplier);
+    }
+
+    /// <summary>
+    /// 공격속도를 기본 상태로 복구합니다.
+    /// </summary>
+    public void ResetAttackSpeedMultiplier()
+    {
+        attackSpeedMultiplier = 1f;
     }
 }

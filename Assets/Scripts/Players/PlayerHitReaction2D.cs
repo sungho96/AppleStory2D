@@ -1,4 +1,4 @@
-using System.Collections;
+    using System.Collections;
 using UnityEngine;
 
 /// <summary>
@@ -18,6 +18,9 @@ public class PlayerHitReaction2D : MonoBehaviour
 
     [Header("Layer")]
     [SerializeField] private string enemyLayerName = "Enemy";
+
+    [Header("Camera Shake")]
+    [SerializeField] private CameraShake2D cameraShake;
 
     private Rigidbody2D rb;
     private CapsuleCollider2D playerCol;
@@ -56,6 +59,9 @@ public class PlayerHitReaction2D : MonoBehaviour
             if (renderers[i] != null)
                 originalColors[i] = renderers[i].color;
         }
+
+        if (cameraShake == null)
+            cameraShake = Camera.main.GetComponent<CameraShake2D>();
     }
 
     /// <summary>
@@ -83,6 +89,8 @@ public class PlayerHitReaction2D : MonoBehaviour
         isKnockback = true;
         isHitCooldown = true;
 
+        cameraShake?.Shake();
+
         if (ladder != null && ladder.IsClimbing)
             ladder.StopClimbing();
 
@@ -103,6 +111,7 @@ public class PlayerHitReaction2D : MonoBehaviour
         isHitCooldown = false;
         SetDamageCooldownVisual(false);
         SetEnemyCollisionEnabled(true);
+
     }
 
     /// <summary>

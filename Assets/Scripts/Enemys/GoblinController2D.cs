@@ -154,8 +154,6 @@ public class GoblinController2D : MonoBehaviour
 
         float dir = collision.transform.position.x > transform.position.x ? 1f : -1f;
         Vector2 knockbackForce = new Vector2(dir* knockbackForceX, knockbackForceY);
-
-        playerHealth.TakeDamage(contactDamage, knockbackForce);
     }
 
     public void PlayHitStun()

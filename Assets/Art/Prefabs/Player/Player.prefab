@@ -15385,6 +15385,7 @@ GameObject:
   - component: {fileID: 6644943936061090762}
   - component: {fileID: 4856803503507890905}
   - component: {fileID: 7822624666821371382}
+  - component: {fileID: 1684008500124945262}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -15775,6 +15776,7 @@ MonoBehaviour:
   firePoint: {fileID: 0}
   arrowSpeed: 12
   playerController: {fileID: 7224375001734147463}
+  baseAttackDelay: 0.4
 --- !u!114 &268150137115684623
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -15802,6 +15804,7 @@ MonoBehaviour:
   knockbackDuration: 0.2
   hitCooldown: 1
   enemyLayerName: Enemy
+  cameraShake: {fileID: 0}
 --- !u!114 &6644943936061090762
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -15864,6 +15867,27 @@ MonoBehaviour:
   maxHp: 100
   currentHp: 0
   hitReaction: {fileID: 4910311054295029632}
+  hpBarUI: {fileID: 0}
+  playerStats: {fileID: 0}
+--- !u!114 &1684008500124945262
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7540131496875148918}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f0394790ada96e943af2cf51b0c79862, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  level: 1
+  maxHp: 100
+  hp: 100
+  maxMp: 100
+  mp: 100
+  exp: 0
+  needExp: 10
 --- !u!1 &7570741826955583570
 GameObject:
   m_ObjectHideFlags: 0

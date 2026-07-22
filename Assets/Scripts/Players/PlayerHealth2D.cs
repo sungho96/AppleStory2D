@@ -18,6 +18,8 @@ public class PlayerHealth2D : MonoBehaviour
 
     [Header("Refs")]
     [SerializeField] private PlayerHitReaction2D hitReaction;
+    [SerializeField] private PlayerHpBarUI hpBarUI;
+    [SerializeField] private PlayerStats playerStats;
 
     private bool isDead;
 
@@ -25,6 +27,8 @@ public class PlayerHealth2D : MonoBehaviour
     /// 현재 HP 반환.
     /// </summary>
     public int CurrentHp => currentHp;
+    public int MaxHp => maxHp;
+    public float NormalizedHp => maxHp > 0 ? (float)currentHp / maxHp : 0f;
 
     /// <summary>
     /// 사망 상태 여부.
@@ -35,10 +39,18 @@ public class PlayerHealth2D : MonoBehaviour
     {
         if (hitReaction == null)
             hitReaction = GetComponent<PlayerHitReaction2D>();
+        if (hpBarUI == null)
+            hpBarUI = Object.FindFirstObjectByType<PlayerHpBarUI>();
+        if (playerStats == null)
+            playerStats = GetComponent<PlayerStats>();
+
     }
     void Start()
     {
         currentHp = maxHp;
+
+        if (hpBarUI != null)
+            hpBarUI.Refresh();
     }
 
     /// <summary>
@@ -68,7 +80,8 @@ public class PlayerHealth2D : MonoBehaviour
         if (currentHp < 0)
             currentHp = 0;
 
-        Debug.Log($"플레이어 피격, 현재 HP: {currentHp}");
+        if (hpBarUI != null)
+            hpBarUI.Refresh();
 
         if (currentHp <= 0)
         {
@@ -76,13 +89,14 @@ public class PlayerHealth2D : MonoBehaviour
             Die();
             return;
         }
+        playerStats.Damage(damage);
 
         if (hitReaction == null)
         {
             Debug.LogWarning("hitReaction 이 null 이라 넉백 호출 불가");
             return;
         }
-
+        Debug.Log($"HP after damage = {currentHp}/{maxHp}");
         hitReaction.ApplyKnockback(knockbackForce);
     }
 
@@ -90,6 +104,18 @@ public class PlayerHealth2D : MonoBehaviour
     {
         isDead = true;
         Debug.Log("플레이어 사망");
+    }
+
+    private int CalculateFinalDamage(int rawDamage)
+    {
+        // 나중에 방어력/감소율 넣을 자리
+        // 예: rawDamage - defense, 최소 1 보장 등
+        int finalDamage = rawDamage;
+
+        // 최소 1 데미지 보장(메이플식 느낌)
+        finalDamage = Mathf.Max(1, finalDamage);
+
+        return finalDamage;
     }
 
 }
