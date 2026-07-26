@@ -5,13 +5,11 @@ using UnityEngine.UI;
 using Assets.HeroEditor4D.Common.Scripts.CharacterScripts;
 
 /// <summary>
-/// ÀÌµ¿¼Ó ¹öÇÁ °ü¸®.
-/// ÀÌµ¿¼Óµµ Áõ°¡
-/// ¹öÇÁ ¾ÆÀÌÄÜ Ç¥½Ã
-/// Áö¼Ó½Ã°£ slider °¨¼Ò
-/// Á¾·áÈÄ ¼Óµµ º¹±¸ ¹× ¾ÆÀÌÄÜ ¼û±è
-/// - ¼ıÀÚ 1: ÀÌµ¿¼Óµµ ¹öÇÁ
-/// - ¼ıÀÚ 2: °ø°İ¼Óµµ ¹öÇÁ
+/// ì´ë™ì† ë²„í”„ ê´€ë¦¬.
+/// ì´ë™ì†ë„ ì¦ê°€
+/// ë²„í”„ ì•„ì´ì½˜ í‘œì‹œ
+/// ì§€ì†ì‹œê°„ slider ê°ì†Œ
+/// ì¢…ë£Œí›„ ì†ë„ ë³µêµ¬ ë° ì•„ì´ì½˜ ìˆ¨ê¹€
 /// </summary>
 public class SpeedBuffController : MonoBehaviour
 {
@@ -38,6 +36,13 @@ public class SpeedBuffController : MonoBehaviour
     [Header("Animation")]
     [SerializeField] private AnimationManager animationManager;
 
+    [Header("Visual Feedback")]
+    [Tooltip("ë¹„ì›Œë‘ë©´ ê°™ì€ ì˜¤ë¸Œì íŠ¸ì— ìë™ìœ¼ë¡œ ìƒì„±ë©ë‹ˆë‹¤.")]
+    // [ì´ë™ì†ë„ ë²„í”„ ì—°ì¶œ ì¶”ê°€] ì”¬ ìˆ˜ì •ì„ í”¼í•˜ê¸° ìœ„í•´ ë¯¸ì—°ê²° ìƒíƒœì—ì„œëŠ” Awakeì—ì„œ ìë™ ìƒì„±í•©ë‹ˆë‹¤.
+    [SerializeField] private SpeedBuffVisualFeedback moveSpeedVisualFeedback;
+    // [ê³µê²©ì†ë„ ë²„í”„ ì—°ì¶œ ì¶”ê°€] ì”¬ ìˆ˜ì •ì„ í”¼í•˜ê¸° ìœ„í•´ ë¯¸ì—°ê²° ìƒíƒœì—ì„œëŠ” Awakeì—ì„œ ìë™ ìƒì„±í•©ë‹ˆë‹¤.
+    [SerializeField] private AttackSpeedBuffVisualFeedback attackSpeedVisualFeedback;
+
     private Coroutine moveSpeedBuffCoroutine;
     private Coroutine attackSpeedBuffCoroutine;
 
@@ -52,40 +57,43 @@ public class SpeedBuffController : MonoBehaviour
         {
             attackSpeedBuffIcon.SetActive(false);
         }
+
+        if (moveSpeedVisualFeedback == null)
+            moveSpeedVisualFeedback = GetComponent<SpeedBuffVisualFeedback>();
+        if (moveSpeedVisualFeedback == null)
+            moveSpeedVisualFeedback = gameObject.AddComponent<SpeedBuffVisualFeedback>();
+
+        moveSpeedVisualFeedback.Initialize(
+            playerMovement != null ? playerMovement.transform : null,
+            speedBuffIcon);
+
+        // [ê³µê²©ì†ë„ ë²„í”„ ì—°ì¶œ ì¶”ê°€] ê³µì† ì•„ì´ì½˜ê³¼ í”Œë ˆì´ì–´ ìŠ¤í”„ë¼ì´íŠ¸ë¥¼ ì—°ì¶œ ëŒ€ìƒì— ì—°ê²°í•©ë‹ˆë‹¤.
+        if (attackSpeedVisualFeedback == null)
+            attackSpeedVisualFeedback = GetComponent<AttackSpeedBuffVisualFeedback>();
+        if (attackSpeedVisualFeedback == null)
+            attackSpeedVisualFeedback = gameObject.AddComponent<AttackSpeedBuffVisualFeedback>();
+
+        attackSpeedVisualFeedback.Initialize(
+            playerAttack != null ? playerAttack.transform : null,
+            attackSpeedBuffIcon);
     }
 
-    private void Update()
-    {
-        // ÀÓ½Ã Å×½ºÆ® Å° ¼ıÀÚ 1 : ÀÌµ¿¼Óµµ
-        if (Input.GetKeyDown(KeyCode.Alpha1))
-        {
-            Debug.Log("[SpeedBuff] ÀÌµ¿¼Óµµ ¹öÇÁ ÀÔ·Â");
-            UseSpeedBuff();
-        }
-
-        // ¼ıÀÚ 2: °ø°İ¼Óµµ ¹öÇÁ
-        if (Input.GetKeyDown(KeyCode.Alpha2))
-        {
-            Debug.Log("[Buff] °ø°İ¼Óµµ ¹öÇÁ ÀÔ·Â");
-            UseAttackSpeedBuff();
-        }
-    }
     /// <summary>
-    /// ÀÌµ¿¼Óµµ ¹öÇÁ »ç¿ë
-    /// ÀÌ¹Ì Àû¿ë ÁßÀÌ¶ó¸é Áö¼Ó½Ã°£À» Ã³À½ºÎÅÍ ´Ù½Ã ½ÃÀÛ.
+    /// ì´ë™ì†ë„ ë²„í”„ ì‚¬ìš©
+    /// ì´ë¯¸ ì ìš© ì¤‘ì´ë¼ë©´ ì§€ì†ì‹œê°„ì„ ì²˜ìŒë¶€í„° ë‹¤ì‹œ ì‹œì‘.
     /// </summary>
     public void UseSpeedBuff()
     {
-        Debug.Log("[SpeedBuff] UseSpeedBuff È£Ãâ");
+        Debug.Log("[SpeedBuff] UseSpeedBuff í˜¸ì¶œ");
         if (playerMovement == null)
         {
-            Debug.LogWarning("PlayerMovement2D°¡ ¿¬°áµÇÁö ¾Ê¾Ò½À´Ï´Ù.");
+            Debug.LogWarning("PlayerMovement2Dê°€ ì—°ê²°ë˜ì§€ ì•Šì•˜ìŠµë‹ˆë‹¤.");
             return;
         }
 
         if (moveSpeedBuffCoroutine !=null)
         {
-            Debug.Log("[SpeedBuff] ±âÁ¸ ¹öÇÁ ÄÚ·çÆ¾ Á¤Áö");
+            Debug.Log("[SpeedBuff] ê¸°ì¡´ ë²„í”„ ì½”ë£¨í‹´ ì •ì§€");
             StopCoroutine(moveSpeedBuffCoroutine);
         }
 
@@ -93,14 +101,14 @@ public class SpeedBuffController : MonoBehaviour
     }
 
     /// <summary>
-    /// °ø°İ¼Óµµ ¹öÇÁ¸¦ »ç¿ëÇÕ´Ï´Ù.
-    /// Àç»ç¿ëÇÏ¸é Áö¼Ó½Ã°£À» Ã³À½ºÎÅÍ ´Ù½Ã ½ÃÀÛÇÕ´Ï´Ù.
+    /// ê³µê²©ì†ë„ ë²„í”„ë¥¼ ì‚¬ìš©í•©ë‹ˆë‹¤.
+    /// ì¬ì‚¬ìš©í•˜ë©´ ì§€ì†ì‹œê°„ì„ ì²˜ìŒë¶€í„° ë‹¤ì‹œ ì‹œì‘í•©ë‹ˆë‹¤.
     /// </summary>
     public void UseAttackSpeedBuff()
     {
         if(playerAttack == null)
         {
-            Debug.LogWarning("PlayerAttack2D°¡ ¿¬°áµÇÁö ¾Ê¾Ò½À´Ï´Ù.");
+            Debug.LogWarning("PlayerAttack2Dê°€ ì—°ê²°ë˜ì§€ ì•Šì•˜ìŠµë‹ˆë‹¤.");
             return;
         }
 
@@ -113,7 +121,7 @@ public class SpeedBuffController : MonoBehaviour
     }
 
     /// <summary>
-    /// ÀÌµ¿¼Óµµ ¹öÇÁ Áö¼Ó½Ã°£ Ã³¸®.
+    /// ì´ë™ì†ë„ ë²„í”„ ì§€ì†ì‹œê°„ ì²˜ë¦¬.
     /// </summary>
     private IEnumerator MoveSpeedBuffRoutine()
     {
@@ -123,6 +131,8 @@ public class SpeedBuffController : MonoBehaviour
         }
 
         animationManager?.PlayMoveSpeedBuff();
+
+        moveSpeedVisualFeedback?.PlayStart();
 
         playerMovement.SetMoveSpeedMultiplier(moveSpeedMultiplier);
 
@@ -147,6 +157,8 @@ public class SpeedBuffController : MonoBehaviour
             yield return null;
         }
         playerMovement.ResetmoveSpeedMultiplier();
+
+        moveSpeedVisualFeedback?.PlayEnd();
             
         if (durationSlider != null)
         {
@@ -162,7 +174,7 @@ public class SpeedBuffController : MonoBehaviour
     }
 
     /// <summary>
-    /// °ø°İ¼Óµµ ¹öÇÁ Áö¼Ó½Ã°£ Ã³¸®.
+    /// ê³µê²©ì†ë„ ë²„í”„ ì§€ì†ì‹œê°„ ì²˜ë¦¬.
     /// </summary>
     private IEnumerator AttackSpeedBuffRoutine()
     {
@@ -173,7 +185,11 @@ public class SpeedBuffController : MonoBehaviour
 
         animationManager?.PlayAttackSpeedBuff();
 
-        playerMovement.SetMoveSpeedMultiplier(attackSpeedMultiplier);
+        // [ê³µê²©ì†ë„ ë²„í”„ ì˜¤ë¥˜ ìˆ˜ì •] ì´ë™ì†ë„ê°€ ì•„ë‹ˆë¼ ì‹¤ì œ ê³µê²© ëŒ€ê¸°ì‹œê°„ ë°°ìœ¨ì— ì ìš©í•©ë‹ˆë‹¤.
+        playerAttack.SetAttackSpeedMultiplier(attackSpeedMultiplier);
+
+        // [ê³µê²©ì†ë„ ë²„í”„ ì—°ì¶œ ì¶”ê°€] ë°œë™ í”Œë˜ì‹œì™€ ìƒë‹¨ ì•„ì´ì½˜ ëª¨ì…˜ì„ ì‹œì‘í•©ë‹ˆë‹¤.
+        attackSpeedVisualFeedback?.PlayStart();
 
         float remainingTime = attackSpeedDuration;
 
@@ -190,12 +206,15 @@ public class SpeedBuffController : MonoBehaviour
 
             if (attackDurationSlider != null)
             {
-                attackDurationSlider.value = Mathf.Clamp01(remainingTime / duration);
+                // [ê³µê²©ì†ë„ ë²„í”„ ì˜¤ë¥˜ ìˆ˜ì •] ê³µì† ë²„í”„ ê³ ìœ  ì§€ì†ì‹œê°„ì„ ê¸°ì¤€ìœ¼ë¡œ ê²Œì´ì§€ë¥¼ ê³„ì‚°í•©ë‹ˆë‹¤.
+                attackDurationSlider.value = Mathf.Clamp01(remainingTime / attackSpeedDuration);
             }
 
             yield return null;
         }
         playerAttack.ResetAttackSpeedMultiplier();
+
+        attackSpeedVisualFeedback?.PlayEnd();
 
         if (attackDurationSlider != null)
         {
@@ -211,11 +230,14 @@ public class SpeedBuffController : MonoBehaviour
     }
     private void OnDisable()
     {
-        // ¿ÀºêÁ§Æ®°¡ ºñÈ°¼ºÈ­µÉ ¶§ ¹öÇÁ°¡ ³²Áö ¾Ê°Ô º¹±¸
+        // ì˜¤ë¸Œì íŠ¸ê°€ ë¹„í™œì„±í™”ë  ë•Œ ë²„í”„ê°€ ë‚¨ì§€ ì•Šê²Œ ë³µêµ¬
         if (playerMovement != null)
         {
             playerMovement.ResetmoveSpeedMultiplier();
         }
+
+        moveSpeedVisualFeedback?.PlayEnd();
+        attackSpeedVisualFeedback?.PlayEnd();
 
         if (playerAttack != null)
         {

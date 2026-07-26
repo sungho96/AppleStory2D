@@ -3,18 +3,22 @@ using Assets.HeroEditor4D.Common.Scripts.Enums;
 using UnityEngine;
 
 /// <summary>
-/// ÇÃ·¹ÀÌ¾î ÀüÃ¼ Èå¸§ ÃÑ°ü¸®.
-/// - ÀÔ·Â ¼öÁı
-/// - »ç´Ù¸® / ÀÌµ¿ / ¹æÇâ / ÇÇ°İ ½Ã½ºÅÛ È£Ãâ
-/// - ¾Ö´Ï¸ŞÀÌ¼Ç »óÅÂ °»½Å
+/// í”Œë ˆì´ì–´ ì „ì²´ íë¦„ ì´ê´€ë¦¬.
+/// - ì…ë ¥ ìˆ˜ì§‘
+/// - ì‚¬ë‹¤ë¦¬ / ì´ë™ / ë°©í–¥ / í”¼ê²© ì‹œìŠ¤í…œ í˜¸ì¶œ
+/// - ì• ë‹ˆë©”ì´ì…˜ ìƒíƒœ ê°±ì‹ 
 /// 
-/// ÀÌ ½ºÅ©¸³Æ®´Â "Á÷Á¢ ¸ğµç ±â´ÉÀ» Ã³¸®"ÇÏÁö ¾Ê°í
-/// °¢ ºĞ¸®µÈ ½ºÅ©¸³Æ®¸¦ ¿¬°áÇÏ°í ¼ø¼­¸¦ Á¦¾îÇÏ´Â ¿ªÇÒ¸¸ ´ã´çÇÕ´Ï´Ù.
+/// ì´ ìŠ¤í¬ë¦½íŠ¸ëŠ” "ì§ì ‘ ëª¨ë“  ê¸°ëŠ¥ì„ ì²˜ë¦¬"í•˜ì§€ ì•Šê³ 
+/// ê° ë¶„ë¦¬ëœ ìŠ¤í¬ë¦½íŠ¸ë¥¼ ì—°ê²°í•˜ê³  ìˆœì„œë¥¼ ì œì–´í•˜ëŠ” ì—­í• ë§Œ ë‹´ë‹¹í•©ë‹ˆë‹¤.
 /// </summary>
 public class PlayerController2D : MonoBehaviour
 {
     [Header("Player")]
     [SerializeField] private AnimationManager animationManager;
+
+    [Header("Quick Step Sound")]
+    [Tooltip("êµì²´í•  í€µìŠ¤í… AudioClipì„ ë„£ìœ¼ì„¸ìš”. ë¹„ì›Œë‘ë©´ ê¸°ë³¸ í•©ì„±ìŒì„ ì‚¬ìš©í•©ë‹ˆë‹¤.")]
+    [SerializeField] private AudioClip quickStepSound;
 
     private Rigidbody2D rb;
     private CapsuleCollider2D playerCol;
@@ -24,12 +28,13 @@ public class PlayerController2D : MonoBehaviour
     private PlayerDirection2D direction;
     private PlayerHitReaction2D hitReaction;
     private PlayerHealth2D health;
+    private PlayerQuickStep2D quickStep;
 
     private float moveInput;
     private float verticalInput;
 
     /// <summary>
-    /// °øÅë ÄÄÆ÷³ÍÆ® ¹× ºĞ¸® ½ºÅ©¸³Æ® Ä³½Ì.
+    /// ê³µí†µ ì»´í¬ë„ŒíŠ¸ ë° ë¶„ë¦¬ ìŠ¤í¬ë¦½íŠ¸ ìºì‹±.
     /// </summary>
     private void Awake()
     {
@@ -41,6 +46,11 @@ public class PlayerController2D : MonoBehaviour
         direction = GetComponent<PlayerDirection2D>();
         hitReaction = GetComponent<PlayerHitReaction2D>();
         health = GetComponent<PlayerHealth2D>();
+        quickStep = GetComponent<PlayerQuickStep2D>();
+
+        // [í€µ ìŠ¤í… ì¶”ê°€] ì”¬ ì°¸ì¡°ë¥¼ ëŠ˜ë¦¬ì§€ ì•Šê³  í”Œë ˆì´ì–´ì— í•„ìš”í•œ ìŠ¤í… ì»´í¬ë„ŒíŠ¸ë¥¼ í•œ ë²ˆë§Œ ë³´ì¥í•©ë‹ˆë‹¤.
+        if (quickStep == null)
+            quickStep = gameObject.AddComponent<PlayerQuickStep2D>();
 
         if (animationManager == null)
             animationManager = GetComponent<AnimationManager>();
@@ -56,10 +66,13 @@ public class PlayerController2D : MonoBehaviour
 
         if (hitReaction != null)
             hitReaction.Initialize(rb, playerCol, ladder);
+
+        if (quickStep != null)
+            quickStep.Initialize(rb, playerCol, quickStepSound);
     }
 
     /// <summary>
-    /// ÀÔ·Â / °¨Áö / »óÅÂ ÆÇ´Ü Ã³¸®.
+    /// ì…ë ¥ / ê°ì§€ / ìƒíƒœ íŒë‹¨ ì²˜ë¦¬.
     /// </summary>
     private void Update()
     {
@@ -74,25 +87,26 @@ public class PlayerController2D : MonoBehaviour
             ladder.CheckGround();
             ladder.RefreshLadderContacts();
 
-            // À§¿¡¼­ ¾Æ·¡·Î ³»·Á°¡±â ÁøÀÔ
+            // ìœ„ì—ì„œ ì•„ë˜ë¡œ ë‚´ë ¤ê°€ê¸° ì§„ì…
             ladder.TryEnterFromTop(verticalInput);
 
-            // ¸öÅë¿¡¼­ À§·Î ¿Ã¶ó°¡±â ÁøÀÔ
+            // ëª¸í†µì—ì„œ ìœ„ë¡œ ì˜¬ë¼ê°€ê¸° ì§„ì…
             ladder.TryEnterFromBody(verticalInput);
 
-            // ²À´ë±â Å»Ãâ Ã³¸®
+            // ê¼­ëŒ€ê¸° íƒˆì¶œ ì²˜ë¦¬
             ladder.TryExitToTop(verticalInput);
         }
 
+        HandleQuickStepInput();
         HandleDirection();
         HandleJump();
         UpdateAnimationState();
     }
 
     /// <summary>
-    /// ½ÇÁ¦ ¹°¸® ÀÌµ¿ Ã³¸®.
-    /// - »ç´Ù¸® ÁßÀÌ¸é µî¹İ ÀÌµ¿
-    /// - ¾Æ´Ï¸é ÀÏ¹İ ¼öÆò ÀÌµ¿
+    /// ì‹¤ì œ ë¬¼ë¦¬ ì´ë™ ì²˜ë¦¬.
+    /// - ì‚¬ë‹¤ë¦¬ ì¤‘ì´ë©´ ë“±ë°˜ ì´ë™
+    /// - ì•„ë‹ˆë©´ ì¼ë°˜ ìˆ˜í‰ ì´ë™
     /// </summary>
     private void FixedUpdate()
     {
@@ -108,6 +122,21 @@ public class PlayerController2D : MonoBehaviour
             return;
         }
 
+        // [í€µ ìŠ¤í… ì¶”ê°€] ìŠ¤í… ì¤‘ì—ëŠ” ì¼ë°˜ ì´ë™ì´ Rigidbody ì´ë™ì„ ë®ì–´ì“°ì§€ ì•Šê²Œ í•©ë‹ˆë‹¤.
+        if (quickStep != null && quickStep.IsStepping)
+        {
+            bool wasStepping = quickStep.IsStepping;
+            quickStep.HandleStepMove();
+
+            // [í€µ ìŠ¤í… ë°©í–¥ ìˆ˜ì •] ì´ë™ ì¤‘ì—ëŠ” ê¸°ì¡´ ë°©í–¥ì„ ìœ ì§€í•˜ê³ , ì¢…ë£Œ ìˆœê°„ ì´ë™í•œ ë°©í–¥ì„ ë°”ë¼ë´…ë‹ˆë‹¤.
+            if (wasStepping && !quickStep.IsStepping && direction != null)
+            {
+                direction.SetFacingByHorizontalInput(quickStep.StepDirection);
+            }
+
+            return;
+        }
+
         if (movement != null)
         {
             bool blockMove = hitReaction != null && hitReaction.IsKnockback;
@@ -116,8 +145,8 @@ public class PlayerController2D : MonoBehaviour
     }
 
     /// <summary>
-    /// ¹æÇâ °»½Å.
-    /// - »ç´Ù¸® ÁßÀÌ ¾Æ´Ò ¶§¸¸ ÁÂ/¿ì ¹æÇâ °»½Å
+    /// ë°©í–¥ ê°±ì‹ .
+    /// - ì‚¬ë‹¤ë¦¬ ì¤‘ì´ ì•„ë‹ ë•Œë§Œ ì¢Œ/ìš° ë°©í–¥ ê°±ì‹ 
     /// </summary>
     private void HandleDirection()
     {
@@ -127,13 +156,43 @@ public class PlayerController2D : MonoBehaviour
         if (ladder != null && ladder.IsClimbing)
             return;
 
+        if (quickStep != null && quickStep.IsStepping)
+            return;
+
         direction.SetFacingByHorizontalInput(moveInput);
     }
 
+    private void HandleQuickStepInput()
+    {
+        if (quickStep == null || direction == null)
+            return;
+
+        float tappedDirection = 0f;
+
+        if (Input.GetKeyDown(KeyCode.LeftArrow))
+            tappedDirection = -1f;
+        else if (Input.GetKeyDown(KeyCode.RightArrow))
+            tappedDirection = 1f;
+
+        if (Mathf.Approximately(tappedDirection, 0f))
+            return;
+
+        bool isGrounded = ladder != null && ladder.IsGrounded;
+        bool isClimbing = ladder != null && ladder.IsClimbing;
+        bool isKnockback = hitReaction != null && hitReaction.IsKnockback;
+        bool canStep = isGrounded && !isClimbing && !isKnockback;
+
+        // [í€µ ìŠ¤í… ë°©í–¥ ìˆ˜ì •] ì²« ë²ˆì§¸ ì…ë ¥ë¶€í„° ì¦‰ì‹œ ì…ë ¥ ë°©í–¥ì„ ë°”ë¼ë³´ê²Œ í•©ë‹ˆë‹¤.
+        direction.SetFacingByHorizontalInput(tappedDirection);
+
+        // ë‘ ë²ˆì§¸ ê°™ì€ ë°©í–¥ ì…ë ¥ì—ì„œëŠ” ë°©ê¸ˆ ì „í™˜í•œ ë°©í–¥ì„ ìœ ì§€í•œ ì±„ ìŠ¤í…í•©ë‹ˆë‹¤.
+        quickStep.RegisterDirectionTap(tappedDirection, canStep);
+    }
+
     /// <summary>
-    /// Á¡ÇÁ Ã³¸®.
-    /// - »ç´Ù¸® Áß Á¡ÇÁ¸é »ç´Ù¸® Á¾·á ÈÄ Á¡ÇÁ
-    /// - ÀÏ¹İ »óÅÂ¸é ¹Ù´ÚÀÏ ¶§¸¸ Á¡ÇÁ
+    /// ì í”„ ì²˜ë¦¬.
+    /// - ì‚¬ë‹¤ë¦¬ ì¤‘ ì í”„ë©´ ì‚¬ë‹¤ë¦¬ ì¢…ë£Œ í›„ ì í”„
+    /// - ì¼ë°˜ ìƒíƒœë©´ ë°”ë‹¥ì¼ ë•Œë§Œ ì í”„
     /// </summary>
     private void HandleJump()
     {
@@ -161,11 +220,11 @@ public class PlayerController2D : MonoBehaviour
         if (animationManager == null)
             return;
 
-        // ÇöÀç ¹Ù¶óº¸´Â ¹æÇâ
-        // ¿ŞÂÊÀÌ¸é true, ¿À¸¥ÂÊÀÌ¸é false
+        // í˜„ì¬ ë°”ë¼ë³´ëŠ” ë°©í–¥
+        // ì™¼ìª½ì´ë©´ true, ì˜¤ë¥¸ìª½ì´ë©´ false
         bool facingLeft = GetHorizontalFacingDir() < 0f;
 
-        // ³Ë¹é Áß
+        // ë„‰ë°± ì¤‘
         if (hitReaction != null && hitReaction.IsKnockback)
         {
             animationManager.SetJump(false, facingLeft);
@@ -173,7 +232,7 @@ public class PlayerController2D : MonoBehaviour
             return;
         }
 
-        // »ç´Ù¸® Áß
+        // ì‚¬ë‹¤ë¦¬ ì¤‘
         if (ladder != null && ladder.IsClimbing)
         {
             animationManager.SetJump(false, facingLeft);
@@ -186,20 +245,20 @@ public class PlayerController2D : MonoBehaviour
             return;
         }
 
-        // °øÁß ¿©ºÎ
+        // ê³µì¤‘ ì—¬ë¶€
         bool isAirborne = ladder != null && !ladder.IsGrounded;
 
-        // °øÁßÀÌ¸é ÇöÀç ¹Ù¶óº¸´Â ¹æÇâ¿¡ ¸Â´Â Á¡ÇÁ ¾Ö´Ï¸ŞÀÌ¼Ç ½ÇÇà
+        // ê³µì¤‘ì´ë©´ í˜„ì¬ ë°”ë¼ë³´ëŠ” ë°©í–¥ì— ë§ëŠ” ì í”„ ì• ë‹ˆë©”ì´ì…˜ ì‹¤í–‰
         if (isAirborne)
         {
             animationManager.SetJump(true, facingLeft);
             return;
         }
 
-        // ÂøÁöÇÏ¸é JumpL / JumpR ¸ğµÎ ÇØÁ¦
+        // ì°©ì§€í•˜ë©´ JumpL / JumpR ëª¨ë‘ í•´ì œ
         animationManager.SetJump(false, facingLeft);
 
-        // ÂøÁö ÈÄ Idle / Run
+        // ì°©ì§€ í›„ Idle / Run
         if (Mathf.Abs(moveInput) > 0.01f)
             animationManager.SetState(CharacterState.Run);
         else
@@ -207,7 +266,7 @@ public class PlayerController2D : MonoBehaviour
     }
 
     /// <summary>
-    /// ÇöÀç ÁÂ¿ì ¹Ù¶óº¸´Â ¹æÇâ°ª ¹İÈ¯.
+    /// í˜„ì¬ ì¢Œìš° ë°”ë¼ë³´ëŠ” ë°©í–¥ê°’ ë°˜í™˜.
     /// - Left = -1
     /// - Right / Front / Back = 1
     /// </summary>
@@ -220,8 +279,8 @@ public class PlayerController2D : MonoBehaviour
     }
 
     /// <summary>
-    /// µğ¹ö±× Gizmo Ç¥½Ã.
-    /// - »ç´Ù¸® °¨Áö ¹Ú½º
+    /// ë””ë²„ê·¸ Gizmo í‘œì‹œ.
+    /// - ì‚¬ë‹¤ë¦¬ ê°ì§€ ë°•ìŠ¤
     /// - GroundCheck Ray
     /// </summary>
     private void OnDrawGizmosSelected()

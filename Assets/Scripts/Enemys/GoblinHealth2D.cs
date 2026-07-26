@@ -6,13 +6,13 @@ using UnityEngine.UI;
 public class GoblinHealth2D : MonoBehaviour
 {
     [Header("HP")]
-    [SerializeField] private int maxHp = 100;     // °íºí¸°ÀÇ ÃÖ´ë Ã¼·Â
-    [SerializeField] private int currentHp;       // ÇöÀç Ã¼·Â
+    [SerializeField] private int maxHp = 100;     // ê³ ë¸”ë¦°ì˜ ìµœëŒ€ ì²´ë ¥
+    [SerializeField] private int currentHp;       // í˜„ì¬ ì²´ë ¥
 
     [Header("Hit")]
-    [SerializeField] private Color hitColor = Color.red;   // ÇÇ°İ ½Ã Àá½Ã º¯°æÇÒ »ö»ó
-    [SerializeField] private float hitColorDuration = 0.2f; // ÇÇ°İ »ö»ó À¯Áö ½Ã°£
-    [SerializeField] private float hitStunDuration = 0.25f; // ÇÇ°İ °æÁ÷ °ü·Ã ½Ã°£°ª (ÇöÀç ÀÌ ½ºÅ©¸³Æ®¿¡¼­´Â Á÷Á¢ »ç¿ëÇÏÁö ¾ÊÀ½)
+    [SerializeField] private Color hitColor = Color.red;   // í”¼ê²© ì‹œ ì ì‹œ ë³€ê²½í•  ìƒ‰ìƒ
+    [SerializeField] private float hitColorDuration = 0.2f; // í”¼ê²© ìƒ‰ìƒ ìœ ì§€ ì‹œê°„
+    [SerializeField] private float hitStunDuration = 0.25f; // í”¼ê²© ê²½ì§ ê´€ë ¨ ì‹œê°„ê°’ (í˜„ì¬ ì´ ìŠ¤í¬ë¦½íŠ¸ì—ì„œëŠ” ì§ì ‘ ì‚¬ìš©í•˜ì§€ ì•ŠìŒ)
     [SerializeField] private Slider hpSlider;
 
     [Header("Death Effect")]
@@ -20,19 +20,19 @@ public class GoblinHealth2D : MonoBehaviour
     [SerializeField] private float deathRotateZ = 25f;
     [SerializeField] private float deathFloatY = 0.2f;
 
-    private GoblinController2D goblinController; // ÀÌµ¿/³Ë¹é/°æÁ÷ Ã³¸®¸¦ ¸Ã´Â ÄÁÆ®·Ñ·¯ ÂüÁ¶
-    private SpriteRenderer[] renderers;          // ÀÚ½Å ¹× ÀÚ½Ä¿¡ ÀÖ´Â ¸ğµç SpriteRenderer
-    private Color[] originalColors;              // °¢ SpriteRendererÀÇ ¿ø·¡ »ö»ó ÀúÀå¿ë
-    private bool isHitStun;                      // ÇÇ°İ °æÁ÷ »óÅÂ¿ë º¯¼ö (ÇöÀç ÀÌ ½ºÅ©¸³Æ®¿¡¼­´Â Á÷Á¢ »ç¿ëÇÏÁö ¾ÊÀ½)
+    private GoblinController2D goblinController; // ì´ë™/ë„‰ë°±/ê²½ì§ ì²˜ë¦¬ë¥¼ ë§¡ëŠ” ì»¨íŠ¸ë¡¤ëŸ¬ ì°¸ì¡°
+    private SpriteRenderer[] renderers;          // ìì‹  ë° ìì‹ì— ìˆëŠ” ëª¨ë“  SpriteRenderer
+    private Color[] originalColors;              // ê° SpriteRendererì˜ ì›ë˜ ìƒ‰ìƒ ì €ì¥ìš©
+    private bool isHitStun;                      // í”¼ê²© ê²½ì§ ìƒíƒœìš© ë³€ìˆ˜ (í˜„ì¬ ì´ ìŠ¤í¬ë¦½íŠ¸ì—ì„œëŠ” ì§ì ‘ ì‚¬ìš©í•˜ì§€ ì•ŠìŒ)
 
-    [SerializeField] private int expReward = 3;   // Ã³Ä¡ ½Ã Áö±Ş EXP(¸ŞÀÌÇÃ½Ä: ¸ó½ºÅÍ°¡ º¸»ó°ª ¼ÒÀ¯)
-    private bool isDead;                          // Áßº¹ Ã³Ä¡/Áßº¹ EXP Áö±Ş ¹æÁö
+    [SerializeField] private int expReward = 3;   // ì²˜ì¹˜ ì‹œ ì§€ê¸‰ EXP(ë©”ì´í”Œì‹: ëª¬ìŠ¤í„°ê°€ ë³´ìƒê°’ ì†Œìœ )
+    private bool isDead;                          // ì¤‘ë³µ ì²˜ì¹˜/ì¤‘ë³µ EXP ì§€ê¸‰ ë°©ì§€
 
     /// <summary>
-    /// ÃÊ±â ÂüÁ¶ Ä³½Ì.
-    /// - GoblinController2D¸¦ ¿¬°áÇØ ÇÇ°İ ½Ã ÀÌµ¿/³Ë¹é ·ÎÁ÷À» È£ÃâÇÒ ÁØºñ¸¦ ÇÔ
-    /// - ÀÚ½Ä Æ÷ÇÔ SpriteRenderer¸¦ ¸ğµÎ ¼öÁı
-    /// - ÇÇ°İ ÈÄ ¿ø·¡ »öÀ¸·Î º¹±¸ÇÏ±â À§ÇØ ½ÃÀÛ »ö»óÀ» ¹è¿­¿¡ ÀúÀå
+    /// ì´ˆê¸° ì°¸ì¡° ìºì‹±.
+    /// - GoblinController2Dë¥¼ ì—°ê²°í•´ í”¼ê²© ì‹œ ì´ë™/ë„‰ë°± ë¡œì§ì„ í˜¸ì¶œí•  ì¤€ë¹„ë¥¼ í•¨
+    /// - ìì‹ í¬í•¨ SpriteRendererë¥¼ ëª¨ë‘ ìˆ˜ì§‘
+    /// - í”¼ê²© í›„ ì›ë˜ ìƒ‰ìœ¼ë¡œ ë³µêµ¬í•˜ê¸° ìœ„í•´ ì‹œì‘ ìƒ‰ìƒì„ ë°°ì—´ì— ì €ì¥
     /// </summary>
     private void Awake()
     {
@@ -55,7 +55,10 @@ public class GoblinHealth2D : MonoBehaviour
         SyncHpUI();
     }
 
-    public void TakeDamage(int damage, float hitDir)
+    public void TakeDamage(
+        int damage,
+        float hitDir,
+        bool applyHitReaction = true)
     {
         if (isDead) return;
 
@@ -69,12 +72,12 @@ public class GoblinHealth2D : MonoBehaviour
 
             StartCoroutine(CoDie());
 
-            // 1) ½½¶óÀÌ´õ Á¤¸®(½Ã°¢ÀûÀ¸·Î 0 °íÁ¤)
+            // 1) ìŠ¬ë¼ì´ë” ì •ë¦¬(ì‹œê°ì ìœ¼ë¡œ 0 ê³ ì •)
             currentHp = 0;
             if (hpSlider != null)
                 hpSlider.value = 0f;
 
-            // 2) EXP Áö±Ş(Á¤¼®: ¸ó½ºÅÍ°¡ Á×À» ¶§ Áö±Ş)
+            // 2) EXP ì§€ê¸‰(ì •ì„: ëª¬ìŠ¤í„°ê°€ ì£½ì„ ë•Œ ì§€ê¸‰)
             GameObject player = GameObject.FindGameObjectWithTag("Player");
             if (player != null)
             {
@@ -89,7 +92,7 @@ public class GoblinHealth2D : MonoBehaviour
 
         StartCoroutine(CoHitColor());
 
-        if (goblinController != null)
+        if (applyHitReaction && goblinController != null)
         {
             goblinController.PlayHitStun();
             goblinController.PlayKnockback(hitDir);
@@ -97,11 +100,11 @@ public class GoblinHealth2D : MonoBehaviour
     }
 
     /// <summary>
-    /// »ç¸Á ¿¬Ãâ ÄÚ·çÆ¾.
-    /// - ÄÁÆ®·Ñ·¯/Ãæµ¹/¹°¸® µ¿ÀÛÀ» Á¤Áö
-    /// - »ìÂ¦ ±â¿ïÀÌ¸ç À§·Î ÀÌµ¿
-    /// - ¾ËÆÄ°ªÀ» ÁÙ¿© »ç¶óÁö°Ô Ã³¸®
-    /// - ¿¬Ãâ Á¾·á ÈÄ ¿ÀºêÁ§Æ® Á¦°Å
+    /// ì‚¬ë§ ì—°ì¶œ ì½”ë£¨í‹´.
+    /// - ì»¨íŠ¸ë¡¤ëŸ¬/ì¶©ëŒ/ë¬¼ë¦¬ ë™ì‘ì„ ì •ì§€
+    /// - ì‚´ì§ ê¸°ìš¸ì´ë©° ìœ„ë¡œ ì´ë™
+    /// - ì•ŒíŒŒê°’ì„ ì¤„ì—¬ ì‚¬ë¼ì§€ê²Œ ì²˜ë¦¬
+    /// - ì—°ì¶œ ì¢…ë£Œ í›„ ì˜¤ë¸Œì íŠ¸ ì œê±°
     /// </summary>
     private IEnumerator CoDie()
     {
@@ -161,9 +164,9 @@ public class GoblinHealth2D : MonoBehaviour
         hpSlider.value = ratio;
     }
     /// <summary>
-    /// ÇÇ°İ »ö»ó ¿¬Ãâ ÄÚ·çÆ¾.
-    /// - ¸ğµç SpriteRenderer¸¦ hitColor·Î Àá½Ã º¯°æ
-    /// - ÀÏÁ¤ ½Ã°£ ÈÄ Awake¿¡¼­ ÀúÀåÇÑ ¿ø·¡ »ö»óÀ¸·Î º¹±¸
+    /// í”¼ê²© ìƒ‰ìƒ ì—°ì¶œ ì½”ë£¨í‹´.
+    /// - ëª¨ë“  SpriteRendererë¥¼ hitColorë¡œ ì ì‹œ ë³€ê²½
+    /// - ì¼ì • ì‹œê°„ í›„ Awakeì—ì„œ ì €ì¥í•œ ì›ë˜ ìƒ‰ìƒìœ¼ë¡œ ë³µêµ¬
     /// </summary>
     private IEnumerator CoHitColor()
     {

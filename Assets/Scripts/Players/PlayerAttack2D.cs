@@ -5,126 +5,400 @@ using UnityEngine;
 public class PlayerAttack2D : MonoBehaviour
 {
     [Header("Attack")]
-    [SerializeField] private Animator animator;              // È° ¹ß»ç ¾Ö´Ï¸ŞÀÌ¼Ç Á¦¾î¿ë
-    [SerializeField] private GameObject arrowPrefab;         // ¹ß»çÇÒ È­»ì ÇÁ¸®ÆÕ
-    [SerializeField] private Transform firePoint;            // È­»ì »ı¼º À§Ä¡
-    [SerializeField] private float arrowSpeed = 12f;         // È­»ì ¼Óµµ
-    [SerializeField] private PlayerController2D playerController; // ¹Ù¶óº¸´Â ¹æÇâ ÂüÁ¶¿ë
+    [SerializeField] private Animator animator;              // í™œ ë°œì‚¬ ì• ë‹ˆë©”ì´ì…˜ ì œì–´ìš©
+    [SerializeField] private GameObject arrowPrefab;         // ë°œì‚¬í•  í™”ì‚´ í”„ë¦¬íŒ¹
+    [SerializeField] private Transform firePoint;            // í™”ì‚´ ìƒì„± ìœ„ì¹˜
+    [SerializeField] private float arrowSpeed = 12f;         // í™”ì‚´ ì†ë„
+    [SerializeField] private PlayerController2D playerController; // ë°”ë¼ë³´ëŠ” ë°©í–¥ ì°¸ì¡°ìš©
 
     [Header("Attack Speed")]
     [SerializeField] private float baseAttackDelay = 0.4f;
 
+    [Header("Power Shot")]
+    [SerializeField] private float powerShotMaxChargeDuration = 1.5f;
+    [SerializeField] private int powerShotMinDamage = 18;
+    [SerializeField] private int powerShotMaxDamage = 45;
+    [SerializeField] private float powerShotMinSpeed = 14f;
+    [SerializeField] private float powerShotMaxSpeed = 20f;
+    [SerializeField] private float powerShotMinScale = 0.95f;
+    [SerializeField] private float powerShotMaxScale = 1.45f;
+
+    [Header("Power Shot Audio")]
+    [SerializeField] private AudioClip powerShotChargeSound;
+    [SerializeField] private AudioClip powerShotReleaseSound;
+    [SerializeField, Range(0f, 1f)] private float powerShotChargeVolume = 0.65f;
+    [SerializeField, Range(0f, 1f)] private float powerShotReleaseVolume = 0.85f;
+
     private float attackSpeedMultiplier = 1f;
 
-    private bool isAttacking; // ¿¬Å¸ ¹æÁö (°ø°İ Áß Ãß°¡ ÀÔ·Â Â÷´Ü ÇÃ·¡±×)
+    private bool isAttacking; // ì—°íƒ€ ë°©ì§€ (ê³µê²© ì¤‘ ì¶”ê°€ ì…ë ¥ ì°¨ë‹¨ í”Œë˜ê·¸)
+    private bool isPowerShotCharging;
+    private bool hasPendingPowerShot;
+    private float powerShotChargeStartedAt;
+    private int pendingPowerShotDamage;
+    private float pendingPowerShotSpeed;
+    private float pendingPowerShotScale;
+    private float pendingPowerShotRatio;
+    private PowerShotChargeGauge powerShotChargeGauge;
+    private PowerShotVisualFeedback powerShotVisualFeedback;
+    private CameraShake2D cameraShake;
+    private AudioSource powerShotAudioSource;
 
     /// <summary>
-    /// ÃÊ±â ÂüÁ¶ ¼³Á¤.
-    /// - PlayerController2D°¡ ºñ¾î ÀÖÀ» °æ¿ì ÀÚµ¿À¸·Î °°Àº ¿ÀºêÁ§Æ®¿¡¼­ °¡Á®¿È
-    /// - °ø°İ ¹æÇâ °è»ê(GetHorizontalFacingDir)¿¡ »ç¿ëµÊ
+    /// ì´ˆê¸° ì°¸ì¡° ì„¤ì •.
+    /// - PlayerController2Dê°€ ë¹„ì–´ ìˆì„ ê²½ìš° ìë™ìœ¼ë¡œ ê°™ì€ ì˜¤ë¸Œì íŠ¸ì—ì„œ ê°€ì ¸ì˜´
+    /// - ê³µê²© ë°©í–¥ ê³„ì‚°(GetHorizontalFacingDir)ì— ì‚¬ìš©ë¨
     /// </summary>
     private void Awake()
     {
         if (playerController == null)
             playerController = GetComponent<PlayerController2D>();
+
+        // [íŒŒì›Œ ìƒ· ê²Œì´ì§€ ì¶”ê°€] ì”¬ ì°¸ì¡° ì—†ì´ í”Œë ˆì´ì–´ì— ê²Œì´ì§€ë¥¼ ìë™ êµ¬ì„±í•©ë‹ˆë‹¤.
+        powerShotChargeGauge = GetComponent<PowerShotChargeGauge>();
+        if (powerShotChargeGauge == null)
+            powerShotChargeGauge = gameObject.AddComponent<PowerShotChargeGauge>();
+        powerShotChargeGauge.Initialize();
+
+        // [íŒŒì›Œ ìƒ· ì—°ì¶œ ì¶”ê°€] ì°¨ì§• ì˜¤ë¼ì™€ ë°œì‚¬ ì„¬ê´‘ì„ ëŸ°íƒ€ì„ìœ¼ë¡œ êµ¬ì„±í•©ë‹ˆë‹¤.
+        powerShotVisualFeedback = GetComponent<PowerShotVisualFeedback>();
+        if (powerShotVisualFeedback == null)
+            powerShotVisualFeedback = gameObject.AddComponent<PowerShotVisualFeedback>();
+        powerShotVisualFeedback.Initialize(firePoint, playerController);
+        cameraShake = FindFirstObjectByType<CameraShake2D>();
+        if (cameraShake == null && Camera.main != null)
+            cameraShake = Camera.main.gameObject.AddComponent<CameraShake2D>();
+
+        // [íŒŒì›Œ ìƒ· ì‚¬ìš´ë“œ ì—°ê²°] ë‹¤ë¥¸ í”Œë ˆì´ì–´ ì‚¬ìš´ë“œì™€ ì„ì´ì§€ ì•ŠëŠ” ì „ìš© AudioSourceë¥¼ ì‚¬ìš©í•©ë‹ˆë‹¤.
+        powerShotAudioSource = gameObject.AddComponent<AudioSource>();
+        powerShotAudioSource.playOnAwake = false;
+        powerShotAudioSource.spatialBlend = 0f;
     }
 
     /// <summary>
-    /// ÀÔ·Â Ã³¸® ·çÇÁ.
-    /// - LeftControl ÀÔ·Â ½Ã °ø°İ ÄÚ·çÆ¾ ½ÇÇà
-    /// - isAttackingÀ» ÅëÇØ ¿¬¼Ó ÀÔ·Â(½ºÆÔ °ø°İ) ¹æÁö
+    /// ì…ë ¥ ì²˜ë¦¬ ë£¨í”„.
+    /// - LeftControl ì…ë ¥ ì‹œ ê³µê²© ì½”ë£¨í‹´ ì‹¤í–‰
+    /// - isAttackingì„ í†µí•´ ì—°ì† ì…ë ¥(ìŠ¤íŒ¸ ê³µê²©) ë°©ì§€
     /// </summary>
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.LeftControl) && !isAttacking)
+        // [ì„ì‹œ í…ŒìŠ¤íŠ¸ Qí‚¤ - íŒŒì›Œ ìƒ· ì™„ì„± í›„ ì‚­ì œ]
+        // í‚¤ ì„¸íŒ… UIì—ì„œ ë§¤ë²ˆ ë°°ì¹˜í•˜ì§€ ì•Šì•„ë„ Që¥¼ ëˆ„ë¥´ê³  ë–¼ì–´ íŒŒì›Œ ìƒ·ì„ í…ŒìŠ¤íŠ¸í•  ìˆ˜ ìˆìŠµë‹ˆë‹¤.
+        if (Input.GetKeyDown(KeyCode.Q))
+            BeginPowerShotCharge();
+
+        if (Input.GetKeyUp(KeyCode.Q))
+            ReleasePowerShot();
+
+        if (isPowerShotCharging)
+        {
+            float chargeRatio = (Time.time - powerShotChargeStartedAt) /
+                                Mathf.Max(0.01f, powerShotMaxChargeDuration);
+            powerShotChargeGauge.SetProgress(chargeRatio);
+            powerShotVisualFeedback.SetChargeProgress(chargeRatio);
+        }
+
+        if (Input.GetKeyDown(KeyCode.LeftControl) &&
+            !isAttacking &&
+            !isPowerShotCharging)
         {
             StartCoroutine(DoBowShot());
         }
     }
 
+    public void BeginPowerShotCharge()
+    {
+        if (isAttacking || isPowerShotCharging)
+        {
+            return;
+        }
+
+        // [íŒŒì›Œ ìƒ· ì¶”ê°€] í‚¤ë¥¼ ëˆ„ë¥¸ ì‹œì ë¶€í„° ì°¨ì§• ì‹œê°„ì„ ì¸¡ì •í•©ë‹ˆë‹¤.
+        isPowerShotCharging = true;
+        powerShotChargeStartedAt = Time.time;
+        powerShotChargeGauge.Show();
+        powerShotVisualFeedback.BeginCharge();
+        PlayPowerShotChargeSound();
+
+        // [íŒŒì›Œ ìƒ· í™œ ë‹¹ê¸°ê¸°] ê¸°ì¡´ ShotBow í´ë¦½ì„ ë°œì‚¬ ì§ì „ ìì„¸ì—ì„œ ì •ì§€ì‹œí‚µë‹ˆë‹¤.
+        StartCoroutine(HoldPowerShotPose());
+    }
+
+    public void ReleasePowerShot()
+    {
+        if (!isPowerShotCharging || isAttacking)
+        {
+            return;
+        }
+
+        float chargedDuration = Time.time - powerShotChargeStartedAt;
+        float chargeRatio = Mathf.Clamp01(
+            chargedDuration / Mathf.Max(0.01f, powerShotMaxChargeDuration));
+
+        isPowerShotCharging = false;
+        powerShotChargeGauge.Hide();
+        StopPowerShotChargeSound();
+        hasPendingPowerShot = true;
+        pendingPowerShotDamage = Mathf.RoundToInt(
+            Mathf.Lerp(powerShotMinDamage, powerShotMaxDamage, chargeRatio));
+        pendingPowerShotSpeed = Mathf.Lerp(
+            powerShotMinSpeed, powerShotMaxSpeed, chargeRatio);
+        pendingPowerShotScale = Mathf.Lerp(
+            powerShotMinScale, powerShotMaxScale, chargeRatio);
+        pendingPowerShotRatio = chargeRatio;
+
+        // [íŒŒì›Œ ìƒ· í™œ ë‹¹ê¸°ê¸°] ë©ˆì¶° ë‘” ì• ë‹ˆë©”ì´ì…˜ì„ ì¬ê°œí•˜ë©´ ê¸°ì¡´ FireArrow ì´ë²¤íŠ¸ê°€ ì‹¤í–‰ë©ë‹ˆë‹¤.
+        animator.speed = 1f;
+        powerShotVisualFeedback.Release(chargeRatio);
+        PlayPowerShotReleaseSound();
+        StartCoroutine(FinishPowerShotRelease());
+        StartCoroutine(EnsurePowerShotFired());
+    }
+
+    private IEnumerator EnsurePowerShotFired()
+    {
+        // [ë°©í–¥ ì „í™˜ í›„ ì²« ë°œ ì•ˆì •í™”] Animation Eventê°€ ìœ ì‹¤ëœ ê²½ìš°ì—ë§Œ í•œ ë²ˆ ë³´ì¥ ë°œì‚¬í•©ë‹ˆë‹¤.
+        yield return new WaitForSeconds(0.2f);
+        if (hasPendingPowerShot)
+            FireArrow();
+    }
+
+    private IEnumerator HoldPowerShotPose()
+    {
+        // [ë°©í–¥ ì „í™˜ í›„ ì²« ì• ë‹ˆë©”ì´ì…˜ ìˆ˜ì •]
+        // PlayerControllerê°€ Left/Right í‘œì‹œë¥¼ ì „í™˜í•œ ë‹¤ìŒ í”„ë ˆì„ì— ShotBowë¥¼ ì‹œì‘í•©ë‹ˆë‹¤.
+        yield return null;
+        if (!isPowerShotCharging)
+            yield break;
+
+        animator.speed = 1f;
+        int shotBowHash = Animator.StringToHash("ShotBow");
+
+        // [ë°©í–¥ ì „í™˜ í›„ ì²« ì• ë‹ˆë©”ì´ì…˜ ìˆ˜ì •]
+        // ê¸°ì¡´ Animatorì˜ Action/SoloState íë¦„ì„ ìœ ì§€í•˜ê³ , ì‹¤ì œ ì§„ì…í•  ë•Œê¹Œì§€ ì¡°ê±´ì„ ìœ ì§€í•©ë‹ˆë‹¤.
+        animator.SetBool("ShotBow", true);
+
+        // ì‹¤ì œ ShotBow ì§„í–‰ë„ë¥¼ í™•ì¸í•œ ë’¤ ë°œì‚¬ ì´ë²¤íŠ¸ ì „ì— ê³ ì •í•©ë‹ˆë‹¤.
+        float elapsed = 0f;
+        while (isPowerShotCharging && elapsed < 0.45f)
+        {
+            for (int layer = 0; layer < animator.layerCount; layer++)
+            {
+                AnimatorStateInfo state = animator.GetCurrentAnimatorStateInfo(layer);
+                if (state.shortNameHash == shotBowHash && state.normalizedTime >= 0.42f)
+                {
+                    animator.SetBool("ShotBow", false);
+                    animator.speed = 0f;
+                    yield break;
+                }
+            }
+
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        animator.SetBool("ShotBow", false);
+    }
+
+    private IEnumerator FinishPowerShotRelease()
+    {
+        isAttacking = true;
+        float currentAttackDelay = baseAttackDelay / attackSpeedMultiplier;
+        yield return new WaitForSeconds(currentAttackDelay);
+        isAttacking = false;
+    }
+
+    private void OnDisable()
+    {
+        // [íŒŒì›Œ ìƒ· ê²Œì´ì§€ ì¶”ê°€] ë¹„í™œì„±í™” ì¤‘ ê²Œì´ì§€ì™€ ì°¨ì§• ìƒíƒœê°€ ë‚¨ì§€ ì•Šê²Œ ì •ë¦¬í•©ë‹ˆë‹¤.
+        isPowerShotCharging = false;
+        animator.speed = 1f;
+        if (powerShotChargeGauge != null)
+            powerShotChargeGauge.Hide();
+        if (powerShotVisualFeedback != null)
+            powerShotVisualFeedback.CancelCharge();
+        StopPowerShotChargeSound();
+    }
+
     /// <summary>
-    /// È° ¹ß»ç ¾Ö´Ï¸ŞÀÌ¼Ç ½ÃÄö½º.
-    /// - ShotBow BoolÀ» 1ÇÁ·¹ÀÓ¸¸ true·Î ¼³Á¤ÇÏ¿© ¾Ö´Ï¸ŞÀÌ¼Ç Æ®¸®°Å ¿ªÇÒ ¼öÇà
-    /// - ÀÏÁ¤ ½Ã°£ µ¿¾È ÀÔ·ÂÀ» Àá°¡ Áßº¹ °ø°İ ¹æÁö
-    /// - ½ÇÁ¦ È­»ì »ı¼ºÀº Animation Event¿¡¼­ FireArrow()·Î Ã³¸®ÇÏ´Â ±¸Á¶
+    /// í™œ ë°œì‚¬ ì• ë‹ˆë©”ì´ì…˜ ì‹œí€€ìŠ¤.
+    /// - ShotBow Boolì„ 1í”„ë ˆì„ë§Œ trueë¡œ ì„¤ì •í•˜ì—¬ ì• ë‹ˆë©”ì´ì…˜ íŠ¸ë¦¬ê±° ì—­í•  ìˆ˜í–‰
+    /// - ì¼ì • ì‹œê°„ ë™ì•ˆ ì…ë ¥ì„ ì ê°€ ì¤‘ë³µ ê³µê²© ë°©ì§€
+    /// - ì‹¤ì œ í™”ì‚´ ìƒì„±ì€ Animation Eventì—ì„œ FireArrow()ë¡œ ì²˜ë¦¬í•˜ëŠ” êµ¬ì¡°
     /// </summary>
     private IEnumerator DoBowShot()
     {
-        isAttacking = true; // °ø°İ ½ÃÀÛ ¡æ ÀÔ·Â Àá±İ
+        isAttacking = true; // ê³µê²© ì‹œì‘ â†’ ì…ë ¥ ì ê¸ˆ
 
-        animator.SetBool("ShotBow", true); // ¹ß»ç ¾Ö´Ï ½ÃÀÛ
-        yield return null;                 // 1ÇÁ·¹ÀÓ À¯Áö
-        animator.SetBool("ShotBow", false); // ¾Ö´Ï Æ®¸®°Å OFF
+        animator.SetBool("ShotBow", true); // ë°œì‚¬ ì• ë‹ˆ ì‹œì‘
+        yield return null;                 // 1í”„ë ˆì„ ìœ ì§€
+        animator.SetBool("ShotBow", false); // ì• ë‹ˆ íŠ¸ë¦¬ê±° OFF
 
         float currentAttackDelay =
             baseAttackDelay / attackSpeedMultiplier;
 
         yield return new WaitForSeconds(currentAttackDelay);
 
-        isAttacking = false; // °ø°İ Á¾·á ¡æ ÀÔ·Â ÇØÁ¦
+        isAttacking = false; // ê³µê²© ì¢…ë£Œ â†’ ì…ë ¥ í•´ì œ
     }
 
     /// <summary>
-    /// È­»ì »ı¼º ¹× ¹ß»ç Ã³¸®.
-    /// - ÇÃ·¹ÀÌ¾î ¹Ù¶óº¸´Â ¹æÇâ(dir)¿¡ µû¶ó À§Ä¡/È¸Àü °áÁ¤
-    /// - ÇÃ·¹ÀÌ¾î¿Í È­»ìÀÇ Ãæµ¹À» ¹«½ÃÇÏ¿© ÀÚ±â ÀÚ½Å°ú ºÎµúÈ÷´Â ¹®Á¦ ¹æÁö
-    /// - Rigidbody2D velocity¸¦ ÀÌ¿ëÇØ Á÷¼± ¹ß»ç
+    /// í™”ì‚´ ìƒì„± ë° ë°œì‚¬ ì²˜ë¦¬.
+    /// - í”Œë ˆì´ì–´ ë°”ë¼ë³´ëŠ” ë°©í–¥(dir)ì— ë”°ë¼ ìœ„ì¹˜/íšŒì „ ê²°ì •
+    /// - í”Œë ˆì´ì–´ì™€ í™”ì‚´ì˜ ì¶©ëŒì„ ë¬´ì‹œí•˜ì—¬ ìê¸° ìì‹ ê³¼ ë¶€ë”ªíˆëŠ” ë¬¸ì œ ë°©ì§€
+    /// - Rigidbody2D velocityë¥¼ ì´ìš©í•´ ì§ì„  ë°œì‚¬
     /// </summary>
     public void FireArrow()
     {
-        // ÇÊ¼ö ÂüÁ¶ Ã¼Å©
+        // í•„ìˆ˜ ì°¸ì¡° ì²´í¬
         if (arrowPrefab == null || firePoint == null)
         {
-            Debug.LogWarning("arrowPrefab ¶Ç´Â firePoint°¡ ¿¬°áµÇÁö ¾Ê¾Ò½À´Ï´Ù.");
+            Debug.LogWarning("arrowPrefab ë˜ëŠ” firePointê°€ ì—°ê²°ë˜ì§€ ì•Šì•˜ìŠµë‹ˆë‹¤.");
             return;
         }
 
-        // ÇÃ·¹ÀÌ¾î ¹æÇâ °è»ê (¿À¸¥ÂÊ: +1 / ¿ŞÂÊ: -1)
+        // í”Œë ˆì´ì–´ ë°©í–¥ ê³„ì‚° (ì˜¤ë¥¸ìª½: +1 / ì™¼ìª½: -1)
         float dir = playerController != null ? playerController.GetHorizontalFacingDir() : 1f;
 
-        // ¹ß»ç À§Ä¡ (ÇÃ·¹ÀÌ¾î ¾ÕÂÊÀ¸·Î ¾à°£ ÀÌµ¿)
+        // ë°œì‚¬ ìœ„ì¹˜ (í”Œë ˆì´ì–´ ì•ìª½ìœ¼ë¡œ ì•½ê°„ ì´ë™)
         Vector3 spawnPos = firePoint.position + new Vector3(dir * 0.3f, 0f, 0f);
 
-        // ¹æÇâ¿¡ µû¸¥ È¸Àü (½ºÇÁ¶óÀÌÆ® ±âÁØ º¸Á¤)
+        // ë°©í–¥ì— ë”°ë¥¸ íšŒì „ (ìŠ¤í”„ë¼ì´íŠ¸ ê¸°ì¤€ ë³´ì •)
         Quaternion rot = dir > 0f
-            ? Quaternion.Euler(0f, 0f, -90f) // ¿À¸¥ÂÊ
-            : Quaternion.Euler(0f, 0f, 90f); // ¿ŞÂÊ
+            ? Quaternion.Euler(0f, 0f, -90f) // ì˜¤ë¥¸ìª½
+            : Quaternion.Euler(0f, 0f, 90f); // ì™¼ìª½
 
-        // È­»ì »ı¼º
+        // í™”ì‚´ ìƒì„±
         GameObject arrow = Instantiate(arrowPrefab, spawnPos, rot);
 
-        // È­»ì Äİ¶óÀÌ´õ °¡Á®¿À±â
-        Collider2D arrowCol = arrow.GetComponent<Collider2D>();
-
-        // ÇÃ·¹ÀÌ¾îÀÇ ¸ğµç Äİ¶óÀÌ´õ °¡Á®¿À±â (ÀÚ½Ä Æ÷ÇÔ)
-        Collider2D[] playerCols = GetComponentsInChildren<Collider2D>();
-
-        // È­»ì ½ºÅ©¸³Æ® ÂüÁ¶ (¹æÇâ ¼³Á¤¿ë)
-        ArrowProjectile2D arrowProjectile = arrow.GetComponent<ArrowProjectile2D>();
-
-        // ¹æÇâ Á¤º¸ Àü´Ş (È­»ì ÀÚÃ¼ ·ÎÁ÷¿¡¼­ »ç¿ë)
-        if (arrowProjectile != null)
+        float launchSpeed = arrowSpeed;
+        if (hasPendingPowerShot)
         {
-            arrowProjectile.SetDirection(dir);
+            // [íŒŒì›Œ ìƒ· ì¶”ê°€] ì°¨ì§• ê²°ê³¼ë¥¼ ì´ë²ˆì— ìƒì„±ëœ í™”ì‚´ì—ë§Œ ì ìš©í•©ë‹ˆë‹¤.
+            arrow.transform.localScale *= pendingPowerShotScale;
+            launchSpeed = pendingPowerShotSpeed;
+            ApplyPowerShotArrowVisual(arrow, pendingPowerShotRatio);
+
+            // [íŒŒì›Œ ìƒ· ë°œì‚¬ ì§„ë™] ì™„ì¶©ë„ì— ë”°ë¼ ì•½í•œ ì¹´ë©”ë¼ í”ë“¤ë¦¼ì„ ì ìš©í•©ë‹ˆë‹¤.
+            if (cameraShake == null && Camera.main != null)
+                cameraShake = Camera.main.GetComponent<CameraShake2D>();
+            cameraShake?.Shake(
+                0.07f + pendingPowerShotRatio * 0.04f,
+                0.025f + pendingPowerShotRatio * 0.025f);
         }
 
-        // ÇÃ·¹ÀÌ¾î¿Í È­»ì Ãæµ¹ ¹«½Ã Ã³¸®
+        // í™”ì‚´ ì½œë¼ì´ë” ê°€ì ¸ì˜¤ê¸°
+        Collider2D arrowCol = arrow.GetComponent<Collider2D>();
+
+        // í”Œë ˆì´ì–´ì˜ ëª¨ë“  ì½œë¼ì´ë” ê°€ì ¸ì˜¤ê¸° (ìì‹ í¬í•¨)
+        Collider2D[] playerCols = GetComponentsInChildren<Collider2D>();
+
+        // í™”ì‚´ ìŠ¤í¬ë¦½íŠ¸ ì°¸ì¡° (ë°©í–¥ ì„¤ì •ìš©)
+        ArrowProjectile2D arrowProjectile = arrow.GetComponent<ArrowProjectile2D>();
+
+        // ë°©í–¥ ì •ë³´ ì „ë‹¬ (í™”ì‚´ ìì²´ ë¡œì§ì—ì„œ ì‚¬ìš©)
+        if (arrowProjectile != null)
+        {
+            if (hasPendingPowerShot)
+            {
+                arrowProjectile.Configure(
+                    pendingPowerShotDamage,
+                    dir,
+                    false);
+            }
+            else
+            {
+                arrowProjectile.SetDirection(dir);
+            }
+        }
+
+        // í”Œë ˆì´ì–´ì™€ í™”ì‚´ ì¶©ëŒ ë¬´ì‹œ ì²˜ë¦¬
         foreach (Collider2D col in playerCols)
         {
             if (arrowCol != null && col != null)
                 Physics2D.IgnoreCollision(arrowCol, col, true);
         }
 
-        // Rigidbody2D ±â¹İ ¹ß»ç (¼Óµµ Á÷Á¢ ÁöÁ¤)
+        // Rigidbody2D ê¸°ë°˜ ë°œì‚¬ (ì†ë„ ì§ì ‘ ì§€ì •)
         Rigidbody2D rb = arrow.GetComponent<Rigidbody2D>();
         if (rb != null)
         {
-            rb.velocity = new Vector2(dir * arrowSpeed, 0f);
+            rb.velocity = new Vector2(dir * launchSpeed, 0f);
         }
+
+
+        hasPendingPowerShot = false;
+    }
+
+    private void ApplyPowerShotArrowVisual(GameObject arrow, float power)
+    {
+        // [íŒŒì›Œ ìƒ· í™”ì‚´ ë³€í™”] ì›ë³¸ í”„ë¦¬íŒ¹ì€ ë³´ì¡´í•˜ê³  íŒŒì›Œ ìƒ· ì¸ìŠ¤í„´ìŠ¤ë§Œ ê°•í™”í•©ë‹ˆë‹¤.
+        SpriteRenderer arrowRenderer = arrow.GetComponent<SpriteRenderer>();
+        if (arrowRenderer != null)
+        {
+            arrowRenderer.color = Color.Lerp(
+                new Color(1f, 0.9f, 0.55f, 1f),
+                new Color(0.9f, 0.72f, 1f, 1f),
+                power);
+        }
+
+        TrailRenderer trail = arrow.GetComponentInChildren<TrailRenderer>(true);
+        if (trail == null)
+            return;
+
+        trail.time = Mathf.Lerp(0.22f, 0.34f, power);
+        trail.widthMultiplier *= Mathf.Lerp(1.25f, 1.65f, power);
+
+        Gradient gradient = new Gradient();
+        gradient.SetKeys(
+            new[]
+            {
+                new GradientColorKey(new Color(1f, 0.82f, 0.3f), 0f),
+                new GradientColorKey(new Color(0.62f, 0.38f, 1f), 1f)
+            },
+            new[]
+            {
+                new GradientAlphaKey(0.95f, 0f),
+                new GradientAlphaKey(0f, 1f)
+            });
+        trail.colorGradient = gradient;
+    }
+
+    private void PlayPowerShotChargeSound()
+    {
+        // [íŒŒì›Œ ìƒ· ì‚¬ìš´ë“œ ì—°ê²°] ë¹„ì–´ ìˆìœ¼ë©´ ì¡°ìš©íˆ ê±´ë„ˆë›°ë¯€ë¡œ Inspectorì—ì„œ ììœ ë¡­ê²Œ êµì²´í•  ìˆ˜ ìˆìŠµë‹ˆë‹¤.
+        if (powerShotAudioSource == null || powerShotChargeSound == null)
+            return;
+
+        powerShotAudioSource.Stop();
+        powerShotAudioSource.clip = powerShotChargeSound;
+        powerShotAudioSource.volume = powerShotChargeVolume;
+        powerShotAudioSource.loop = true;
+        powerShotAudioSource.Play();
+    }
+
+    private void StopPowerShotChargeSound()
+    {
+        if (powerShotAudioSource == null)
+            return;
+
+        powerShotAudioSource.Stop();
+        powerShotAudioSource.clip = null;
+        powerShotAudioSource.loop = false;
+    }
+
+    private void PlayPowerShotReleaseSound()
+    {
+        if (powerShotAudioSource == null || powerShotReleaseSound == null)
+            return;
+
+        powerShotAudioSource.PlayOneShot(
+            powerShotReleaseSound,
+            powerShotReleaseVolume);
     }
     /// <summary>
-    /// °ø°İ¼Óµµ ¹èÀ² Àû¿ë.
-    /// 1.5 ÀÔ·Â ½Ã °ø°İ ´ë±â½Ã°£ÀÌ ¾à 33% °¨¼ÒÇÕ´Ï´Ù.
+    /// ê³µê²©ì†ë„ ë°°ìœ¨ ì ìš©.
+    /// 1.5 ì…ë ¥ ì‹œ ê³µê²© ëŒ€ê¸°ì‹œê°„ì´ ì•½ 33% ê°ì†Œí•©ë‹ˆë‹¤.
     /// </summary>
     public void SetAttackSpeedMultiplier(float multiplier)
     {
@@ -132,7 +406,7 @@ public class PlayerAttack2D : MonoBehaviour
     }
 
     /// <summary>
-    /// °ø°İ¼Óµµ¸¦ ±âº» »óÅÂ·Î º¹±¸ÇÕ´Ï´Ù.
+    /// ê³µê²©ì†ë„ë¥¼ ê¸°ë³¸ ìƒíƒœë¡œ ë³µêµ¬í•©ë‹ˆë‹¤.
     /// </summary>
     public void ResetAttackSpeedMultiplier()
     {

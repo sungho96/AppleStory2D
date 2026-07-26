@@ -4,15 +4,16 @@ using UnityEngine;
 
 public class ArrowProjectile2D : MonoBehaviour
 {
-    [SerializeField] private int damage = 10;     // È­»ìÀÌ °¡ÇÏ´Â µ¥¹ÌÁö °ª
-    [SerializeField] private float lifeTime = 3f; // ÀÏÁ¤ ½Ã°£ ÈÄ ÀÚµ¿ Á¦°Å (¸Ş¸ğ¸® °ü¸®¿ë)
+    [SerializeField] private int damage = 10;     // í™”ì‚´ì´ ê°€í•˜ëŠ” ë°ë¯¸ì§€ ê°’
+    [SerializeField] private float lifeTime = 3f; // ì¼ì • ì‹œê°„ í›„ ìë™ ì œê±° (ë©”ëª¨ë¦¬ ê´€ë¦¬ìš©)
 
-    private float moveDir; // ¹ß»ç ¹æÇâ (1: ¿À¸¥ÂÊ / -1: ¿ŞÂÊ)
+    private float moveDir; // ë°œì‚¬ ë°©í–¥ (1: ì˜¤ë¥¸ìª½ / -1: ì™¼ìª½)
+    private bool applyHitReaction = true;
 
     /// <summary>
-    /// ÃÊ±â ½ÇÇà.
-    /// - È­»ìÀÌ ÀÏÁ¤ ½Ã°£ ÈÄ ÀÚµ¿À¸·Î »èÁ¦µÇµµ·Ï ¼³Á¤
-    /// - ¾À¿¡ ³²¾ÆÀÖ´Â ¹ß»çÃ¼ ´©Àû ¹æÁö (¼º´É °ü¸®)
+    /// ì´ˆê¸° ì‹¤í–‰.
+    /// - í™”ì‚´ì´ ì¼ì • ì‹œê°„ í›„ ìë™ìœ¼ë¡œ ì‚­ì œë˜ë„ë¡ ì„¤ì •
+    /// - ì”¬ì— ë‚¨ì•„ìˆëŠ” ë°œì‚¬ì²´ ëˆ„ì  ë°©ì§€ (ì„±ëŠ¥ ê´€ë¦¬)
     /// </summary>
     void Start()
     {
@@ -20,35 +21,43 @@ public class ArrowProjectile2D : MonoBehaviour
     }
 
     /// <summary>
-    /// Ãæµ¹ Ã³¸® (Trigger ±â¹İ).
-    /// - Ãæµ¹ÇÑ ´ë»ó¿¡¼­ GoblinHealth2D¸¦ Ã£¾Æ µ¥¹ÌÁö Àü´Ş
-    /// - ºÎ¸ğ±îÁö Å½»öÇÏ¿© Äİ¶óÀÌ´õ ±¸Á¶¿¡ À¯¿¬ÇÏ°Ô ´ëÀÀ
-    /// - Àû°ú Ãæµ¹ ½Ã Áï½Ã È­»ì Á¦°Å
+    /// ì¶©ëŒ ì²˜ë¦¬ (Trigger ê¸°ë°˜).
+    /// - ì¶©ëŒí•œ ëŒ€ìƒì—ì„œ GoblinHealth2Dë¥¼ ì°¾ì•„ ë°ë¯¸ì§€ ì „ë‹¬
+    /// - ë¶€ëª¨ê¹Œì§€ íƒìƒ‰í•˜ì—¬ ì½œë¼ì´ë” êµ¬ì¡°ì— ìœ ì—°í•˜ê²Œ ëŒ€ì‘
+    /// - ì ê³¼ ì¶©ëŒ ì‹œ ì¦‰ì‹œ í™”ì‚´ ì œê±°
     /// </summary>
     private void OnTriggerEnter2D(Collider2D other)
     {
-        // ºÎ¸ğ±îÁö Æ÷ÇÔÇÏ¿© Àû Ã¼·Â ÄÄÆ÷³ÍÆ® Å½»ö
+        // ë¶€ëª¨ê¹Œì§€ í¬í•¨í•˜ì—¬ ì  ì²´ë ¥ ì»´í¬ë„ŒíŠ¸ íƒìƒ‰
         GoblinHealth2D enemyHealth = other.GetComponentInParent<GoblinHealth2D>();
 
         if (enemyHealth != null)
         {
-            Debug.Log($"È­»ì Ãæµ¹ ´ë»ó : {other.name}");
+            Debug.Log($"í™”ì‚´ ì¶©ëŒ ëŒ€ìƒ : {other.name}");
 
-            // µ¥¹ÌÁö + ¹æÇâ Àü´Ş (³Ë¹é µî¿¡¼­ »ç¿ë °¡´É)
-            enemyHealth.TakeDamage(damage, moveDir);
+            // ë°ë¯¸ì§€ + ë°©í–¥ ì „ë‹¬ (ë„‰ë°± ë“±ì—ì„œ ì‚¬ìš© ê°€ëŠ¥)
+            enemyHealth.TakeDamage(damage, moveDir, applyHitReaction);
 
-            // Àû ¸íÁß ½Ã È­»ì Á¦°Å
+            // ì  ëª…ì¤‘ ì‹œ í™”ì‚´ ì œê±°
             Destroy(gameObject);
         }
     }
 
     /// <summary>
-    /// ¹ß»ç ¹æÇâ ¼³Á¤.
-    /// - PlayerAttack2D¿¡¼­ È­»ì »ı¼º Á÷ÈÄ È£ÃâµÊ
-    /// - ¹æÇâ °ªÀº ³Ë¹é ¹æÇâ, È÷Æ® È¿°ú µî¿¡ È°¿ëµÊ
+    /// ë°œì‚¬ ë°©í–¥ ì„¤ì •.
+    /// - PlayerAttack2Dì—ì„œ í™”ì‚´ ìƒì„± ì§í›„ í˜¸ì¶œë¨
+    /// - ë°©í–¥ ê°’ì€ ë„‰ë°± ë°©í–¥, íˆíŠ¸ íš¨ê³¼ ë“±ì— í™œìš©ë¨
     /// </summary>
     public void SetDirection(float dir)
     {
         moveDir = dir;
+    }
+
+    public void Configure(int configuredDamage, float dir, bool useHitReaction)
+    {
+        // [íŒŒì›Œ ìƒ· ì¶”ê°€] í™”ì‚´ ì¸ìŠ¤í„´ìŠ¤ë³„ í”¼í•´ì™€ í”¼ê²© ë°˜ì‘ì„ ì„¤ì •í•©ë‹ˆë‹¤.
+        damage = Mathf.Max(1, configuredDamage);
+        moveDir = Mathf.Sign(dir);
+        applyHitReaction = useHitReaction;
     }
 }

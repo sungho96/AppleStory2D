@@ -15759,6 +15759,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   animationManager: {fileID: 3280000191478180616}
+  quickStepSound: {fileID: 0}
 --- !u!114 &3197061422020926529
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -15777,6 +15778,17 @@ MonoBehaviour:
   arrowSpeed: 12
   playerController: {fileID: 7224375001734147463}
   baseAttackDelay: 0.4
+  powerShotMaxChargeDuration: 1.5
+  powerShotMinDamage: 18
+  powerShotMaxDamage: 45
+  powerShotMinSpeed: 14
+  powerShotMaxSpeed: 20
+  powerShotMinScale: 0.95
+  powerShotMaxScale: 1.45
+  powerShotChargeSound: {fileID: 0}
+  powerShotReleaseSound: {fileID: 0}
+  powerShotChargeVolume: 0.65
+  powerShotReleaseVolume: 0.85
 --- !u!114 &268150137115684623
 MonoBehaviour:
   m_ObjectHideFlags: 0
