@@ -15789,6 +15789,11 @@ MonoBehaviour:
   powerShotReleaseSound: {fileID: 0}
   powerShotChargeVolume: 0.65
   powerShotReleaseVolume: 0.85
+  rapidVolleyDamage: 8
+  rapidVolleyArrowSpeed: 16
+  rapidVolleyArrowScale: 0.9
+  rapidVolleyShotSound: {fileID: 0}
+  rapidVolleyShotVolume: 0.8
 --- !u!114 &268150137115684623
 MonoBehaviour:
   m_ObjectHideFlags: 0

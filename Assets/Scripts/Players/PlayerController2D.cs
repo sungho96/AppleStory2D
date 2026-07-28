@@ -32,6 +32,8 @@ public class PlayerController2D : MonoBehaviour
 
     private float moveInput;
     private float verticalInput;
+    private bool isHorizontalFacingLocked;
+    private float lockedHorizontalFacing = 1f;
 
     /// <summary>
     /// 공통 컴포넌트 및 분리 스크립트 캐싱.
@@ -129,7 +131,8 @@ public class PlayerController2D : MonoBehaviour
             quickStep.HandleStepMove();
 
             // [퀵 스텝 방향 수정] 이동 중에는 기존 방향을 유지하고, 종료 순간 이동한 방향을 바라봅니다.
-            if (wasStepping && !quickStep.IsStepping && direction != null)
+            if (wasStepping && !quickStep.IsStepping && direction != null &&
+                !isHorizontalFacingLocked)
             {
                 direction.SetFacingByHorizontalInput(quickStep.StepDirection);
             }
@@ -159,12 +162,20 @@ public class PlayerController2D : MonoBehaviour
         if (quickStep != null && quickStep.IsStepping)
             return;
 
+        // [래피드 볼리 방향 잠금] 3연사 중 반대 입력은 이동에만 사용하고 캐릭터 방향은 유지합니다.
+        if (isHorizontalFacingLocked)
+            return;
+
         direction.SetFacingByHorizontalInput(moveInput);
     }
 
     private void HandleQuickStepInput()
     {
         if (quickStep == null || direction == null)
+            return;
+
+        // [래피드 볼리 방향 잠금] 연사 도중 방향 더블 탭이 캐릭터를 뒤집지 않게 합니다.
+        if (isHorizontalFacingLocked)
             return;
 
         float tappedDirection = 0f;
@@ -272,10 +283,32 @@ public class PlayerController2D : MonoBehaviour
     /// </summary>
     public float GetHorizontalFacingDir()
     {
+        if (isHorizontalFacingLocked)
+            return lockedHorizontalFacing;
+
         if (direction == null)
             return 1f;
 
         return direction.GetHorizontalFacingDir();
+    }
+
+    public void LockHorizontalFacing(float facingDirection)
+    {
+        // [래피드 볼리 방향 잠금] 시작 순간의 좌우 방향을 세 발이 끝날 때까지 고정합니다.
+        lockedHorizontalFacing = facingDirection < 0f ? -1f : 1f;
+        isHorizontalFacingLocked = true;
+        direction?.SetFacingByHorizontalInput(lockedHorizontalFacing);
+    }
+
+    public void UnlockHorizontalFacing()
+    {
+        if (!isHorizontalFacingLocked)
+            return;
+
+        isHorizontalFacingLocked = false;
+
+        // [래피드 볼리 방향 해제] 종료 순간 누르고 있는 방향을 바로 반영합니다.
+        direction?.SetFacingByHorizontalInput(moveInput);
     }
 
     /// <summary>

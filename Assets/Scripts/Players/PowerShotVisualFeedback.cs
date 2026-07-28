@@ -93,19 +93,23 @@ public class PowerShotVisualFeedback : MonoBehaviour
         GameObject flash = CreateEffectSprite("PowerShotReleaseFlash", origin, sortingOrder + 12);
         SpriteRenderer flashRenderer = flash.GetComponent<SpriteRenderer>();
 
-        const int streakCount = 5;
+        // [파워 샷 강화] 발사 방향을 강조하는 속도선 수와 길이를 늘립니다.
+        const int streakCount = 8;
         GameObject[] streaks = new GameObject[streakCount];
         for (int i = 0; i < streakCount; i++)
         {
-            float yOffset = (i - 2) * 0.11f;
+            float yOffset = (i - 3.5f) * 0.1f;
             streaks[i] = CreateEffectSprite(
                 "PowerShotSpeedStreak",
                 origin + new Vector3(0f, yOffset, 0f),
                 sortingOrder + 11);
-            streaks[i].transform.localScale = new Vector3(0.6f + power * 0.45f, 0.055f, 1f);
+            streaks[i].transform.localScale = new Vector3(
+                0.9f + power * 0.75f,
+                i % 2 == 0 ? 0.075f : 0.045f,
+                1f);
         }
 
-        float duration = 0.16f + power * 0.05f;
+        float duration = 0.2f + power * 0.07f;
         float elapsed = 0f;
         while (elapsed < duration)
         {
@@ -113,15 +117,18 @@ public class PowerShotVisualFeedback : MonoBehaviour
             float ratio = Mathf.Clamp01(elapsed / duration);
             float alpha = 1f - ratio;
 
-            flash.transform.localScale = Vector3.one * Mathf.Lerp(0.25f, 1.05f + power * 0.35f, ratio);
-            flashRenderer.color = new Color(1f, 0.82f, 0.34f, alpha * 0.8f);
+            flash.transform.localScale = Vector3.one *
+                Mathf.Lerp(0.35f, 1.65f + power * 0.65f, ratio);
+            flashRenderer.color = new Color(1f, 0.82f, 0.34f, alpha * 0.92f);
 
             for (int i = 0; i < streakCount; i++)
             {
                 streaks[i].transform.position += Vector3.right * direction *
-                                                 (5.5f + i * 0.35f) * Time.deltaTime;
+                                                 (6.8f + i * 0.42f) * Time.deltaTime;
                 SpriteRenderer renderer = streaks[i].GetComponent<SpriteRenderer>();
-                renderer.color = new Color(0.72f, 0.52f, 1f, alpha * 0.72f);
+                renderer.color = i % 2 == 0
+                    ? new Color(1f, 0.76f, 0.28f, alpha * 0.88f)
+                    : new Color(0.7f, 0.46f, 1f, alpha * 0.82f);
             }
 
             yield return null;
@@ -140,7 +147,8 @@ public class PowerShotVisualFeedback : MonoBehaviour
             center,
             sortingOrder + 13);
 
-        const int sparkleCount = 8;
+        // [파워 샷 강화] 완충 순간의 별빛 수와 확산 범위를 늘립니다.
+        const int sparkleCount = 12;
         GameObject[] sparkles = new GameObject[sparkleCount];
         Vector3[] directions = new Vector3[sparkleCount];
         for (int i = 0; i < sparkleCount; i++)
@@ -151,27 +159,28 @@ public class PowerShotVisualFeedback : MonoBehaviour
                 "PowerShotFullChargeSparkle",
                 center,
                 sortingOrder + 14);
-            sparkles[i].transform.localScale = Vector3.one * 0.12f;
+            // [완충 반짝임 크기 확대] 배경 위에서도 보이도록 시작 크기를 키웁니다.
+            sparkles[i].transform.localScale = Vector3.one * 0.18f;
         }
 
         float elapsed = 0f;
-        const float duration = 0.28f;
+        const float duration = 0.34f;
         while (elapsed < duration)
         {
             elapsed += Time.deltaTime;
             float ratio = Mathf.Clamp01(elapsed / duration);
             float alpha = 1f - ratio;
 
-            flash.transform.localScale = Vector3.one * Mathf.Lerp(0.25f, 1.45f, ratio);
+            flash.transform.localScale = Vector3.one * Mathf.Lerp(0.45f, 2.85f, ratio);
             flash.GetComponent<SpriteRenderer>().color =
                 new Color(1f, 0.82f, 0.32f, alpha * 0.65f);
 
             for (int i = 0; i < sparkleCount; i++)
             {
                 sparkles[i].transform.position = center +
-                    directions[i] * Mathf.Lerp(0.15f, 0.85f, ratio);
+                    directions[i] * Mathf.Lerp(0.25f, 1.6f, ratio);
                 sparkles[i].transform.localScale = Vector3.one *
-                    Mathf.Lerp(0.15f, 0.035f, ratio);
+                    Mathf.Lerp(0.23f, 0.05f, ratio);
                 sparkles[i].GetComponent<SpriteRenderer>().color = Color.Lerp(
                     new Color(1f, 0.9f, 0.42f, alpha),
                     new Color(0.7f, 0.48f, 1f, alpha),

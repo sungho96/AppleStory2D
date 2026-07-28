@@ -39,16 +39,66 @@ public class KeySettingUIController : MonoBehaviour
 
     public void Toggle()
     {
-        keySettingUI.SetActive(!keySettingUI.activeSelf);
+        bool willOpen = !keySettingUI.activeSelf;
+        keySettingUI.SetActive(willOpen);
+        if (willOpen)
+            FitContentToCanvas();
     }
 
     public void Open()
     {
         keySettingUI.SetActive(true);
+        FitContentToCanvas();
     }
 
     public void Close()
     {
         keySettingUI.SetActive(false);
+    }
+
+    private void OnRectTransformDimensionsChange()
+    {
+        if (keySettingUI != null && keySettingUI.activeSelf)
+            FitContentToCanvas();
+    }
+
+    private void FitContentToCanvas()
+    {
+        if (keySettingUI == null)
+            return;
+
+        RectTransform content = keySettingUI.transform.Find("Content") as RectTransform;
+        RectTransform contentParent = content != null
+            ? content.parent as RectTransform
+            : null;
+        if (content == null || contentParent == null)
+            return;
+
+        Canvas.ForceUpdateCanvases();
+
+        content.localScale = Vector3.one;
+        content.anchoredPosition = Vector2.zero;
+        Bounds naturalBounds = RectTransformUtility.CalculateRelativeRectTransformBounds(
+            contentParent,
+            content);
+
+        // [Free Aspect 실제 Bounds 맞춤] 현재 렌더링되는 두 패널의 크기로 축소 비율을 계산합니다.
+        const float screenMargin = 0.96f;
+        float widthScale = contentParent.rect.width * screenMargin /
+            Mathf.Max(1f, naturalBounds.size.x);
+        float heightScale = contentParent.rect.height * screenMargin /
+            Mathf.Max(1f, naturalBounds.size.y);
+        float fitScale = Mathf.Min(1f, widthScale, heightScale);
+        content.localScale = Vector3.one * fitScale;
+
+        Canvas.ForceUpdateCanvases();
+        Bounds fittedBounds = RectTransformUtility.CalculateRelativeRectTransformBounds(
+            contentParent,
+            content);
+
+        // [Free Aspect 실제 중앙 정렬] 축소 후 보이는 Bounds 중심을 부모 화면 중심과 정확히 일치시킵니다.
+        Vector2 centerOffset = (Vector2)contentParent.rect.center -
+            (Vector2)fittedBounds.center;
+        content.anchoredPosition += centerOffset;
     }
 }

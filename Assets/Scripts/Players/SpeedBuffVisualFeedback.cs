@@ -8,9 +8,9 @@ public class SpeedBuffVisualFeedback : MonoBehaviour
 {
     [Header("Color")]
     [SerializeField] private Color flashColor = new Color(0.35f, 0.95f, 1f, 1f);
-    [Tooltip("잔상은 캐릭터보다 연하게 보여야 하므로 낮은 알파값을 사용합니다.")]
-    // [잔상 가시성 조정] 배경에서도 잔상의 형태를 알아볼 수 있도록 투명도를 소폭 높였습니다.
-    [SerializeField] private Color afterimageColor = new Color(0.55f, 0.9f, 1f, 0.38f);
+    [Tooltip("이동속도 버프 잔상의 색상과 선명도를 조절합니다.")]
+    // [이속 버프 잔상 강화] 밝은 배경에서도 캐릭터 형태가 읽히도록 채도와 알파를 높입니다.
+    [SerializeField] private Color afterimageColor = new Color(0.48f, 0.86f, 1f, 0.62f);
 
     [Header("Afterimage")]
     [SerializeField, Min(0.02f)] private float interval = 0.08f;
@@ -39,13 +39,51 @@ public class SpeedBuffVisualFeedback : MonoBehaviour
         originalColors.Clear();
         if (player == null) return;
 
-        foreach (SpriteRenderer source in player.GetComponentsInChildren<SpriteRenderer>(true))
+        // [이속 버프 잔상 복구] 플레이어 아래의 게이지·오라가 아니라 Left/Right 캐릭터 파츠만 복사합니다.
+        Transform leftVisual = player.Find("Left");
+        Transform rightVisual = player.Find("Right");
+        AddCharacterRenderers(leftVisual);
+        AddCharacterRenderers(rightVisual);
+
+        // 기존 캐릭터 구조가 Left/Right를 사용하지 않는 경우에만 안전한 이전 방식을 사용합니다.
+        if (sources.Count == 0)
+        {
+            foreach (SpriteRenderer source in player.GetComponentsInChildren<SpriteRenderer>(true))
+            {
+                if (IsRuntimeEffectRenderer(source))
+                    continue;
+
+                sources.Add(source);
+                originalColors.Add(source.color);
+            }
+        }
+
+        CalculateAfterimageSortingOrder();
+    }
+
+    private void AddCharacterRenderers(Transform visualRoot)
+    {
+        if (visualRoot == null)
+            return;
+
+        foreach (SpriteRenderer source in visualRoot.GetComponentsInChildren<SpriteRenderer>(true))
         {
             sources.Add(source);
             originalColors.Add(source.color);
         }
+    }
 
-        CalculateAfterimageSortingOrder();
+    private static bool IsRuntimeEffectRenderer(SpriteRenderer source)
+    {
+        if (source == null)
+            return true;
+
+        string objectName = source.gameObject.name;
+        return objectName.StartsWith("PowerShot") ||
+               objectName.StartsWith("RapidVolley") ||
+               objectName.Contains("Gauge") ||
+               objectName.Contains("Aura") ||
+               objectName.Contains("Effect");
     }
 
     public void PlayStart()
@@ -189,7 +227,9 @@ public class SpeedBuffVisualFeedback : MonoBehaviour
         while (elapsed < lifetime && ghostRoot != null)
         {
             elapsed += Time.deltaTime;
-            float alphaRatio = 1f - Mathf.Clamp01(elapsed / lifetime);
+            // [이속 버프 잔상 강화] 초반 선명도를 조금 더 오래 유지한 뒤 부드럽게 사라집니다.
+            float fadeRatio = 1f - Mathf.Clamp01(elapsed / lifetime);
+            float alphaRatio = Mathf.Sqrt(fadeRatio);
 
             foreach (SpriteRenderer ghost in ghosts)
             {

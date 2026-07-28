@@ -6,7 +6,8 @@ public enum KeySettingSkillType
     None,
     MoveSpeedBuff,
     AttackSpeedBuff,
-    PowerShot
+    PowerShot,
+    RapidVolley
 }
 
 public class KeyBindingManager : MonoBehaviour
@@ -84,8 +85,31 @@ public class KeyBindingManager : MonoBehaviour
         Debug.Log($"[키 설정] {keyName} 실행 스킬이 {skillType}(으)로 변경됐습니다.");
     }
 
+    public void Unassign(string keyName)
+    {
+        // [키 중복 배치 수정] 스킬이 다른 키로 이동하면 이전 키 바인딩을 제거합니다.
+        if (!TryConvertKeyCode(keyName, out KeyCode keyCode))
+            return;
+
+        keyBindings.Remove(keyCode);
+    }
+
     private void ExecuteSkill(KeySettingSkillType skillType)
     {
+        // [래피드 볼리 키매핑 복구] 공격 스킬은 버프 컨트롤러 검사와 분리해 직접 실행합니다.
+        if (skillType == KeySettingSkillType.RapidVolley)
+        {
+            if (playerAttack != null)
+                playerAttack.UseRapidVolley();
+            else
+                Debug.LogWarning("[키 설정] PlayerAttack2D가 연결되지 않았습니다.");
+            return;
+        }
+
+        // 파워샷은 Update에서 KeyDown/KeyUp을 따로 처리하므로 여기서는 실행하지 않습니다.
+        if (skillType == KeySettingSkillType.PowerShot)
+            return;
+
         if (speedBuffController == null)
         {
             Debug.LogWarning("[키 설정] SpeedBuffController가 연결되지 않았습니다.");
@@ -103,6 +127,7 @@ public class KeyBindingManager : MonoBehaviour
                 break;
 
             case KeySettingSkillType.PowerShot:
+            case KeySettingSkillType.RapidVolley:
                 break;
         }
     }
