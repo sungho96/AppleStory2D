@@ -5,8 +5,11 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/Winter.unity
     guid: 2cda990e2423bbf4892e6590ba056729
+  - enabled: 1
+    path: Assets/Scenes/NetworkTest.unity
+    guid: f3812030d3eb41741bd0e431a424f11f
   m_configObjects: {}
   m_UseUCBPForAssetBundles: 0
