@@ -1,15 +1,15 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class PlayerAttack2D : MonoBehaviour
 {
     [Header("Attack")]
-    [SerializeField] private Animator animator;              // 활 발사 애니메이션 제어용
-    [SerializeField] private GameObject arrowPrefab;         // 발사할 화살 프리팹
-    [SerializeField] private Transform firePoint;            // 화살 생성 위치
-    [SerializeField] private float arrowSpeed = 12f;         // 화살 속도
-    [SerializeField] private PlayerController2D playerController; // 바라보는 방향 참조용
+    [SerializeField] private Animator animator;              // ??諛쒖궗 ?좊땲硫붿씠???쒖뼱??
+    [SerializeField] private GameObject arrowPrefab;         // 諛쒖궗???붿궡 ?꾨━??
+    [SerializeField] private Transform firePoint;            // ?붿궡 ?앹꽦 ?꾩튂
+    [SerializeField] private float arrowSpeed = 12f;         // ?붿궡 ?띾룄
+    [SerializeField] private PlayerController2D playerController; // 諛붾씪蹂대뒗 諛⑺뼢 李몄“??
 
     [Header("Attack Speed")]
     [SerializeField] private float baseAttackDelay = 0.4f;
@@ -40,7 +40,7 @@ public class PlayerAttack2D : MonoBehaviour
 
     private float attackSpeedMultiplier = 1f;
 
-    private bool isAttacking; // 연타 방지 (공격 중 추가 입력 차단 플래그)
+    private bool isAttacking; // ?고? 諛⑹? (怨듦꺽 以?異붽? ?낅젰 李⑤떒 ?뚮옒洹?
     private bool isPowerShotCharging;
     private bool hasPendingPowerShot;
     private float powerShotChargeStartedAt;
@@ -48,10 +48,12 @@ public class PlayerAttack2D : MonoBehaviour
     private float pendingPowerShotSpeed;
     private float pendingPowerShotScale;
     private float pendingPowerShotRatio;
+    private bool ignoreNormalShotBowEvent;
     private PowerShotChargeGauge powerShotChargeGauge;
     private PowerShotVisualFeedback powerShotVisualFeedback;
     private PowerShotScreenFeedback powerShotScreenFeedback;
     private PowerShotLimbMotion powerShotLimbMotion;
+    private PlayerLadder2D ladder;
     private CameraShake2D cameraShake;
     private Coroutine powerShotChargeMotionCoroutine;
     private Transform powerShotMovingVisual;
@@ -63,28 +65,31 @@ public class PlayerAttack2D : MonoBehaviour
     private Transform rapidVolleyMovingVisual;
     private Vector3 rapidVolleyVisualOriginalPosition;
     private Vector3 rapidVolleyVisualOriginalScale;
+    private Vector3 rapidVolleyVisualBasePosition;
+    private Vector3 rapidVolleyVisualLocalOffset;
     private int rapidVolleyFiredMask;
     private RapidVolleyVisualFeedback rapidVolleyVisualFeedback;
     private RapidVolleyScreenFeedback rapidVolleyScreenFeedback;
     private float rapidVolleyDirection = 1f;
 
     /// <summary>
-    /// 초기 참조 설정.
-    /// - PlayerController2D가 비어 있을 경우 자동으로 같은 오브젝트에서 가져옴
-    /// - 공격 방향 계산(GetHorizontalFacingDir)에 사용됨
+    /// 珥덇린 李몄“ ?ㅼ젙.
+    /// - PlayerController2D媛 鍮꾩뼱 ?덉쓣 寃쎌슦 ?먮룞?쇰줈 媛숈? ?ㅻ툕?앺듃?먯꽌 媛?몄샂
+    /// - 怨듦꺽 諛⑺뼢 怨꾩궛(GetHorizontalFacingDir)???ъ슜??
     /// </summary>
     private void Awake()
     {
         if (playerController == null)
             playerController = GetComponent<PlayerController2D>();
+        ladder = GetComponent<PlayerLadder2D>();
 
-        // [파워 샷 게이지 추가] 씬 참조 없이 플레이어에 게이지를 자동 구성합니다.
+        // [?뚯썙 ??寃뚯씠吏 異붽?] ??李몄“ ?놁씠 ?뚮젅?댁뼱??寃뚯씠吏瑜??먮룞 援ъ꽦?⑸땲??
         powerShotChargeGauge = GetComponent<PowerShotChargeGauge>();
         if (powerShotChargeGauge == null)
             powerShotChargeGauge = gameObject.AddComponent<PowerShotChargeGauge>();
         powerShotChargeGauge.Initialize();
 
-        // [파워 샷 연출 추가] 차징 오라와 발사 섬광을 런타임으로 구성합니다.
+        // [?뚯썙 ???곗텧 異붽?] 李⑥쭠 ?ㅻ씪? 諛쒖궗 ?ш킅???고??꾩쑝濡?援ъ꽦?⑸땲??
         powerShotVisualFeedback = GetComponent<PowerShotVisualFeedback>();
         if (powerShotVisualFeedback == null)
             powerShotVisualFeedback = gameObject.AddComponent<PowerShotVisualFeedback>();
@@ -93,7 +98,7 @@ public class PlayerAttack2D : MonoBehaviour
         if (cameraShake == null && Camera.main != null)
             cameraShake = Camera.main.gameObject.AddComponent<CameraShake2D>();
 
-        // [파워 샷 화면 후처리] 별도 패키지 없이 카메라 줌·플래시·비네트를 자동 연결합니다.
+        // [?뚯썙 ???붾㈃ ?꾩쿂由? 蹂꾨룄 ?⑦궎吏 ?놁씠 移대찓??以뙿룻뵆?섏떆쨌鍮꾨꽕?몃? ?먮룞 ?곌껐?⑸땲??
         if (Camera.main != null)
         {
             powerShotScreenFeedback = Camera.main.GetComponent<PowerShotScreenFeedback>();
@@ -101,25 +106,25 @@ public class PlayerAttack2D : MonoBehaviour
                 powerShotScreenFeedback = Camera.main.gameObject.AddComponent<PowerShotScreenFeedback>();
             powerShotScreenFeedback.Initialize(Camera.main);
 
-            // [래피드 볼리 후처리] 별도 패키지 없이 카메라에 3연사 플래시와 줌 연출을 연결합니다.
+            // [?섑뵾??蹂쇰━ ?꾩쿂由? 蹂꾨룄 ?⑦궎吏 ?놁씠 移대찓?쇱뿉 3?곗궗 ?뚮옒?쒖? 以??곗텧???곌껐?⑸땲??
             rapidVolleyScreenFeedback = Camera.main.GetComponent<RapidVolleyScreenFeedback>();
             if (rapidVolleyScreenFeedback == null)
                 rapidVolleyScreenFeedback = Camera.main.gameObject.AddComponent<RapidVolleyScreenFeedback>();
             rapidVolleyScreenFeedback.Initialize(Camera.main);
         }
 
-        // [파워 샷 팔다리 애니메이션] 원본 클립을 보존하고 관절 보조 동작을 자동 연결합니다.
+        // [?뚯썙 ???붾떎由??좊땲硫붿씠?? ?먮낯 ?대┰??蹂댁〈?섍퀬 愿??蹂댁“ ?숈옉???먮룞 ?곌껐?⑸땲??
         powerShotLimbMotion = GetComponent<PowerShotLimbMotion>();
         if (powerShotLimbMotion == null)
             powerShotLimbMotion = gameObject.AddComponent<PowerShotLimbMotion>();
         powerShotLimbMotion.Initialize(playerController);
 
-        // [파워 샷 사운드 연결] 다른 플레이어 사운드와 섞이지 않는 전용 AudioSource를 사용합니다.
+        // [?뚯썙 ???ъ슫???곌껐] ?ㅻⅨ ?뚮젅?댁뼱 ?ъ슫?쒖? ?욎씠吏 ?딅뒗 ?꾩슜 AudioSource瑜??ъ슜?⑸땲??
         powerShotAudioSource = gameObject.AddComponent<AudioSource>();
         powerShotAudioSource.playOnAwake = false;
         powerShotAudioSource.spatialBlend = 0f;
 
-        // [래피드 볼리 이펙트] 씬 참조 없이 캐릭터 주변 연출을 자동 구성합니다.
+        // [?섑뵾??蹂쇰━ ?댄럺?? ??李몄“ ?놁씠 罹먮┃??二쇰? ?곗텧???먮룞 援ъ꽦?⑸땲??
         rapidVolleyVisualFeedback = GetComponent<RapidVolleyVisualFeedback>();
         if (rapidVolleyVisualFeedback == null)
             rapidVolleyVisualFeedback = gameObject.AddComponent<RapidVolleyVisualFeedback>();
@@ -127,14 +132,22 @@ public class PlayerAttack2D : MonoBehaviour
     }
 
     /// <summary>
-    /// 입력 처리 루프.
-    /// - LeftControl 입력 시 공격 코루틴 실행
-    /// - isAttacking을 통해 연속 입력(스팸 공격) 방지
+    /// ?낅젰 泥섎━ 猷⑦봽.
+    /// - LeftControl ?낅젰 ??怨듦꺽 肄붾（???ㅽ뻾
+    /// - isAttacking???듯빐 ?곗냽 ?낅젰(?ㅽ뙵 怨듦꺽) 諛⑹?
     /// </summary>
     private void Update()
     {
         if (isPowerShotCharging)
         {
+            bool jumpStarted = Input.GetButtonDown("Jump");
+            bool airborne = ladder != null && !ladder.IsGrounded;
+            if (jumpStarted || airborne)
+            {
+                CancelPowerShotCharge();
+                return;
+            }
+
             float chargeRatio = (Time.time - powerShotChargeStartedAt) /
                                 Mathf.Max(0.01f, powerShotMaxChargeDuration);
             powerShotChargeGauge.SetProgress(chargeRatio);
@@ -160,48 +173,78 @@ public class PlayerAttack2D : MonoBehaviour
 
     private IEnumerator RapidVolleyRoutine()
     {
-        // [래피드 볼리 전용 애니메이션] 화살은 Animation Event 세 곳에서 생성합니다.
+        // [?섑뵾??蹂쇰━ ?꾩슜 ?좊땲硫붿씠?? ?붿궡? Animation Event ??怨녹뿉???앹꽦?⑸땲??
         isRapidVolleyAttacking = true;
         isAttacking = true;
         rapidVolleyFiredMask = 0;
+        Transform rapidVolleyStartVisual = GetActiveDirectionVisual();
+        rapidVolleyVisualBasePosition = rapidVolleyStartVisual != null
+            ? rapidVolleyStartVisual.localPosition
+            : Vector3.zero;
+        rapidVolleyVisualLocalOffset = Vector3.zero;
+        rapidVolleyVisualFeedback?.SetRapidVolleyWorldOffset(Vector3.zero);
         rapidVolleyDirection = playerController != null
             ? playerController.GetHorizontalFacingDir()
             : 1f;
-        // [래피드 볼리 방향 고정] 시작 방향을 저장하고 세 발이 끝날 때까지 캐릭터 전환을 잠급니다.
+        // [?섑뵾??蹂쇰━ 諛⑺뼢 怨좎젙] ?쒖옉 諛⑺뼢????ν븯怨???諛쒖씠 ?앸궇 ?뚭퉴吏 罹먮┃???꾪솚???좉툒?덈떎.
         playerController?.LockHorizontalFacing(rapidVolleyDirection);
-        rapidVolleyVisualFeedback?.PlayCastEffect(rapidVolleyDirection);
+        rapidVolleyVisualFeedback?.PlayCastEffect(
+            rapidVolleyDirection,
+            GetRapidVolleyVisualWorldOffset());
         yield return null;
         animator.speed = 1f;
 
-        // [래피드 볼리 연결 안정화] Trigger와 함께 실제 Lower State 진입을 보장합니다.
-        // [래피드 볼리 수정] 전신 공격용 Complex 레이어의 상태를 직접 재생합니다.
-        int complexLayer = animator.GetLayerIndex("Complex");
-        int rapidVolleyStateHash = Animator.StringToHash("Complex.RapidVolley");
-        if (complexLayer >= 0 && animator.HasState(complexLayer, rapidVolleyStateHash))
+        // [?섑뵾??蹂쇰━ ?곌껐 ?덉젙?? Trigger? ?④퍡 ?ㅼ젣 Lower State 吏꾩엯??蹂댁옣?⑸땲??
+        // [?섑뵾??蹂쇰━ ?섏젙] ?꾩떊 怨듦꺽??Complex ?덉씠?댁쓽 ?곹깭瑜?吏곸젒 ?ъ깮?⑸땲??
+        // [Codex RapidVolley 마지막 복구] BowShot 기반 상체 애니메이션은 Upper 레이어에서 직접 재생합니다.
+        int upperLayer = animator.GetLayerIndex("Upper");
+        int rapidVolleyStateHash = Animator.StringToHash("Upper.RapidVolley");
+        bool canForceUpperRapidVolley =
+            upperLayer >= 0 && animator.HasState(upperLayer, rapidVolleyStateHash);
+        if (!canForceUpperRapidVolley && upperLayer >= 0)
         {
-            animator.ResetTrigger("RapidVolley");
-            animator.CrossFade(rapidVolleyStateHash, 0.02f, complexLayer, 0f);
+            rapidVolleyStateHash = Animator.StringToHash("RapidVolley");
+            canForceUpperRapidVolley = animator.HasState(upperLayer, rapidVolleyStateHash);
         }
-        else
+        if (canForceUpperRapidVolley)
         {
-            animator.SetTrigger("RapidVolley");
+            animator.CrossFade(rapidVolleyStateHash, 0.01f, upperLayer, 0f);
         }
 
-        // [래피드 볼리 수정] 팔을 올린 자세를 유지하는 동안 세 발을 발사합니다.
-        float[] eventTimes = { 0.25f, 0.43f, 0.61f };
+        // [?섑뵾??蹂쇰━ ?섏젙] ?붿쓣 ?щ┛ ?먯꽭瑜??좎??섎뒗 ?숈븞 ??諛쒖쓣 諛쒖궗?⑸땲??
+        float[] eventTimes = { 0.22f, 0.34f, 0.46f };
+        const float rapidVolleyHoldStartTime = 0.14f;
+        const float rapidVolleyReleaseStartTime = 0.5f;
+        const float rapidVolleyEndDelay = 0.72f;
+        bool rapidVolleyReleaseStarted = false;
         float elapsed = 0f;
-        while (elapsed < 0.86f)
+        while (elapsed < rapidVolleyEndDelay)
         {
             elapsed += Time.deltaTime;
 
-            // [래피드 볼리 발사 안전장치] 이벤트가 누락된 발만 개별적으로 복구합니다.
+            // [?섑뵾??蹂쇰━ 諛쒖궗 ?덉쟾?μ튂] ?대깽?멸? ?꾨씫??諛쒕쭔 媛쒕퀎?곸쑝濡?蹂듦뎄?⑸땲??
             for (int shotIndex = 0; shotIndex < eventTimes.Length; shotIndex++)
             {
                 int shotBit = 1 << shotIndex;
-                if (elapsed >= eventTimes[shotIndex] + 0.07f &&
+                if (elapsed >= eventTimes[shotIndex] &&
                     (rapidVolleyFiredMask & shotBit) == 0)
                 {
                     FireRapidVolleyAnimationEvent(shotIndex);
+                }
+            }
+
+            if (canForceUpperRapidVolley)
+            {
+                if (elapsed >= rapidVolleyHoldStartTime && elapsed < rapidVolleyReleaseStartTime)
+                {
+                    // [Codex RapidVolley 팔 유지 복구] 첫 발이 나가기 전부터 BowShot의 당긴 프레임을 고정해 끝나기 전까지 팔을 내리지 않습니다.
+                    animator.Play(rapidVolleyStateHash, upperLayer, 0.21f);
+                }
+                else if (!rapidVolleyReleaseStarted && elapsed >= rapidVolleyReleaseStartTime)
+                {
+                    // [Codex RapidVolley 애니메이션 복구] 세 번째 발 이후에는 활 내리는 구간으로 넘겨 마무리합니다.
+                    animator.Play(rapidVolleyStateHash, upperLayer, 0.76f);
+                    rapidVolleyReleaseStarted = true;
                 }
             }
 
@@ -224,22 +267,27 @@ public class PlayerAttack2D : MonoBehaviour
 
         rapidVolleyFiredMask |= shotBit;
 
-        // [래피드 볼리 전용 애니메이션] 활시위가 풀리는 실제 키프레임에서 발사합니다.
-        StartCoroutine(PlayRapidVolleyBodyKick(shotIndex));
+        // [?섑뵾??蹂쇰━ ?꾩슜 ?좊땲硫붿씠?? ?쒖떆?꾧? ?由щ뒗 ?ㅼ젣 ?ㅽ봽?덉엫?먯꽌 諛쒖궗?⑸땲??
+        // [Codex RapidVolley 마지막 복구] 3발마다 흔들지 않고 첫 발과 마지막 발에만 몸 반동을 줍니다.
+        if (shotIndex == 0 || shotIndex == 2)
+            StartCoroutine(PlayRapidVolleyBodyKick(shotIndex));
         SpawnRapidVolleyArrow(shotIndex);
         PlayRapidVolleyShotSound();
         float shotDirection = rapidVolleyDirection;
-        rapidVolleyVisualFeedback?.PlayShotEffect(shotIndex, shotDirection);
+        rapidVolleyVisualFeedback?.PlayShotEffect(
+            shotIndex,
+            shotDirection,
+            GetRapidVolleyVisualWorldOffset());
         rapidVolleyScreenFeedback?.PlayShot(shotIndex);
 
-        // [래피드 볼리 후처리] 매 발의 반동을 보여 주되 세 번째 발만 확실하게 강해집니다.
+        // [?섑뵾??蹂쇰━ ?꾩쿂由? 留?諛쒖쓽 諛섎룞??蹂댁뿬 二쇰릺 ??踰덉㎏ 諛쒕쭔 ?뺤떎?섍쾶 媛뺥빐吏묐땲??
         float shakeStrength = shotIndex == 2 ? 0.055f : 0.022f + shotIndex * 0.008f;
         cameraShake?.Shake(shotIndex == 2 ? 0.1f : 0.055f, shakeStrength);
     }
 
     private void PlayRapidVolleyShotSound()
     {
-        // [래피드 볼리 사운드] 화살이 생성될 때 같은 클립을 한 번씩, 총 세 번 재생합니다.
+        // [?섑뵾??蹂쇰━ ?ъ슫?? ?붿궡???앹꽦????媛숈? ?대┰????踰덉뵫, 珥???踰??ъ깮?⑸땲??
         if (powerShotAudioSource == null || rapidVolleyShotSound == null)
             return;
 
@@ -254,46 +302,61 @@ public class PlayerAttack2D : MonoBehaviour
         if (visualRoot == null)
             yield break;
 
-        // [래피드 볼리 리듬 애니메이션] 물리 루트가 아닌 현재 방향 캐릭터만 움직입니다.
+        // [?섑뵾??蹂쇰━ 由щ벉 ?좊땲硫붿씠?? 臾쇰━ 猷⑦듃媛 ?꾨땶 ?꾩옱 諛⑺뼢 罹먮┃?곕쭔 ?吏곸엯?덈떎.
         Vector3 originalPosition = visualRoot.localPosition;
         Vector3 originalScale = visualRoot.localScale;
         rapidVolleyMovingVisual = visualRoot;
         rapidVolleyVisualOriginalPosition = originalPosition;
         rapidVolleyVisualOriginalScale = originalScale;
+        rapidVolleyVisualBasePosition = originalPosition;
         float dir = rapidVolleyDirection;
+        bool isFirstShot = shotIndex == 0;
         bool isFinalShot = shotIndex == 2;
+        if (!isFirstShot && !isFinalShot)
+            yield break;
 
         float windupDistance = isFinalShot ? 0.08f : 0.045f;
         float snapDistance = isFinalShot ? 0.14f : 0.085f;
         float windupDuration = isFinalShot ? 0.055f : 0.035f;
         float snapDuration = 0.045f;
         float recoverDuration = isFinalShot ? 0.1f : 0.065f;
+        // [Codex RapidVolley 마지막 복구] 반동으로 밀린 위치를 유지하고 Left/Right 양쪽 비주얼 위치를 동기화합니다.
+        Vector3 recoilHoldPosition = originalPosition + Vector3.right * -dir * windupDistance;
 
-        yield return MoveRapidVolleyVisual(
-            visualRoot,
-            originalPosition,
-            originalPosition + Vector3.right * -dir * windupDistance,
-            originalScale,
-            isFinalShot ? new Vector3(originalScale.x * 0.97f, originalScale.y * 1.03f, originalScale.z) : originalScale,
-            windupDuration);
+        if (isFirstShot)
+        {
+            yield return MoveRapidVolleyVisual(
+                visualRoot,
+                originalPosition,
+                recoilHoldPosition,
+                originalScale,
+                originalScale,
+                windupDuration);
+
+            SetRapidVolleyVisualPosition(recoilHoldPosition);
+            visualRoot.localScale = originalScale;
+            if (rapidVolleyMovingVisual == visualRoot)
+                rapidVolleyMovingVisual = null;
+            yield break;
+        }
 
         yield return MoveRapidVolleyVisual(
             visualRoot,
             visualRoot.localPosition,
             originalPosition + Vector3.right * dir * snapDistance,
             visualRoot.localScale,
-            isFinalShot ? new Vector3(originalScale.x * 1.06f, originalScale.y * 0.95f, originalScale.z) : originalScale,
+            originalScale,
             snapDuration);
 
         yield return MoveRapidVolleyVisual(
             visualRoot,
             visualRoot.localPosition,
-            originalPosition,
+            recoilHoldPosition,
             visualRoot.localScale,
             originalScale,
             recoverDuration);
 
-        visualRoot.localPosition = originalPosition;
+        SetRapidVolleyVisualPosition(recoilHoldPosition);
         visualRoot.localScale = originalScale;
         if (rapidVolleyMovingVisual == visualRoot)
             rapidVolleyMovingVisual = null;
@@ -312,17 +375,38 @@ public class PlayerAttack2D : MonoBehaviour
         {
             elapsed += Time.deltaTime;
             float ratio = Mathf.Clamp01(elapsed / Mathf.Max(0.01f, duration));
-            // 부드러운 가감속으로 짧은 움직임도 끊겨 보이지 않게 합니다.
+            // 遺?쒕윭??媛媛먯냽?쇰줈 吏㏃? ?吏곸엫???딄꺼 蹂댁씠吏 ?딄쾶 ?⑸땲??
             float easedRatio = ratio * ratio * (3f - 2f * ratio);
-            target.localPosition = Vector3.LerpUnclamped(fromPosition, toPosition, easedRatio);
+            Vector3 syncedPosition = Vector3.LerpUnclamped(fromPosition, toPosition, easedRatio);
+            SetRapidVolleyVisualPosition(syncedPosition);
             target.localScale = Vector3.LerpUnclamped(fromScale, toScale, easedRatio);
             yield return null;
         }
     }
 
+    private void SetRapidVolleyVisualPosition(Vector3 position)
+    {
+        // [Codex RapidVolley 마지막 복구] 반동 이동 위치를 Left/Right 양쪽 비주얼 루트에 함께 적용합니다.
+        rapidVolleyVisualLocalOffset = position - rapidVolleyVisualBasePosition;
+        rapidVolleyVisualFeedback?.SetRapidVolleyWorldOffset(GetRapidVolleyVisualWorldOffset());
+        Transform left = transform.Find("Left");
+        if (left != null)
+            left.localPosition = position;
+
+        Transform right = transform.Find("Right");
+        if (right != null)
+            right.localPosition = position;
+    }
+
+    private Vector3 GetRapidVolleyVisualWorldOffset()
+    {
+        // [Codex RapidVolley 위치 보정] 비주얼 반동값을 화살과 이펙트 생성 기준에도 똑같이 반영합니다.
+        return transform.TransformVector(rapidVolleyVisualLocalOffset);
+    }
+
     private Transform GetActiveDirectionVisual()
     {
-        // [래피드 볼리 리듬 애니메이션] 현재 화면에 표시되는 좌우 캐릭터만 선택합니다.
+        // [?섑뵾??蹂쇰━ 由щ벉 ?좊땲硫붿씠?? ?꾩옱 ?붾㈃???쒖떆?섎뒗 醫뚯슦 罹먮┃?곕쭔 ?좏깮?⑸땲??
         Transform left = transform.Find("Left");
         if (left != null && left.gameObject.activeSelf)
             return left;
@@ -341,7 +425,7 @@ public class PlayerAttack2D : MonoBehaviour
             return;
         }
 
-        // [파워 샷 추가] 키를 누른 시점부터 차징 시간을 측정합니다.
+        // [?뚯썙 ??異붽?] ?ㅻ? ?꾨Ⅸ ?쒖젏遺??李⑥쭠 ?쒓컙??痢≪젙?⑸땲??
         isPowerShotCharging = true;
         powerShotChargeStartedAt = Time.time;
         powerShotChargeGauge.Show();
@@ -349,7 +433,7 @@ public class PlayerAttack2D : MonoBehaviour
         powerShotLimbMotion?.BeginCharge();
         PlayPowerShotChargeSound();
 
-        // [파워 샷 활 당기기] 기존 ShotBow 클립을 발사 직전 자세에서 정지시킵니다.
+        // [?뚯썙 ?????밴린湲? 湲곗〈 ShotBow ?대┰??諛쒖궗 吏곸쟾 ?먯꽭?먯꽌 ?뺤??쒗궢?덈떎.
         StartCoroutine(HoldPowerShotPose());
     }
 
@@ -375,11 +459,11 @@ public class PlayerAttack2D : MonoBehaviour
         pendingPowerShotScale = Mathf.Lerp(
             powerShotMinScale, powerShotMaxScale, chargeRatio);
         pendingPowerShotRatio = chargeRatio;
-        // [파워 샷 전신 연출] 차징 미세 동작을 정리한 뒤 발사 애니메이션을 이어갑니다.
+        // [?뚯썙 ???꾩떊 ?곗텧] 李⑥쭠 誘몄꽭 ?숈옉???뺣━????諛쒖궗 ?좊땲硫붿씠?섏쓣 ?댁뼱媛묐땲??
         StopPowerShotChargeMotion();
         powerShotLimbMotion?.EndCharge();
 
-        // [파워 샷 활 당기기] 멈춰 둔 애니메이션을 재개하면 기존 FireArrow 이벤트가 실행됩니다.
+        // [?뚯썙 ?????밴린湲? 硫덉떠 ???좊땲硫붿씠?섏쓣 ?ш컻?섎㈃ 湲곗〈 FireArrow ?대깽?멸? ?ㅽ뻾?⑸땲??
         animator.speed = 1f;
         powerShotVisualFeedback.Release(chargeRatio);
         PlayPowerShotReleaseSound();
@@ -389,16 +473,18 @@ public class PlayerAttack2D : MonoBehaviour
 
     private IEnumerator EnsurePowerShotFired()
     {
-        // [방향 전환 후 첫 발 안정화] Animation Event가 유실된 경우에만 한 번 보장 발사합니다.
+        // [Codex PowerShot 1.1] Animation Event가 유실된 경우에만 한 번 보장 발사합니다.
         yield return new WaitForSeconds(0.2f);
         if (hasPendingPowerShot)
+        {
             FireArrow();
+            ignoreNormalShotBowEvent = true;
+        }
     }
-
     private IEnumerator HoldPowerShotPose()
     {
-        // [방향 전환 후 첫 애니메이션 수정]
-        // PlayerController가 Left/Right 표시를 전환한 다음 프레임에 ShotBow를 시작합니다.
+        // [諛⑺뼢 ?꾪솚 ??泥??좊땲硫붿씠???섏젙]
+        // PlayerController媛 Left/Right ?쒖떆瑜??꾪솚???ㅼ쓬 ?꾨젅?꾩뿉 ShotBow瑜??쒖옉?⑸땲??
         yield return null;
         if (!isPowerShotCharging)
             yield break;
@@ -406,11 +492,13 @@ public class PlayerAttack2D : MonoBehaviour
         animator.speed = 1f;
         int shotBowHash = Animator.StringToHash("ShotBow");
 
-        // [방향 전환 후 첫 애니메이션 수정]
-        // 기존 Animator의 Action/SoloState 흐름을 유지하고, 실제 진입할 때까지 조건을 유지합니다.
-        animator.SetBool("ShotBow", true);
+        // [諛⑺뼢 ?꾪솚 ??泥??좊땲硫붿씠???섏젙]
+        // 湲곗〈 Animator??Action/SoloState ?먮쫫???좎??섍퀬, ?ㅼ젣 吏꾩엯???뚭퉴吏 議곌굔???좎??⑸땲??
+        // [Codex PowerShot 1.1] ShotBow??Trigger?대?濡?李⑥쭠 ?쒖옉 ????踰덈쭔 吏꾩엯?쒗궢?덈떎.
+        animator.ResetTrigger("ShotBow");
+        animator.SetTrigger("ShotBow");
 
-        // 실제 ShotBow 진행도를 확인한 뒤 발사 이벤트 전에 고정합니다.
+        // ?ㅼ젣 ShotBow 吏꾪뻾?꾨? ?뺤씤????諛쒖궗 ?대깽???꾩뿉 怨좎젙?⑸땲??
         float elapsed = 0f;
         while (isPowerShotCharging && elapsed < 0.45f)
         {
@@ -419,10 +507,7 @@ public class PlayerAttack2D : MonoBehaviour
                 AnimatorStateInfo state = animator.GetCurrentAnimatorStateInfo(layer);
                 if (state.shortNameHash == shotBowHash && state.normalizedTime >= 0.42f)
                 {
-                    animator.SetBool("ShotBow", false);
                     animator.speed = 0f;
-                    powerShotChargeMotionCoroutine =
-                        StartCoroutine(AnimatePowerShotChargePose());
                     yield break;
                 }
             }
@@ -431,7 +516,6 @@ public class PlayerAttack2D : MonoBehaviour
             yield return null;
         }
 
-        animator.SetBool("ShotBow", false);
     }
 
     private IEnumerator AnimatePowerShotChargePose()
@@ -454,7 +538,7 @@ public class PlayerAttack2D : MonoBehaviour
                 ? playerController.GetHorizontalFacingDir()
                 : 1f;
 
-            // [파워 샷 전신 연출] 호흡과 장력 떨림으로 차징 중 완전 정지를 방지합니다.
+            // [?뚯썙 ???꾩떊 ?곗텧] ?명씉怨??λ젰 ?⑤┝?쇰줈 李⑥쭠 以??꾩쟾 ?뺤?瑜?諛⑹??⑸땲??
             float breath = Mathf.Sin(Time.time * 7f);
             float tension = Mathf.Sin(Time.time * Mathf.Lerp(13f, 24f, chargeRatio));
             float drawPulse = Mathf.Sin(Time.time * 4.2f) * chargeRatio;
@@ -499,6 +583,24 @@ public class PlayerAttack2D : MonoBehaviour
         powerShotMovingVisual = null;
     }
 
+    private void CancelPowerShotCharge()
+    {
+        if (!isPowerShotCharging)
+            return;
+
+        // [Codex PowerShot 1.4] ?먰봽?섎㈃ ?뚯썙?룹쓣 諛쒖궗?섏? ?딄퀬 李⑥쭠 ?곹깭留?源⑤걮?섍쾶 ?댁젣?⑸땲??
+        isPowerShotCharging = false;
+        hasPendingPowerShot = false;
+        ignoreNormalShotBowEvent = false;
+        animator.speed = 1f;
+        animator.ResetTrigger("ShotBow");
+        StopPowerShotChargeMotion();
+        powerShotChargeGauge.Hide();
+        powerShotVisualFeedback.CancelCharge();
+        powerShotLimbMotion?.EndCharge();
+        StopPowerShotChargeSound();
+    }
+
     private IEnumerator PlayPowerShotFullBodyRecoil(float direction, float power)
     {
         Transform visualRoot = GetActiveDirectionVisual();
@@ -510,7 +612,7 @@ public class PlayerAttack2D : MonoBehaviour
         Quaternion originalRotation = visualRoot.localRotation;
         float recoilDistance = Mathf.Lerp(0.16f, 0.38f, power);
 
-        // [파워 샷 전신 강화] 아래·뒤로 강하게 압축되며 발사 충격을 전신으로 받습니다.
+        // [?뚯썙 ???꾩떊 媛뺥솕] ?꾨옒쨌?ㅻ줈 媛뺥븯寃??뺤텞?섎ŉ 諛쒖궗 異⑷꺽???꾩떊?쇰줈 諛쏆뒿?덈떎.
         yield return MovePowerShotVisual(
             visualRoot,
             originalPosition,
@@ -522,7 +624,7 @@ public class PlayerAttack2D : MonoBehaviour
             originalRotation * Quaternion.Euler(0f, 0f, -direction * Mathf.Lerp(5f, 10f, power)),
             Mathf.Lerp(0.05f, 0.075f, power));
 
-        // [파워 샷 전신 강화] 위·앞으로 튕기며 실루엣이 길어지는 스냅 동작입니다.
+        // [?뚯썙 ???꾩떊 媛뺥솕] ?꽷룹븵?쇰줈 ?뺢린硫??ㅻ（?ｌ씠 湲몄뼱吏???ㅻ깄 ?숈옉?낅땲??
         yield return MovePowerShotVisual(
             visualRoot,
             visualRoot.localPosition,
@@ -578,20 +680,22 @@ public class PlayerAttack2D : MonoBehaviour
         float currentAttackDelay = baseAttackDelay / attackSpeedMultiplier;
         yield return new WaitForSeconds(currentAttackDelay);
         isAttacking = false;
+        ignoreNormalShotBowEvent = false;
     }
 
     private void OnDisable()
     {
-        // [파워 샷 게이지 추가] 비활성화 중 게이지와 차징 상태가 남지 않게 정리합니다.
+        // [?뚯썙 ??寃뚯씠吏 異붽?] 鍮꾪솢?깊솕 以?寃뚯씠吏? 李⑥쭠 ?곹깭媛 ?⑥? ?딄쾶 ?뺣━?⑸땲??
         isPowerShotCharging = false;
         isRapidVolleyAttacking = false;
         isAttacking = false;
+        ignoreNormalShotBowEvent = false;
         playerController?.UnlockHorizontalFacing();
         animator.speed = 1f;
         StopPowerShotChargeMotion();
         if (rapidVolleyMovingVisual != null)
         {
-            rapidVolleyMovingVisual.localPosition = rapidVolleyVisualOriginalPosition;
+            SetRapidVolleyVisualPosition(rapidVolleyVisualOriginalPosition);
             rapidVolleyMovingVisual.localScale = rapidVolleyVisualOriginalScale;
             rapidVolleyMovingVisual = null;
         }
@@ -604,18 +708,18 @@ public class PlayerAttack2D : MonoBehaviour
     }
 
     /// <summary>
-    /// 활 발사 애니메이션 시퀀스.
-    /// - ShotBow Bool을 1프레임만 true로 설정하여 애니메이션 트리거 역할 수행
-    /// - 일정 시간 동안 입력을 잠가 중복 공격 방지
-    /// - 실제 화살 생성은 Animation Event에서 FireArrow()로 처리하는 구조
+    /// ??諛쒖궗 ?좊땲硫붿씠???쒗??
+    /// - ShotBow Bool??1?꾨젅?꾨쭔 true濡??ㅼ젙?섏뿬 ?좊땲硫붿씠???몃━嫄???븷 ?섑뻾
+    /// - ?쇱젙 ?쒓컙 ?숈븞 ?낅젰???좉? 以묐났 怨듦꺽 諛⑹?
+    /// - ?ㅼ젣 ?붿궡 ?앹꽦? Animation Event?먯꽌 FireArrow()濡?泥섎━?섎뒗 援ъ“
     /// </summary>
     private IEnumerator DoBowShot()
     {
         isAttacking = true; // 공격 시작 → 입력 잠금
 
-        animator.SetBool("ShotBow", true); // 발사 애니 시작
-        yield return null;                 // 1프레임 유지
-        animator.SetBool("ShotBow", false); // 애니 트리거 OFF
+        // [Codex PowerShot 1.1] ShotBow는 Bool이 아니라 Trigger로 한 번만 요청합니다.
+        animator.ResetTrigger("ShotBow");
+        animator.SetTrigger("ShotBow"); // 발사 애니 시작
 
         float currentAttackDelay =
             baseAttackDelay / attackSpeedMultiplier;
@@ -624,21 +728,22 @@ public class PlayerAttack2D : MonoBehaviour
 
         isAttacking = false; // 공격 종료 → 입력 해제
     }
-
     /// <summary>
-    /// 화살 생성 및 발사 처리.
-    /// - 플레이어 바라보는 방향(dir)에 따라 위치/회전 결정
-    /// - 플레이어와 화살의 충돌을 무시하여 자기 자신과 부딪히는 문제 방지
-    /// - Rigidbody2D velocity를 이용해 직선 발사
+    /// ?붿궡 ?앹꽦 諛?諛쒖궗 泥섎━.
+    /// - ?뚮젅?댁뼱 諛붾씪蹂대뒗 諛⑺뼢(dir)???곕씪 ?꾩튂/?뚯쟾 寃곗젙
+    /// - ?뚮젅?댁뼱? ?붿궡??異⑸룎??臾댁떆?섏뿬 ?먭린 ?먯떊怨?遺?ろ엳??臾몄젣 諛⑹?
+    /// - Rigidbody2D velocity瑜??댁슜??吏곸꽑 諛쒖궗
     /// </summary>
     private void SpawnRapidVolleyArrow(int shotIndex)
     {
         if (arrowPrefab == null || firePoint == null)
             return;
 
-        // [래피드 볼리 방향 고정] 세 화살 모두 스킬 시작 순간의 방향을 사용합니다.
+        // [?섑뵾??蹂쇰━ 諛⑺뼢 怨좎젙] ???붿궡 紐⑤몢 ?ㅽ궗 ?쒖옉 ?쒓컙??諛⑺뼢???ъ슜?⑸땲??
         float dir = rapidVolleyDirection;
-        Vector3 spawnPos = firePoint.position + new Vector3(dir * 0.3f, 0f, 0f);
+        Vector3 spawnPos = firePoint.position +
+            GetRapidVolleyVisualWorldOffset() +
+            new Vector3(dir * 0.3f, 0f, 0f);
         Quaternion rotation = dir > 0f
             ? Quaternion.Euler(0f, 0f, -90f)
             : Quaternion.Euler(0f, 0f, 90f);
@@ -672,7 +777,7 @@ public class PlayerAttack2D : MonoBehaviour
 
     private void ApplyRapidVolleyArrowVisual(GameObject arrow, bool isFinalShot)
     {
-        // [래피드 볼리 전용 연출] 청록색 화살과 보라색 꼬리로 아이콘 색감을 이어갑니다.
+        // [?섑뵾??蹂쇰━ ?꾩슜 ?곗텧] 泥?줉???붿궡怨?蹂대씪??瑗щ━濡??꾩씠肄??됯컧???댁뼱媛묐땲??
         SpriteRenderer arrowRenderer = arrow.GetComponent<SpriteRenderer>();
         if (arrowRenderer != null)
         {
@@ -705,40 +810,45 @@ public class PlayerAttack2D : MonoBehaviour
 
     public void FireArrow()
     {
-        // [래피드 볼리 중복 방지] ShotBow Animation Event는 무시하고 코루틴이 정확히 3발을 생성합니다.
+        // [?섑뵾??蹂쇰━ 以묐났 諛⑹?] ShotBow Animation Event??臾댁떆?섍퀬 肄붾（?댁씠 ?뺥솗??3諛쒖쓣 ?앹꽦?⑸땲??
         if (isRapidVolleyAttacking)
             return;
 
-        // 필수 참조 체크
+        // [Codex PowerShot 1.1] 차징 중 ShotBow 이벤트나 fallback 이후 늦게 들어온 이벤트가 평타를 만들지 않게 합니다.
+        if (isPowerShotCharging || ignoreNormalShotBowEvent)
+            return;
+
+        // ?꾩닔 李몄“ 泥댄겕
         if (arrowPrefab == null || firePoint == null)
         {
-            Debug.LogWarning("arrowPrefab 또는 firePoint가 연결되지 않았습니다.");
+            Debug.LogWarning("arrowPrefab ?먮뒗 firePoint媛 ?곌껐?섏? ?딆븯?듬땲??");
             return;
         }
 
-        // 플레이어 방향 계산 (오른쪽: +1 / 왼쪽: -1)
+        // ?뚮젅?댁뼱 諛⑺뼢 怨꾩궛 (?ㅻⅨ履? +1 / ?쇱そ: -1)
         float dir = playerController != null ? playerController.GetHorizontalFacingDir() : 1f;
 
-        // 발사 위치 (플레이어 앞쪽으로 약간 이동)
+        // 諛쒖궗 ?꾩튂 (?뚮젅?댁뼱 ?욎そ?쇰줈 ?쎄컙 ?대룞)
         Vector3 spawnPos = firePoint.position + new Vector3(dir * 0.3f, 0f, 0f);
 
-        // 방향에 따른 회전 (스프라이트 기준 보정)
+        // 諛⑺뼢???곕Ⅸ ?뚯쟾 (?ㅽ봽?쇱씠??湲곗? 蹂댁젙)
         Quaternion rot = dir > 0f
-            ? Quaternion.Euler(0f, 0f, -90f) // 오른쪽
-            : Quaternion.Euler(0f, 0f, 90f); // 왼쪽
+            ? Quaternion.Euler(0f, 0f, -90f) // ?ㅻⅨ履?
+            : Quaternion.Euler(0f, 0f, 90f); // ?쇱そ
 
-        // 화살 생성
+        // ?붿궡 ?앹꽦
         GameObject arrow = Instantiate(arrowPrefab, spawnPos, rot);
 
         float launchSpeed = arrowSpeed;
         if (hasPendingPowerShot)
         {
-            // [파워 샷 추가] 차징 결과를 이번에 생성된 화살에만 적용합니다.
+            ignoreNormalShotBowEvent = true;
+            // [?뚯썙 ??異붽?] 李⑥쭠 寃곌낵瑜??대쾲???앹꽦???붿궡?먮쭔 ?곸슜?⑸땲??
             arrow.transform.localScale *= pendingPowerShotScale;
             launchSpeed = pendingPowerShotSpeed;
             ApplyPowerShotArrowVisual(arrow, pendingPowerShotRatio);
 
-            // [파워 샷 발사 진동] 완충도에 따라 약한 카메라 흔들림을 적용합니다.
+            // [?뚯썙 ??諛쒖궗 吏꾨룞] ?꾩땐?꾩뿉 ?곕씪 ?쏀븳 移대찓???붾뱾由쇱쓣 ?곸슜?⑸땲??
             if (cameraShake == null && Camera.main != null)
                 cameraShake = Camera.main.GetComponent<CameraShake2D>();
             cameraShake?.Shake(
@@ -749,16 +859,16 @@ public class PlayerAttack2D : MonoBehaviour
             powerShotLimbMotion?.PlayRelease(pendingPowerShotRatio);
         }
 
-        // 화살 콜라이더 가져오기
+        // ?붿궡 肄쒕씪?대뜑 媛?몄삤湲?
         Collider2D arrowCol = arrow.GetComponent<Collider2D>();
 
-        // 플레이어의 모든 콜라이더 가져오기 (자식 포함)
+        // ?뚮젅?댁뼱??紐⑤뱺 肄쒕씪?대뜑 媛?몄삤湲?(?먯떇 ?ы븿)
         Collider2D[] playerCols = GetComponentsInChildren<Collider2D>();
 
-        // 화살 스크립트 참조 (방향 설정용)
+        // ?붿궡 ?ㅽ겕由쏀듃 李몄“ (諛⑺뼢 ?ㅼ젙??
         ArrowProjectile2D arrowProjectile = arrow.GetComponent<ArrowProjectile2D>();
 
-        // 방향 정보 전달 (화살 자체 로직에서 사용)
+        // 諛⑺뼢 ?뺣낫 ?꾨떖 (?붿궡 ?먯껜 濡쒖쭅?먯꽌 ?ъ슜)
         if (arrowProjectile != null)
         {
             if (hasPendingPowerShot)
@@ -774,14 +884,14 @@ public class PlayerAttack2D : MonoBehaviour
             }
         }
 
-        // 플레이어와 화살 충돌 무시 처리
+        // ?뚮젅?댁뼱? ?붿궡 異⑸룎 臾댁떆 泥섎━
         foreach (Collider2D col in playerCols)
         {
             if (arrowCol != null && col != null)
                 Physics2D.IgnoreCollision(arrowCol, col, true);
         }
 
-        // Rigidbody2D 기반 발사 (속도 직접 지정)
+        // Rigidbody2D 湲곕컲 諛쒖궗 (?띾룄 吏곸젒 吏??
         Rigidbody2D rb = arrow.GetComponent<Rigidbody2D>();
         if (rb != null)
         {
@@ -794,7 +904,7 @@ public class PlayerAttack2D : MonoBehaviour
 
     private void ApplyPowerShotArrowVisual(GameObject arrow, float power)
     {
-        // [파워 샷 화살 변화] 원본 프리팹은 보존하고 파워 샷 인스턴스만 강화합니다.
+        // [?뚯썙 ???붿궡 蹂?? ?먮낯 ?꾨━?뱀? 蹂댁〈?섍퀬 ?뚯썙 ???몄뒪?댁뒪留?媛뺥솕?⑸땲??
         SpriteRenderer arrowRenderer = arrow.GetComponent<SpriteRenderer>();
         if (arrowRenderer != null)
         {
@@ -828,7 +938,7 @@ public class PlayerAttack2D : MonoBehaviour
 
     private void PlayPowerShotChargeSound()
     {
-        // [파워 샷 사운드 연결] 비어 있으면 조용히 건너뛰므로 Inspector에서 자유롭게 교체할 수 있습니다.
+        // [?뚯썙 ???ъ슫???곌껐] 鍮꾩뼱 ?덉쑝硫?議곗슜??嫄대꼫?곕?濡?Inspector?먯꽌 ?먯쑀濡?쾶 援먯껜?????덉뒿?덈떎.
         if (powerShotAudioSource == null || powerShotChargeSound == null)
             return;
 
@@ -859,8 +969,8 @@ public class PlayerAttack2D : MonoBehaviour
             powerShotReleaseVolume);
     }
     /// <summary>
-    /// 공격속도 배율 적용.
-    /// 1.5 입력 시 공격 대기시간이 약 33% 감소합니다.
+    /// 怨듦꺽?띾룄 諛곗쑉 ?곸슜.
+    /// 1.5 ?낅젰 ??怨듦꺽 ?湲곗떆媛꾩씠 ??33% 媛먯냼?⑸땲??
     /// </summary>
     public void SetAttackSpeedMultiplier(float multiplier)
     {
@@ -868,7 +978,7 @@ public class PlayerAttack2D : MonoBehaviour
     }
 
     /// <summary>
-    /// 공격속도를 기본 상태로 복구합니다.
+    /// 怨듦꺽?띾룄瑜?湲곕낯 ?곹깭濡?蹂듦뎄?⑸땲??
     /// </summary>
     public void ResetAttackSpeedMultiplier()
     {

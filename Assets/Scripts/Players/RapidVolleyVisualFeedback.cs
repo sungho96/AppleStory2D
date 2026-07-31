@@ -7,6 +7,7 @@ public class RapidVolleyVisualFeedback : MonoBehaviour
     private Texture2D softCircleTexture;
     private int sortingLayerId;
     private int characterSortingOrder;
+    private Vector3 rapidVolleyWorldOffset;
 
     public static Color GetShotColor(int shotIndex)
     {
@@ -33,25 +34,41 @@ public class RapidVolleyVisualFeedback : MonoBehaviour
         CreateSoftCircleSprite();
     }
 
+    public void SetRapidVolleyWorldOffset(Vector3 worldOffset)
+    {
+        // [Codex RapidVolley 위치 보정] 캐스팅 오라가 반동 중인 캐릭터 비주얼 중심을 계속 따라가게 합니다.
+        rapidVolleyWorldOffset = worldOffset;
+    }
+
     public void PlayCastEffect(float direction)
+    {
+        PlayCastEffect(direction, Vector3.zero);
+    }
+
+    public void PlayCastEffect(float direction, Vector3 worldOffset)
     {
         if (softCircleSprite == null)
             Initialize();
 
-        StartCoroutine(PlayAura(direction));
+        StartCoroutine(PlayAura(direction, worldOffset));
     }
 
     public void PlayShotEffect(int shotIndex, float direction)
     {
+        PlayShotEffect(shotIndex, direction, Vector3.zero);
+    }
+
+    public void PlayShotEffect(int shotIndex, float direction, Vector3 worldOffset)
+    {
         if (softCircleSprite == null)
             Initialize();
 
-        StartCoroutine(PlayShotBurst(shotIndex, direction));
+        StartCoroutine(PlayShotBurst(shotIndex, direction, worldOffset));
     }
 
-    private IEnumerator PlayAura(float direction)
+    private IEnumerator PlayAura(float direction, Vector3 worldOffset)
     {
-        Vector3 center = transform.position + Vector3.up * 0.72f;
+        Vector3 center = transform.position + worldOffset + rapidVolleyWorldOffset + Vector3.up * 0.72f;
         GameObject aura = CreateEffect("RapidVolleyCastAura", center, characterSortingOrder - 2);
         GameObject crossSlashA = CreateEffect("RapidVolleyCrossSlashA", center, characterSortingOrder - 1);
         GameObject crossSlashB = CreateEffect("RapidVolleyCrossSlashB", center, characterSortingOrder - 1);
@@ -77,7 +94,8 @@ public class RapidVolleyVisualFeedback : MonoBehaviour
             float ratio = Mathf.Clamp01(elapsed / duration);
             float pulse = 1f + Mathf.Sin(ratio * Mathf.PI * 8f) * 0.1f;
             float alpha = Mathf.Sin(ratio * Mathf.PI);
-            center = transform.position + Vector3.up * 0.76f;
+            // [Codex RapidVolley 위치 보정] 캐릭터 비주얼이 반동으로 밀린 만큼 캐스팅 이펙트 중심도 같이 이동합니다.
+            center = transform.position + worldOffset + rapidVolleyWorldOffset + Vector3.up * 0.76f;
 
             aura.transform.position = center;
             // [래피드 볼리 조정] 중심 오라만 25% 줄이고 바깥 회전 궤도 크기는 유지합니다.
@@ -126,12 +144,13 @@ public class RapidVolleyVisualFeedback : MonoBehaviour
             Destroy(orbit);
     }
 
-    private IEnumerator PlayShotBurst(int shotIndex, float direction)
+    private IEnumerator PlayShotBurst(int shotIndex, float direction, Vector3 worldOffset)
     {
         bool finalShot = shotIndex == 2;
         float shotStrength = 1f + shotIndex * 0.22f;
         Color shotColor = GetShotColor(shotIndex);
-        Vector3 center = transform.position + new Vector3(direction * 0.18f, 0.78f, 0f);
+        // [Codex RapidVolley 위치 보정] 발사 순간의 반동 위치를 기준으로 섬광과 스파크를 생성합니다.
+        Vector3 center = transform.position + worldOffset + new Vector3(direction * 0.18f, 0.78f, 0f);
         GameObject flash = CreateEffect(
             "RapidVolleyBodyFlash", center, characterSortingOrder - 1);
         GameObject impactLineA = CreateEffect(

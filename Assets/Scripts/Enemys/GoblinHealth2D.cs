@@ -28,6 +28,11 @@ public class GoblinHealth2D : MonoBehaviour
     [SerializeField] private int expReward = 3;   // 처치 시 지급 EXP(메이플식: 몬스터가 보상값 소유)
     private bool isDead;                          // 중복 처치/중복 EXP 지급 방지
 
+    // Codex recovery compatibility: GoblinBoss scripts need read-only HP/death state.
+    public int CurrentHp => currentHp;
+    public int MaxHp => maxHp;
+    public bool IsDead => isDead;
+
     /// <summary>
     /// 초기 참조 캐싱.
     /// - GoblinController2D를 연결해 피격 시 이동/넉백 로직을 호출할 준비를 함

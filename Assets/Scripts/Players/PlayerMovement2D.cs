@@ -65,6 +65,18 @@ public class PlayerMovement2D : MonoBehaviour
         moveSpeedMultiplier = 1f;
     }
 
+    // Codex recovery compatibility: boss ice slow uses the existing move speed multiplier.
+    public void SetSlowMultiplier(float multiplier)
+    {
+        SetMoveSpeedMultiplier(multiplier);
+    }
+
+    // Codex recovery compatibility: reset boss ice slow back to the default move speed.
+    public void ResetSlowMultiplier()
+    {
+        ResetmoveSpeedMultiplier();
+    }
+
     /// <summary>
     /// 점프 처리.
     /// - 현재 x 속도는 유지하고 y만 점프 속도로 변경
