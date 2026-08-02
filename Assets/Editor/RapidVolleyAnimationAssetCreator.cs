@@ -16,12 +16,6 @@ public static class RapidVolleyAnimationAssetCreator
         "Assets/_Project/Player/Common/Animation/Controller.controller";
     private const string StateName = "RapidVolley";
 
-    static RapidVolleyAnimationAssetCreator()
-    {
-        // [Codex RapidVolley 마지막 복구] Unity 컴파일 후 BowShot 기반 래피드 볼리 상체 클립을 확인합니다.
-        EditorApplication.delayCall += EnsureAnimationAsset;
-    }
-
     [MenuItem("Tools/AppleStory/Create Rapid Volley Animation")]
     public static void EnsureAnimationAsset()
     {
