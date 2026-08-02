@@ -1,10 +1,10 @@
 using UnityEngine;
 
 /// <summary>
-/// 방향 전용 처리.
-/// - Left / Right / Front / Back 자식 오브젝트 캐싱
-/// - 방향 상태 변경
-/// - 해당 방향 오브젝트만 활성화
+/// Handles the visible facing direction objects.
+/// - Caches Left / Right / Front / Back child objects.
+/// - Keeps the current facing state.
+/// - Enables only the object for the current direction.
 /// </summary>
 public class PlayerDirection2D : MonoBehaviour
 {
@@ -23,8 +23,10 @@ public class PlayerDirection2D : MonoBehaviour
 
     private FacingDir currentDir = FacingDir.Right;
 
+    public FacingDir CurrentDir => currentDir;
+
     /// <summary>
-    /// 방향 오브젝트 캐싱 후 초기 적용.
+    /// Cache direction objects and apply the initial state.
     /// </summary>
     public void Initialize()
     {
@@ -33,7 +35,7 @@ public class PlayerDirection2D : MonoBehaviour
     }
 
     /// <summary>
-    /// 수평 입력 기반 좌/우 방향 갱신.
+    /// Update left/right facing from horizontal input.
     /// </summary>
     public void SetFacingByHorizontalInput(float moveInput)
     {
@@ -44,17 +46,23 @@ public class PlayerDirection2D : MonoBehaviour
     }
 
     /// <summary>
-    /// 사다리 등반 등 뒤를 보게 해야 할 때 사용.
+    /// Use when the player should face backward, such as ladder climbing.
     /// </summary>
     public void SetBack()
     {
         SetDirection(FacingDir.Back);
     }
 
+    public void SetDirectionFromNetwork(FacingDir dir)
+    {
+        // Codex: Apply only the visual direction state that NetworkAnimator does not synchronize.
+        SetDirection(dir);
+    }
+
     /// <summary>
-    /// 현재 좌우 방향값 반환.
+    /// Returns the current horizontal facing value.
     /// - Left = -1
-    /// - 나머지 = 1
+    /// - Others = 1
     /// </summary>
     public float GetHorizontalFacingDir()
     {
@@ -65,7 +73,7 @@ public class PlayerDirection2D : MonoBehaviour
     }
 
     /// <summary>
-    /// 방향 상태 변경 후 표시 적용.
+    /// Change direction state and refresh visibility.
     /// </summary>
     private void SetDirection(FacingDir dir)
     {
@@ -77,7 +85,7 @@ public class PlayerDirection2D : MonoBehaviour
     }
 
     /// <summary>
-    /// 현재 방향에 해당하는 오브젝트만 활성화.
+    /// Enables only the object that matches the current direction.
     /// </summary>
     private void ApplyDirection()
     {
@@ -88,7 +96,7 @@ public class PlayerDirection2D : MonoBehaviour
     }
 
     /// <summary>
-    /// 방향 표시용 자식 Transform 캐싱.
+    /// Cache child transforms used for direction display.
     /// </summary>
     private void CacheDirectionTransforms()
     {

@@ -70,7 +70,7 @@ public class GoblinBossCombatController2D : MonoBehaviour
         FacePlayer();
 
         if (rb != null)
-            rb.velocity = new Vector2(0f, rb.velocity.y);
+            rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
         if (animationManager != null)
         {
             animationManager.SetState(CharacterState.Idle);
@@ -153,7 +153,7 @@ public class GoblinBossCombatController2D : MonoBehaviour
             return;
 
         float horizontalVelocity = isCasting ? 0f : moveDirection * approachSpeed;
-        rb.velocity = new Vector2(horizontalVelocity, rb.velocity.y);
+        rb.linearVelocity = new Vector2(horizontalVelocity, rb.linearVelocity.y);
     }
 
     private void LateUpdate()
@@ -203,7 +203,7 @@ public class GoblinBossCombatController2D : MonoBehaviour
         FacePlayer();
 
         if (rb != null)
-            rb.velocity = new Vector2(0f, rb.velocity.y);
+            rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
         if (animationManager != null)
         {
             animationManager.SetState(CharacterState.Idle);

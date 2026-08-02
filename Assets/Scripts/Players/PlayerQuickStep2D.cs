@@ -121,7 +121,7 @@ public class PlayerQuickStep2D : MonoBehaviour
         quickStepVisual?.PlayStart(stepDirection);
 
         // 이전 일반 이동 속도가 스텝 거리에 섞이지 않도록 수평 속도만 정리합니다.
-        rb.velocity = new Vector2(0f, rb.velocity.y);
+        rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
     }
 
     private float GetSafeStepDistance(float direction, float requestedDistance)

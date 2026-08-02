@@ -1,53 +1,36 @@
-using System.Collections;
-using System.Collections.Generic;
+using Unity.Netcode;
 using UnityEngine;
 
-public class ArrowProjectile2D : MonoBehaviour
+public class ArrowProjectile2D : NetworkBehaviour
 {
-    [SerializeField] private int damage = 10;     // 화살이 가하는 데미지 값
-    [SerializeField] private float lifeTime = 3f; // 일정 시간 후 자동 제거 (메모리 관리용)
+    [SerializeField] private int damage = 10;
+    [SerializeField] private float lifeTime = 3f;
 
-    private float moveDir; // 발사 방향 (1: 오른쪽 / -1: 왼쪽)
+    private float moveDir;
     private bool applyHitReaction = true;
 
-    /// <summary>
-    /// 초기 실행.
-    /// - 화살이 일정 시간 후 자동으로 삭제되도록 설정
-    /// - 씬에 남아있는 발사체 누적 방지 (성능 관리)
-    /// </summary>
-    void Start()
+    private void Start()
     {
-        Destroy(gameObject, lifeTime);
+        if (IsNetworkActive() && !IsServer)
+            return;
+
+        Invoke(nameof(Expire), lifeTime);
     }
 
-    /// <summary>
-    /// 충돌 처리 (Trigger 기반).
-    /// - 충돌한 대상에서 GoblinHealth2D를 찾아 데미지 전달
-    /// - 부모까지 탐색하여 콜라이더 구조에 유연하게 대응
-    /// - 적과 충돌 시 즉시 화살 제거
-    /// </summary>
     private void OnTriggerEnter2D(Collider2D other)
     {
-        // 부모까지 포함하여 적 체력 컴포넌트 탐색
+        if (IsNetworkActive() && !IsServer)
+            return;
+
         GoblinHealth2D enemyHealth = other.GetComponentInParent<GoblinHealth2D>();
+        if (enemyHealth == null)
+            return;
 
-        if (enemyHealth != null)
-        {
-            Debug.Log($"화살 충돌 대상 : {other.name}");
-
-            // 데미지 + 방향 전달 (넉백 등에서 사용 가능)
-            enemyHealth.TakeDamage(damage, moveDir, applyHitReaction);
-
-            // 적 명중 시 화살 제거
-            Destroy(gameObject);
-        }
+        Debug.Log($"Arrow hit target: {other.name}");
+        enemyHealth.TakeDamage(damage, moveDir, applyHitReaction);
+        DespawnOrDestroy();
     }
 
-    /// <summary>
-    /// 발사 방향 설정.
-    /// - PlayerAttack2D에서 화살 생성 직후 호출됨
-    /// - 방향 값은 넉백 방향, 히트 효과 등에 활용됨
-    /// </summary>
     public void SetDirection(float dir)
     {
         moveDir = dir;
@@ -55,9 +38,52 @@ public class ArrowProjectile2D : MonoBehaviour
 
     public void Configure(int configuredDamage, float dir, bool useHitReaction)
     {
-        // [파워 샷 추가] 화살 인스턴스별 피해와 피격 반응을 설정합니다.
+        Configure(configuredDamage, dir, useHitReaction, 0f);
+    }
+
+    public void Configure(int configuredDamage, float dir, bool useHitReaction, float speed)
+    {
         damage = Mathf.Max(1, configuredDamage);
         moveDir = Mathf.Sign(dir);
         applyHitReaction = useHitReaction;
+
+        Rigidbody2D rigidbody = GetComponent<Rigidbody2D>();
+        if (rigidbody == null)
+            return;
+
+        rigidbody.linearVelocity = new Vector2(moveDir * speed, 0f);
+    }
+
+    [ClientRpc]
+    public void ApplyVelocityClientRpc(float dir, float speed)
+    {
+        // Codex: Apply movement after NetworkObject.Spawn so clients never write pre-spawn NetworkVariables.
+        moveDir = Mathf.Sign(dir);
+
+        Rigidbody2D rigidbody = GetComponent<Rigidbody2D>();
+        if (rigidbody != null)
+            rigidbody.linearVelocity = new Vector2(moveDir * speed, 0f);
+    }
+
+    private void Expire()
+    {
+        DespawnOrDestroy();
+    }
+
+    private void DespawnOrDestroy()
+    {
+        NetworkObject networkObject = GetComponent<NetworkObject>();
+        if (networkObject != null && networkObject.IsSpawned)
+        {
+            networkObject.Despawn(true);
+            return;
+        }
+
+        Destroy(gameObject);
+    }
+
+    private bool IsNetworkActive()
+    {
+        return NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening;
     }
 }

@@ -7,14 +7,14 @@ using Assets.HeroEditor4D.Common.Scripts.Enums;
 public class GoblinController2D : MonoBehaviour
 {
     [Header("Move")]
-    [SerializeField] private float moveSpeed = 2f;        // ±âº» ÀÌµ¿ ¼Óµµ
-    [SerializeField] private float speedVariance = 0.4f;  // ¹æÇâ ÀüÈ¯ ¶§¸¶´Ù ¼Óµµ ·£´ý ÆíÂ÷
-    [SerializeField] private float patrolMinTime = 1.2f;  // ¼øÂû ÃÖ¼Ò ½Ã°£
-    [SerializeField] private float patrolMaxTime = 3.1f;  // ¼øÂû ÃÖ´ë ½Ã°£
+    [SerializeField] private float moveSpeed = 2f;        // ï¿½âº» ï¿½Ìµï¿½ ï¿½Óµï¿½
+    [SerializeField] private float speedVariance = 0.4f;  // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½È¯ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Óµï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+    [SerializeField] private float patrolMinTime = 1.2f;  // ï¿½ï¿½ï¿½ï¿½ ï¿½Ö¼ï¿½ ï¿½Ã°ï¿½
+    [SerializeField] private float patrolMaxTime = 3.1f;  // ï¿½ï¿½ï¿½ï¿½ ï¿½Ö´ï¿½ ï¿½Ã°ï¿½
 
     [Header("Refs")]
-    [SerializeField] private AnimationManager animationManager; // ÀÌµ¿/´ë±â ¾Ö´Ï¸ÞÀÌ¼Ç Á¦¾î
-    [SerializeField] private Rigidbody2D rb;                    // ¹°¸® ÀÌµ¿ Ã³¸®
+    [SerializeField] private AnimationManager animationManager; // ï¿½Ìµï¿½/ï¿½ï¿½ï¿½ ï¿½Ö´Ï¸ï¿½ï¿½Ì¼ï¿½ ï¿½ï¿½ï¿½ï¿½
+    [SerializeField] private Rigidbody2D rb;                    // ï¿½ï¿½ï¿½ï¿½ ï¿½Ìµï¿½ Ã³ï¿½ï¿½
     [SerializeField] private float hitStunDuration = 0.15f;
 
     [Header("Knockback")]
@@ -26,22 +26,22 @@ public class GoblinController2D : MonoBehaviour
     [SerializeField] private float knockbackForceX = 11f;
     [SerializeField] private float knockbackForceY = 4.5f;
 
-    private Transform tLeft;   // ¿ÞÂÊ ¹æÇâ ºñÁÖ¾ó
-    private Transform tRight;  // ¿À¸¥ÂÊ ¹æÇâ ºñÁÖ¾ó
+    private Transform tLeft;   // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ö¾ï¿½
+    private Transform tRight;  // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ö¾ï¿½
 
-    private float patrolTimer;        // ÇöÀç ¹æÇâ À¯Áö ½Ã°£ ´©Àû
-    private float currentPatrolTime;  // ÀÌ¹ø ¼øÂû ±¸°£ Áö¼Ó ½Ã°£
-    private int moveDir = 1;          // ÀÌµ¿ ¹æÇâ(+1 ¿À¸¥ÂÊ / -1 ¿ÞÂÊ)
-    private float currentMoveSpeed;   // ÇöÀç ±¸°£ ½ÇÁ¦ ÀÌµ¿ ¼Óµµ
+    private float patrolTimer;        // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½ ï¿½ï¿½ï¿½ï¿½
+    private float currentPatrolTime;  // ï¿½Ì¹ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½
+    private int moveDir = 1;          // ï¿½Ìµï¿½ ï¿½ï¿½ï¿½ï¿½(+1 ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ / -1 ï¿½ï¿½ï¿½ï¿½)
+    private float currentMoveSpeed;   // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ìµï¿½ ï¿½Óµï¿½
     private bool isHitStun;
 
     private bool isKnockback;
     private float knockbackDir;
     /// <summary>
-    /// ÂüÁ¶ Ä³½Ì ¹× ÃÊ±â ¼øÂû°ª ¼³Á¤.
-    /// - Rigidbody2D / AnimationManager ÀÚµ¿ ¿¬°á
-    /// - Left/Right ¹æÇâ ¿ÀºêÁ§Æ® Ä³½Ì
-    /// - ½ÃÀÛ ¼øÂû ½Ã°£/ÀÌµ¿ ¼Óµµ¸¦ ·£´ýÀ¸·Î ¼³Á¤
+    /// ï¿½ï¿½ï¿½ï¿½ Ä³ï¿½ï¿½ ï¿½ï¿½ ï¿½Ê±ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½.
+    /// - Rigidbody2D / AnimationManager ï¿½Úµï¿½ ï¿½ï¿½ï¿½ï¿½
+    /// - Left/Right ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ® Ä³ï¿½ï¿½
+    /// - ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½/ï¿½Ìµï¿½ ï¿½Óµï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     /// </summary>
     private void Awake()
     {
@@ -61,10 +61,10 @@ public class GoblinController2D : MonoBehaviour
     }
 
     /// <summary>
-    /// ¼øÂû Å¸ÀÌ¸Ó °»½Å.
-    /// - currentPatrolTimeÀÌ Áö³ª¸é ¹æÇâ ¹ÝÀü
-    /// - ¹ÝÀü ½Ã ´ÙÀ½ ¼øÂû ½Ã°£/ÀÌµ¿ ¼Óµµ¸¦ ´Ù½Ã ·£´ý ¼³Á¤
-    /// - ¾Ö´Ï¸ÞÀÌ¼Ç »óÅÂµµ ÇÔ²² °»½Å
+    /// ï¿½ï¿½ï¿½ï¿½ Å¸ï¿½Ì¸ï¿½ ï¿½ï¿½ï¿½ï¿½.
+    /// - currentPatrolTimeï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+    /// - ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½/ï¿½Ìµï¿½ ï¿½Óµï¿½ï¿½ï¿½ ï¿½Ù½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+    /// - ï¿½Ö´Ï¸ï¿½ï¿½Ì¼ï¿½ ï¿½ï¿½ï¿½Âµï¿½ ï¿½Ô²ï¿½ ï¿½ï¿½ï¿½ï¿½
     /// </summary>
     private void Update()
     {
@@ -75,7 +75,7 @@ public class GoblinController2D : MonoBehaviour
             patrolTimer = 0f;
             moveDir *= -1;
 
-            // ¹æÇâÀ» ¹Ù²Ü ¶§¸¶´Ù ¼Óµµ/Áö¼Ó ½Ã°£¿¡ º¯È­¸¦ ÁÜ
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ù²ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Óµï¿½/ï¿½ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½ï¿½ï¿½ ï¿½ï¿½È­ï¿½ï¿½ ï¿½ï¿½
             currentMoveSpeed = moveSpeed + Random.Range(-speedVariance, speedVariance);
             currentPatrolTime = Random.Range(patrolMinTime, patrolMaxTime);
 
@@ -86,28 +86,28 @@ public class GoblinController2D : MonoBehaviour
     }
 
     /// <summary>
-    /// ¹°¸® ÀÌµ¿ Ã³¸®.
-    /// - ÇöÀç ¹æÇâ(moveDir)°ú ÇöÀç ¼Óµµ(currentMoveSpeed)·Î ¼öÆò ÀÌµ¿
+    /// ï¿½ï¿½ï¿½ï¿½ ï¿½Ìµï¿½ Ã³ï¿½ï¿½.
+    /// - ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½(moveDir)ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Óµï¿½(currentMoveSpeed)ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ìµï¿½
     /// </summary>
     private void FixedUpdate()
     {
         if (isKnockback)
         {
-            rb.velocity = new Vector2(knockbackDir * knockbackSpeed, rb.velocity.y);
+            rb.linearVelocity = new Vector2(knockbackDir * knockbackSpeed, rb.linearVelocity.y);
             return;
         }
 
         if (isHitStun)
         {
-            rb.velocity = new Vector2(0f, rb.velocity.y);
+            rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
             return;
         }
-        rb.velocity = new Vector2(moveDir * currentMoveSpeed, rb.velocity.y);
+        rb.linearVelocity = new Vector2(moveDir * currentMoveSpeed, rb.linearVelocity.y);
     }
 
     /// <summary>
-    /// ÁÂ/¿ì ¹æÇâ ºñÁÖ¾ó ÀüÈ¯.
-    /// - moveDir °ª¿¡ µû¶ó Left/Right ¿ÀºêÁ§Æ® È°¼ºÈ­
+    /// ï¿½ï¿½/ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ö¾ï¿½ ï¿½ï¿½È¯.
+    /// - moveDir ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ Left/Right ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ® È°ï¿½ï¿½È­
     /// </summary>
     private void ApplyDirectionVisual()
     {
@@ -119,9 +119,9 @@ public class GoblinController2D : MonoBehaviour
     }
 
     /// <summary>
-    /// ÀÌµ¿ »óÅÂ ±â¹Ý ¾Ö´Ï¸ÞÀÌ¼Ç °»½Å.
-    /// - ÀÌµ¿ ÁßÀÌ¸é Run
-    /// - Á¤Áö »óÅÂ¸é Idle
+    /// ï¿½Ìµï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½Ö´Ï¸ï¿½ï¿½Ì¼ï¿½ ï¿½ï¿½ï¿½ï¿½.
+    /// - ï¿½Ìµï¿½ ï¿½ï¿½ï¿½Ì¸ï¿½ Run
+    /// - ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Â¸ï¿½ Idle
     /// </summary>
     private void UpdateAnimation()
     {
@@ -135,9 +135,9 @@ public class GoblinController2D : MonoBehaviour
     }
 
     /// <summary>
-    /// ÇÃ·¹ÀÌ¾î¿Í Ãæµ¹ ½Ã ³Ë¹é Àû¿ë.
-    /// - Player ÅÂ±×¸¸ Ã³¸®
-    /// - Ãæµ¹ À§Ä¡¸¦ ±âÁØÀ¸·Î ³Ë¹é ¹æÇâÀ» °áÁ¤
+    /// ï¿½Ã·ï¿½ï¿½Ì¾ï¿½ï¿½ ï¿½æµ¹ ï¿½ï¿½ ï¿½Ë¹ï¿½ ï¿½ï¿½ï¿½ï¿½.
+    /// - Player ï¿½Â±×¸ï¿½ Ã³ï¿½ï¿½
+    /// - ï¿½æµ¹ ï¿½ï¿½Ä¡ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ë¹ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     /// </summary>
     private void OnCollisionEnter2D(Collision2D collision)
     {
@@ -148,7 +148,7 @@ public class GoblinController2D : MonoBehaviour
 
         if (playerHealth == null)
         {
-            Debug.LogWarning("PlayerHealth2D ¸ø Ã£À½");
+            Debug.LogWarning("PlayerHealth2D ï¿½ï¿½ Ã£ï¿½ï¿½");
             return;
         }
 

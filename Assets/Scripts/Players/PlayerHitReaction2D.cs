@@ -2,11 +2,11 @@
 using UnityEngine;
 
 /// <summary>
-/// ÇÇ°Ý ¹ÝÀÀ Àü¿ë Ã³¸®.
-/// - ³Ë¹é
-/// - ÇÇ°Ý ¹«Àû(Äð´Ù¿î)
-/// - ¹ÝÅõ¸í ½Ã°¢ Ã³¸®
-/// - Àû°ú Ãæµ¹ ¹«½Ã / º¹±¸
+/// ï¿½Ç°ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ Ã³ï¿½ï¿½.
+/// - ï¿½Ë¹ï¿½
+/// - ï¿½Ç°ï¿½ ï¿½ï¿½ï¿½ï¿½(ï¿½ï¿½Ù¿ï¿½)
+/// - ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½ Ã³ï¿½ï¿½
+/// - ï¿½ï¿½ï¿½ï¿½ ï¿½æµ¹ ï¿½ï¿½ï¿½ï¿½ / ï¿½ï¿½ï¿½ï¿½
 /// </summary>
 public class PlayerHitReaction2D : MonoBehaviour
 {
@@ -33,17 +33,17 @@ public class PlayerHitReaction2D : MonoBehaviour
     private bool isHitCooldown;
 
     /// <summary>
-    /// ÇöÀç ³Ë¹é »óÅÂ ¿©ºÎ.
+    /// ï¿½ï¿½ï¿½ï¿½ ï¿½Ë¹ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½.
     /// </summary>
     public bool IsKnockback => isKnockback;
 
     /// <summary>
-    /// ÇöÀç ÇÇ°Ý ¹«Àû »óÅÂ ¿©ºÎ.
+    /// ï¿½ï¿½ï¿½ï¿½ ï¿½Ç°ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½.
     /// </summary>
     public bool IsHitCooldown => isHitCooldown;
 
     /// <summary>
-    /// ¿ÜºÎ ÃÊ±âÈ­.
+    /// ï¿½Üºï¿½ ï¿½Ê±ï¿½È­.
     /// </summary>
     public void Initialize(Rigidbody2D targetRb, CapsuleCollider2D targetCol, PlayerLadder2D targetLadder)
     {
@@ -65,8 +65,8 @@ public class PlayerHitReaction2D : MonoBehaviour
     }
 
     /// <summary>
-    /// ³Ë¹é Àû¿ë ¿äÃ».
-    /// - ÀÌ¹Ì ³Ë¹é ÁßÀÌ°Å³ª ÇÇ°Ý Äð´Ù¿î ÁßÀÌ¸é ¹«½Ã
+    /// ï¿½Ë¹ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ã».
+    /// - ï¿½Ì¹ï¿½ ï¿½Ë¹ï¿½ ï¿½ï¿½ï¿½Ì°Å³ï¿½ ï¿½Ç°ï¿½ ï¿½ï¿½Ù¿ï¿½ ï¿½ï¿½ï¿½Ì¸ï¿½ ï¿½ï¿½ï¿½ï¿½
     /// </summary>
     public void ApplyKnockback(Vector2 force)
     {
@@ -77,12 +77,12 @@ public class PlayerHitReaction2D : MonoBehaviour
     }
 
     /// <summary>
-    /// ³Ë¹é ÄÚ·çÆ¾.
-    /// - »ç´Ù¸® ÁßÀÌ¸é Á¾·á
-    /// - ¹ÝÅõ¸í Ã³¸®
-    /// - Àû Ãæµ¹ ¹«½Ã
-    /// - ÀÏÁ¤ ½Ã°£ ÈÄ ³Ë¹é Á¾·á
-    /// - hitCooldown ÈÄ ½Ã°¢/Ãæµ¹ º¹±¸
+    /// ï¿½Ë¹ï¿½ ï¿½Ú·ï¿½Æ¾.
+    /// - ï¿½ï¿½Ù¸ï¿½ ï¿½ï¿½ï¿½Ì¸ï¿½ ï¿½ï¿½ï¿½ï¿½
+    /// - ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Ã³ï¿½ï¿½
+    /// - ï¿½ï¿½ ï¿½æµ¹ ï¿½ï¿½ï¿½ï¿½
+    /// - ï¿½ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½ ï¿½ï¿½ ï¿½Ë¹ï¿½ ï¿½ï¿½ï¿½ï¿½
+    /// - hitCooldown ï¿½ï¿½ ï¿½Ã°ï¿½/ï¿½æµ¹ ï¿½ï¿½ï¿½ï¿½
     /// </summary>
     private IEnumerator CoKnockback(Vector2 force)
     {
@@ -99,7 +99,7 @@ public class PlayerHitReaction2D : MonoBehaviour
 
         if (rb != null)
         {
-            rb.velocity = Vector2.zero;
+            rb.linearVelocity = Vector2.zero;
             rb.AddForce(force, ForceMode2D.Impulse);
         }
 
@@ -115,7 +115,7 @@ public class PlayerHitReaction2D : MonoBehaviour
     }
 
     /// <summary>
-    /// ÇÇ°Ý ¹«Àû ½Ã ¹ÝÅõ¸í Ã³¸® / ÇØÁ¦.
+    /// ï¿½Ç°ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Ã³ï¿½ï¿½ / ï¿½ï¿½ï¿½ï¿½.
     /// </summary>
     private void SetDamageCooldownVisual(bool active)
     {
@@ -140,9 +140,9 @@ public class PlayerHitReaction2D : MonoBehaviour
     }
 
     /// <summary>
-    /// Àû°úÀÇ Ãæµ¹ ¹«½Ã / º¹±¸ Ã³¸®.
-    /// - ÇÃ·¹ÀÌ¾î ÇÏÀ§ Collider¿Í
-    /// - ¾ÀÀÇ Enemy ·¹ÀÌ¾î Collider »çÀÌ IgnoreCollision Ã³¸®
+    /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½æµ¹ ï¿½ï¿½ï¿½ï¿½ / ï¿½ï¿½ï¿½ï¿½ Ã³ï¿½ï¿½.
+    /// - ï¿½Ã·ï¿½ï¿½Ì¾ï¿½ ï¿½ï¿½ï¿½ï¿½ Colliderï¿½ï¿½
+    /// - ï¿½ï¿½ï¿½ï¿½ Enemy ï¿½ï¿½ï¿½Ì¾ï¿½ Collider ï¿½ï¿½ï¿½ï¿½ IgnoreCollision Ã³ï¿½ï¿½
     /// </summary>
     private void SetEnemyCollisionEnabled(bool enabled)
     {
@@ -151,7 +151,7 @@ public class PlayerHitReaction2D : MonoBehaviour
         int enemyLayer = LayerMask.NameToLayer(enemyLayerName);
         if (enemyLayer == -1)
         {
-            Debug.LogWarning($"{enemyLayerName} ·¹ÀÌ¾î°¡ ¾ø½À´Ï´Ù.");
+            Debug.LogWarning($"{enemyLayerName} ï¿½ï¿½ï¿½Ì¾î°¡ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½.");
             return;
         }
 

@@ -1,8 +1,9 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using Unity.Netcode;
 using UnityEngine;
 
-public class PlayerAttack2D : MonoBehaviour
+public class PlayerAttack2D : NetworkBehaviour
 {
     [Header("Attack")]
     [SerializeField] private Animator animator;              // ??諛쒖궗 ?좊땲硫붿씠???쒖뼱??
@@ -748,30 +749,18 @@ public class PlayerAttack2D : MonoBehaviour
             ? Quaternion.Euler(0f, 0f, -90f)
             : Quaternion.Euler(0f, 0f, 90f);
 
-        GameObject arrow = Instantiate(arrowPrefab, spawnPos, rotation);
         bool isFinalShot = shotIndex == 2;
-        arrow.transform.localScale *= rapidVolleyArrowScale * (isFinalShot ? 1.15f : 1f);
-        ApplyRapidVolleyArrowVisual(arrow, isFinalShot);
-
-        Collider2D arrowCollider = arrow.GetComponent<Collider2D>();
-        foreach (Collider2D playerCollider in GetComponentsInChildren<Collider2D>())
-        {
-            if (arrowCollider != null && playerCollider != null)
-                Physics2D.IgnoreCollision(arrowCollider, playerCollider, true);
-        }
-
-        ArrowProjectile2D projectile = arrow.GetComponent<ArrowProjectile2D>();
-        if (projectile != null)
-            projectile.Configure(rapidVolleyDamage, dir, false);
-
-        Rigidbody2D rigidbody = arrow.GetComponent<Rigidbody2D>();
-        if (rigidbody != null)
-        {
-            float finalSpeedMultiplier = isFinalShot ? 1.12f : 1f;
-            rigidbody.velocity = new Vector2(
-                dir * rapidVolleyArrowSpeed * finalSpeedMultiplier,
-                0f);
-        }
+        float finalSpeedMultiplier = isFinalShot ? 1.12f : 1f;
+        float scaleMultiplier = rapidVolleyArrowScale * (isFinalShot ? 1.15f : 1f);
+        RequestArrowSpawn(
+            spawnPos,
+            rotation,
+            dir,
+            rapidVolleyArrowSpeed * finalSpeedMultiplier,
+            rapidVolleyDamage,
+            scaleMultiplier,
+            false,
+            isFinalShot ? 2 : 1);
 
     }
 
@@ -810,45 +799,44 @@ public class PlayerAttack2D : MonoBehaviour
 
     public void FireArrow()
     {
-        // [?섑뵾??蹂쇰━ 以묐났 諛⑹?] ShotBow Animation Event??臾댁떆?섍퀬 肄붾（?댁씠 ?뺥솗??3諛쒖쓣 ?앹꽦?⑸땲??
+        if (IsNetworkActive() && !IsOwner)
+            return;
+
         if (isRapidVolleyAttacking)
             return;
 
-        // [Codex PowerShot 1.1] 차징 중 ShotBow 이벤트나 fallback 이후 늦게 들어온 이벤트가 평타를 만들지 않게 합니다.
         if (isPowerShotCharging || ignoreNormalShotBowEvent)
             return;
 
-        // ?꾩닔 李몄“ 泥댄겕
         if (arrowPrefab == null || firePoint == null)
         {
-            Debug.LogWarning("arrowPrefab ?먮뒗 firePoint媛 ?곌껐?섏? ?딆븯?듬땲??");
+            Debug.LogWarning("arrowPrefab or firePoint is not assigned.");
             return;
         }
 
-        // ?뚮젅?댁뼱 諛⑺뼢 怨꾩궛 (?ㅻⅨ履? +1 / ?쇱そ: -1)
         float dir = playerController != null ? playerController.GetHorizontalFacingDir() : 1f;
-
-        // 諛쒖궗 ?꾩튂 (?뚮젅?댁뼱 ?욎そ?쇰줈 ?쎄컙 ?대룞)
         Vector3 spawnPos = firePoint.position + new Vector3(dir * 0.3f, 0f, 0f);
-
-        // 諛⑺뼢???곕Ⅸ ?뚯쟾 (?ㅽ봽?쇱씠??湲곗? 蹂댁젙)
         Quaternion rot = dir > 0f
-            ? Quaternion.Euler(0f, 0f, -90f) // ?ㅻⅨ履?
-            : Quaternion.Euler(0f, 0f, 90f); // ?쇱そ
-
-        // ?붿궡 ?앹꽦
-        GameObject arrow = Instantiate(arrowPrefab, spawnPos, rot);
+            ? Quaternion.Euler(0f, 0f, -90f)
+            : Quaternion.Euler(0f, 0f, 90f);
 
         float launchSpeed = arrowSpeed;
+        int arrowDamage = 10;
+        float arrowScale = 1f;
+        bool useHitReaction = true;
+        int visualStyle = 0;
+        float visualPower = 0f;
+
         if (hasPendingPowerShot)
         {
             ignoreNormalShotBowEvent = true;
-            // [?뚯썙 ??異붽?] 李⑥쭠 寃곌낵瑜??대쾲???앹꽦???붿궡?먮쭔 ?곸슜?⑸땲??
-            arrow.transform.localScale *= pendingPowerShotScale;
             launchSpeed = pendingPowerShotSpeed;
-            ApplyPowerShotArrowVisual(arrow, pendingPowerShotRatio);
+            arrowDamage = pendingPowerShotDamage;
+            arrowScale = pendingPowerShotScale;
+            useHitReaction = false;
+            visualStyle = 3;
+            visualPower = pendingPowerShotRatio;
 
-            // [?뚯썙 ??諛쒖궗 吏꾨룞] ?꾩땐?꾩뿉 ?곕씪 ?쏀븳 移대찓???붾뱾由쇱쓣 ?곸슜?⑸땲??
             if (cameraShake == null && Camera.main != null)
                 cameraShake = Camera.main.GetComponent<CameraShake2D>();
             cameraShake?.Shake(
@@ -859,47 +847,182 @@ public class PlayerAttack2D : MonoBehaviour
             powerShotLimbMotion?.PlayRelease(pendingPowerShotRatio);
         }
 
-        // ?붿궡 肄쒕씪?대뜑 媛?몄삤湲?
-        Collider2D arrowCol = arrow.GetComponent<Collider2D>();
+        // Codex: Route projectile creation through Netcode so host and clients see the same arrow.
+        RequestArrowSpawn(
+            spawnPos,
+            rot,
+            dir,
+            launchSpeed,
+            arrowDamage,
+            arrowScale,
+            useHitReaction,
+            visualStyle,
+            visualPower);
 
-        // ?뚮젅?댁뼱??紐⑤뱺 肄쒕씪?대뜑 媛?몄삤湲?(?먯떇 ?ы븿)
-        Collider2D[] playerCols = GetComponentsInChildren<Collider2D>();
-
-        // ?붿궡 ?ㅽ겕由쏀듃 李몄“ (諛⑺뼢 ?ㅼ젙??
-        ArrowProjectile2D arrowProjectile = arrow.GetComponent<ArrowProjectile2D>();
-
-        // 諛⑺뼢 ?뺣낫 ?꾨떖 (?붿궡 ?먯껜 濡쒖쭅?먯꽌 ?ъ슜)
-        if (arrowProjectile != null)
+        hasPendingPowerShot = false;
+    }
+    private void RequestArrowSpawn(
+        Vector3 spawnPos,
+        Quaternion rotation,
+        float dir,
+        float speed,
+        int damage,
+        float scaleMultiplier,
+        bool useHitReaction,
+        int visualStyle,
+        float visualPower = 0f)
+    {
+        if (IsNetworkActive())
         {
-            if (hasPendingPowerShot)
+            if (IsServer)
             {
-                arrowProjectile.Configure(
-                    pendingPowerShotDamage,
+                SpawnArrowOnServer(
+                    spawnPos,
+                    rotation,
                     dir,
-                    false);
+                    speed,
+                    damage,
+                    scaleMultiplier,
+                    useHitReaction,
+                    visualStyle,
+                    visualPower);
             }
             else
             {
-                arrowProjectile.SetDirection(dir);
+                SpawnArrowServerRpc(
+                    spawnPos,
+                    rotation,
+                    dir,
+                    speed,
+                    damage,
+                    scaleMultiplier,
+                    useHitReaction,
+                    visualStyle,
+                    visualPower);
             }
+
+            return;
         }
 
-        // ?뚮젅?댁뼱? ?붿궡 異⑸룎 臾댁떆 泥섎━
-        foreach (Collider2D col in playerCols)
+        SpawnArrowLocal(
+            spawnPos,
+            rotation,
+            dir,
+            speed,
+            damage,
+            scaleMultiplier,
+            useHitReaction,
+            visualStyle,
+            visualPower);
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void SpawnArrowServerRpc(
+        Vector3 spawnPos,
+        Quaternion rotation,
+        float dir,
+        float speed,
+        int damage,
+        float scaleMultiplier,
+        bool useHitReaction,
+        int visualStyle,
+        float visualPower)
+    {
+        SpawnArrowOnServer(
+            spawnPos,
+            rotation,
+            dir,
+            speed,
+            damage,
+            scaleMultiplier,
+            useHitReaction,
+            visualStyle,
+            visualPower);
+    }
+
+    private void SpawnArrowOnServer(
+        Vector3 spawnPos,
+        Quaternion rotation,
+        float dir,
+        float speed,
+        int damage,
+        float scaleMultiplier,
+        bool useHitReaction,
+        int visualStyle,
+        float visualPower)
+    {
+        GameObject arrow = SpawnArrowLocal(
+            spawnPos,
+            rotation,
+            dir,
+            speed,
+            damage,
+            scaleMultiplier,
+            useHitReaction,
+            visualStyle,
+            visualPower);
+
+        NetworkObject networkObject = arrow.GetComponent<NetworkObject>();
+        if (networkObject != null && !networkObject.IsSpawned)
+            networkObject.Spawn(true);
+
+        ArrowProjectile2D projectile = arrow.GetComponent<ArrowProjectile2D>();
+        if (projectile != null)
+            projectile.ApplyVelocityClientRpc(dir, speed);
+    }
+
+    private GameObject SpawnArrowLocal(
+        Vector3 spawnPos,
+        Quaternion rotation,
+        float dir,
+        float speed,
+        int damage,
+        float scaleMultiplier,
+        bool useHitReaction,
+        int visualStyle,
+        float visualPower)
+    {
+        GameObject arrow = Instantiate(arrowPrefab, spawnPos, rotation);
+        arrow.transform.localScale *= scaleMultiplier;
+        ApplyArrowVisualStyle(arrow, visualStyle, visualPower);
+        IgnoreArrowOwnerCollision(arrow);
+
+        ArrowProjectile2D projectile = arrow.GetComponent<ArrowProjectile2D>();
+        if (projectile != null)
+            projectile.Configure(damage, dir, useHitReaction, speed);
+
+        Rigidbody2D rigidbody = arrow.GetComponent<Rigidbody2D>();
+        if (rigidbody != null)
+            rigidbody.linearVelocity = new Vector2(dir * speed, 0f);
+
+        return arrow;
+    }
+
+    private void ApplyArrowVisualStyle(GameObject arrow, int visualStyle, float visualPower)
+    {
+        if (visualStyle == 1 || visualStyle == 2)
         {
-            if (arrowCol != null && col != null)
-                Physics2D.IgnoreCollision(arrowCol, col, true);
+            ApplyRapidVolleyArrowVisual(arrow, visualStyle == 2);
+            return;
         }
 
-        // Rigidbody2D 湲곕컲 諛쒖궗 (?띾룄 吏곸젒 吏??
-        Rigidbody2D rb = arrow.GetComponent<Rigidbody2D>();
-        if (rb != null)
+        if (visualStyle == 3)
+            ApplyPowerShotArrowVisual(arrow, visualPower);
+    }
+
+    private void IgnoreArrowOwnerCollision(GameObject arrow)
+    {
+        Collider2D arrowCollider = arrow.GetComponent<Collider2D>();
+        foreach (Collider2D playerCollider in GetComponentsInChildren<Collider2D>())
         {
-            rb.velocity = new Vector2(dir * launchSpeed, 0f);
+            if (arrowCollider != null && playerCollider != null)
+                Physics2D.IgnoreCollision(arrowCollider, playerCollider, true);
         }
+    }
 
-
-        hasPendingPowerShot = false;
+    private bool IsNetworkActive()
+    {
+        return NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening && IsSpawned;
     }
 
     private void ApplyPowerShotArrowVisual(GameObject arrow, float power)
@@ -985,3 +1108,5 @@ public class PlayerAttack2D : MonoBehaviour
         attackSpeedMultiplier = 1f;
     }
 }
+
+

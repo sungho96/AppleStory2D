@@ -2,14 +2,14 @@ using System.Collections;
 using UnityEngine;
 
 /// <summary>
-/// »ç´Ù¸® Àü¿ë Ã³¸®.
-/// - ¹Ù´Ú Ã¼Å©
-/// - »ç´Ù¸® º»Ã¼ / ²À´ë±â °¨Áö
-/// - À§¿¡¼­ ¾Æ·¡·Î ÁøÀÔ
-/// - ¸öÅë¿¡¼­ À§·Î ÁøÀÔ
-/// - µî¹Ý ÀÌµ¿
-/// - ²À´ë±â Å»Ãâ
-/// - ¹ßÆÇ Ãæµ¹ Àá½Ã ¹«½Ã
+/// ï¿½ï¿½Ù¸ï¿½ ï¿½ï¿½ï¿½ï¿½ Ã³ï¿½ï¿½.
+/// - ï¿½Ù´ï¿½ Ã¼Å©
+/// - ï¿½ï¿½Ù¸ï¿½ ï¿½ï¿½Ã¼ / ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+/// - ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Æ·ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+/// - ï¿½ï¿½ï¿½ë¿¡ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+/// - ï¿½ï¿½ï¿½ ï¿½Ìµï¿½
+/// - ï¿½ï¿½ï¿½ï¿½ï¿½ Å»ï¿½ï¿½
+/// - ï¿½ï¿½ï¿½ï¿½ ï¿½æµ¹ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 /// </summary>
 public class PlayerLadder2D : MonoBehaviour
 {
@@ -50,7 +50,7 @@ public class PlayerLadder2D : MonoBehaviour
     private Coroutine topBlockRoutine;
 
     /// <summary>
-    /// ¿ÜºÎ ÃÊ±âÈ­.
+    /// ï¿½Üºï¿½ ï¿½Ê±ï¿½È­.
     /// </summary>
     public void Initialize(Rigidbody2D targetRb, CapsuleCollider2D targetCol)
     {
@@ -62,24 +62,24 @@ public class PlayerLadder2D : MonoBehaviour
     }
 
     /// <summary>
-    /// ÇöÀç ¹Ù´Ú¿¡ ´ê¾ÆÀÖ´ÂÁö ¹ÝÈ¯.
+    /// ï¿½ï¿½ï¿½ï¿½ ï¿½Ù´Ú¿ï¿½ ï¿½ï¿½ï¿½ï¿½Ö´ï¿½ï¿½ï¿½ ï¿½ï¿½È¯.
     /// </summary>
     public bool IsGrounded => isGrounded;
 
     /// <summary>
-    /// ÇöÀç »ç´Ù¸® µî¹Ý ÁßÀÎÁö ¹ÝÈ¯.
+    /// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ù¸ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½È¯.
     /// </summary>
     public bool IsClimbing => isClimbing;
 
     /// <summary>
-    /// ÇöÀç ¹â°í ÀÖ´Â ¹Ù´Ú ÄÝ¶óÀÌ´õ ¹ÝÈ¯.
+    /// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½Ö´ï¿½ ï¿½Ù´ï¿½ ï¿½Ý¶ï¿½ï¿½Ì´ï¿½ ï¿½ï¿½È¯.
     /// </summary>
     public Collider2D CurrentGroundCollider => currentGroundCollider;
 
     /// <summary>
-    /// ¹Ù´Ú Ã¼Å©.
-    /// - GroundCheck À§Ä¡¿¡¼­ ¾Æ·¡·Î Raycast
-    /// - ´êÀº Ground Collider ÀúÀå
+    /// ï¿½Ù´ï¿½ Ã¼Å©.
+    /// - GroundCheck ï¿½ï¿½Ä¡ï¿½ï¿½ï¿½ï¿½ ï¿½Æ·ï¿½ï¿½ï¿½ Raycast
+    /// - ï¿½ï¿½ï¿½ï¿½ Ground Collider ï¿½ï¿½ï¿½ï¿½
     /// </summary>
     public void CheckGround()
     {
@@ -103,9 +103,9 @@ public class PlayerLadder2D : MonoBehaviour
     }
 
     /// <summary>
-    /// »ç´Ù¸® º»Ã¼ / ²À´ë±â °¨Áö °»½Å.
-    /// - ÇÃ·¹ÀÌ¾î ÁÖº¯ OverlapBox·Î Å½Áö
-    /// - ²À´ë±â¸¸ Ã£Àº °æ¿ì ºÎ¸ð¸¦ Å¸°í ¿Ã¶ó°¡ »ç´Ù¸® º»Ã¼¸¦ Ã£¾Æ ¿¬°á
+    /// ï¿½ï¿½Ù¸ï¿½ ï¿½ï¿½Ã¼ / ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½.
+    /// - ï¿½Ã·ï¿½ï¿½Ì¾ï¿½ ï¿½Öºï¿½ OverlapBoxï¿½ï¿½ Å½ï¿½ï¿½
+    /// - ï¿½ï¿½ï¿½ï¿½â¸¸ Ã£ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½Î¸ï¿½ Å¸ï¿½ï¿½ ï¿½Ã¶ï¿½ ï¿½ï¿½Ù¸ï¿½ ï¿½ï¿½Ã¼ï¿½ï¿½ Ã£ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     /// </summary>
     public void RefreshLadderContacts()
     {
@@ -161,9 +161,9 @@ public class PlayerLadder2D : MonoBehaviour
     }
 
     /// <summary>
-    /// ¸öÅë ±¸°£¿¡¼­ »ç´Ù¸® ÁøÀÔ.
-    /// - »ç´Ù¸® º»Ã¼¿Í ´ê¾Æ ÀÖ°í
-    /// - À§ ÀÔ·ÂÀÏ ¶§ ÁøÀÔ
+    /// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ù¸ï¿½ ï¿½ï¿½ï¿½ï¿½.
+    /// - ï¿½ï¿½Ù¸ï¿½ ï¿½ï¿½Ã¼ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½Ö°ï¿½
+    /// - ï¿½ï¿½ ï¿½Ô·ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     /// </summary>
     public void TryEnterFromBody(float verticalInput)
     {
@@ -180,9 +180,9 @@ public class PlayerLadder2D : MonoBehaviour
     }
 
     /// <summary>
-    /// À§¿¡¼­ ¾Æ·¡·Î ³»·Á°¡±â ÁøÀÔ.
-    /// - ²À´ë±â °¨Áö + ¾Æ·¡ ÀÔ·Â
-    /// - »ç´Ù¸® Áß½É x¿Í ÇÃ·¹ÀÌ¾î Áß½É x °Å¸® È®ÀÎ
+    /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Æ·ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½.
+    /// - ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ + ï¿½Æ·ï¿½ ï¿½Ô·ï¿½
+    /// - ï¿½ï¿½Ù¸ï¿½ ï¿½ß½ï¿½ xï¿½ï¿½ ï¿½Ã·ï¿½ï¿½Ì¾ï¿½ ï¿½ß½ï¿½ x ï¿½Å¸ï¿½ È®ï¿½ï¿½
     /// </summary>
     public void TryEnterFromTop(float verticalInput)
     {
@@ -214,9 +214,9 @@ public class PlayerLadder2D : MonoBehaviour
     }
 
     /// <summary>
-    /// »ç´Ù¸® ²À´ë±â Å»Ãâ Ã³¸®.
-    /// - µî¹Ý Áß + ²À´ë±â °¨Áö + À§ ÀÔ·Â
-    /// - ¹ß À§Ä¡°¡ ÀÓ°è°ª ÀÌ»óÀÌ¸é ¶¥ À§·Î ½º³À ÈÄ Á¾·á
+    /// ï¿½ï¿½Ù¸ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ Å»ï¿½ï¿½ Ã³ï¿½ï¿½.
+    /// - ï¿½ï¿½ï¿½ ï¿½ï¿½ + ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ + ï¿½ï¿½ ï¿½Ô·ï¿½
+    /// - ï¿½ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ ï¿½Ó°è°ª ï¿½Ì»ï¿½ï¿½Ì¸ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     /// </summary>
     public void TryExitToTop(float verticalInput)
     {
@@ -246,11 +246,11 @@ public class PlayerLadder2D : MonoBehaviour
     }
 
     /// <summary>
-    /// »ç´Ù¸® µî¹Ý ÀÌµ¿ Ã³¸®.
-    /// - x´Â »ç´Ù¸® Áß½ÉÀ¸·Î º¸°£ Á¤·Ä
-    /// - y´Â ÀÔ·Â¿¡ µû¶ó µî¹Ý
-    /// - ¹üÀ§¸¦ ¹þ¾î³ª¸é µî¹Ý Á¾·á
-    /// - ²À´ë±â À§·Î ¹ßÀÌ Áö³ª°¡Áö ¾Êµµ·Ï Á¦ÇÑ
+    /// ï¿½ï¿½Ù¸ï¿½ ï¿½ï¿½ï¿½ ï¿½Ìµï¿½ Ã³ï¿½ï¿½.
+    /// - xï¿½ï¿½ ï¿½ï¿½Ù¸ï¿½ ï¿½ß½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+    /// - yï¿½ï¿½ ï¿½Ô·Â¿ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½
+    /// - ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½î³ªï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+    /// - ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Êµï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     /// </summary>
     public void HandleClimbMove(float verticalInput)
     {
@@ -287,23 +287,23 @@ public class PlayerLadder2D : MonoBehaviour
             pos.y = maxFeetY - feetOffsetFromTransform;
             transform.position = pos;
 
-            rb.velocity = new Vector2(0f, Mathf.Min(0f, verticalInput * climbSpeed));
+            rb.linearVelocity = new Vector2(0f, Mathf.Min(0f, verticalInput * climbSpeed));
             return;
         }
 
         transform.position = pos;
 
         float climbY = verticalInput * climbSpeed;
-        rb.velocity = new Vector2(0f, climbY);
+        rb.linearVelocity = new Vector2(0f, climbY);
     }
 
     /// <summary>
-    /// µî¹Ý ½ÃÀÛ °øÅë Ã³¸®.
-    /// - Áß·Â Á¦°Å
-    /// - ¼Óµµ ÃÊ±âÈ­
-    /// - »ç´Ù¸® Áß½É x Á¤·Ä
-    /// - À§¿¡¼­ ÁøÀÔ ½Ã ¹ß À§Ä¡¸¦ »ìÂ¦ ¾Æ·¡·Î º¸Á¤
-    /// - À§ ¹ßÆÇ Ãæµ¹À» Àá½Ã ¹«½Ã
+    /// ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ Ã³ï¿½ï¿½.
+    /// - ï¿½ß·ï¿½ ï¿½ï¿½ï¿½ï¿½
+    /// - ï¿½Óµï¿½ ï¿½Ê±ï¿½È­
+    /// - ï¿½ï¿½Ù¸ï¿½ ï¿½ß½ï¿½ x ï¿½ï¿½ï¿½ï¿½
+    /// - ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ ï¿½ï¿½Â¦ ï¿½Æ·ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+    /// - ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½æµ¹ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     /// </summary>
     private void StartClimbing(bool fromTop)
     {
@@ -315,7 +315,7 @@ public class PlayerLadder2D : MonoBehaviour
 
         isClimbing = true;
         rb.gravityScale = 0f;
-        rb.velocity = Vector2.zero;
+        rb.linearVelocity = Vector2.zero;
 
         Bounds ladderBounds = currentLadderCollider.bounds;
 
@@ -340,7 +340,7 @@ public class PlayerLadder2D : MonoBehaviour
                 );
             }
 
-            rb.velocity = new Vector2(0f, -climbSpeed);
+            rb.linearVelocity = new Vector2(0f, -climbSpeed);
             return;
         }
 
@@ -348,8 +348,8 @@ public class PlayerLadder2D : MonoBehaviour
     }
 
     /// <summary>
-    /// µî¹Ý Á¾·á Ã³¸®.
-    /// - Áß·Â º¹±¸
+    /// ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ Ã³ï¿½ï¿½.
+    /// - ï¿½ß·ï¿½ ï¿½ï¿½ï¿½ï¿½
     /// </summary>
     public void StopClimbing()
     {
@@ -360,9 +360,9 @@ public class PlayerLadder2D : MonoBehaviour
     }
 
     /// <summary>
-    /// ²À´ë±â Å»Ãâ À§Ä¡ º¸Á¤.
-    /// - ¹ß ±âÁØÀ¸·Î »ç´Ù¸® »ó´Üº¸´Ù Á¶±Ý À§¿¡ À§Ä¡½ÃÅ´
-    /// - Å»Ãâ Á÷ÈÄ ÀçÁøÀÔ ¹æÁö ÄÚ·çÆ¾ ½ÇÇà
+    /// ï¿½ï¿½ï¿½ï¿½ï¿½ Å»ï¿½ï¿½ ï¿½ï¿½Ä¡ ï¿½ï¿½ï¿½ï¿½.
+    /// - ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ù¸ï¿½ ï¿½ï¿½Üºï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½Å´
+    /// - Å»ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ú·ï¿½Æ¾ ï¿½ï¿½ï¿½ï¿½
     /// </summary>
     private void ExitLadderToTopGround()
     {
@@ -381,7 +381,7 @@ public class PlayerLadder2D : MonoBehaviour
         StopClimbing();
 
         if (rb != null)
-            rb.velocity = Vector2.zero;
+            rb.linearVelocity = Vector2.zero;
 
         if (topBlockRoutine != null)
             StopCoroutine(topBlockRoutine);
@@ -390,8 +390,8 @@ public class PlayerLadder2D : MonoBehaviour
     }
 
     /// <summary>
-    /// ²À´ë±â ÄÝ¶óÀÌ´õ ±âÁØÀ¸·Î ºÎ¸ð¸¦ Å¸°í ¿Ã¶ó°¡
-    /// »ç´Ù¸® º»Ã¼ Collider2D¸¦ Ã£´Â Ã³¸®.
+    /// ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ý¶ï¿½ï¿½Ì´ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Î¸ï¿½ Å¸ï¿½ï¿½ ï¿½Ã¶ï¿½
+    /// ï¿½ï¿½Ù¸ï¿½ ï¿½ï¿½Ã¼ Collider2Dï¿½ï¿½ Ã£ï¿½ï¿½ Ã³ï¿½ï¿½.
     /// </summary>
     private void ResolveLadderFromTop()
     {
@@ -417,8 +417,8 @@ public class PlayerLadder2D : MonoBehaviour
     }
 
     /// <summary>
-    /// ¹ßÆÇ Ãæµ¹ Àá½Ã ¹«½Ã.
-    /// - À§¿¡¼­ ³»·Á°¡±â ½ÃÀÛ ½Ã »ó´Ü ¹ßÆÇ¿¡ °É¸®´Â Çö»ó ¹æÁö
+    /// ï¿½ï¿½ï¿½ï¿½ ï¿½æµ¹ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½.
+    /// - ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ç¿ï¿½ ï¿½É¸ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     /// </summary>
     private IEnumerator IgnoreCollisionTemporarily(Collider2D targetCollider, float duration)
     {
@@ -438,7 +438,7 @@ public class PlayerLadder2D : MonoBehaviour
     }
 
     /// <summary>
-    /// ²À´ë±â Å»Ãâ Á÷ÈÄ ÀÏÁ¤ ½Ã°£ ÀçÁøÀÔ ¹æÁö.
+    /// ï¿½ï¿½ï¿½ï¿½ï¿½ Å»ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½.
     /// </summary>
     private IEnumerator BlockTopEnterTemporarily()
     {
@@ -449,8 +449,8 @@ public class PlayerLadder2D : MonoBehaviour
     }
 
     /// <summary>
-    /// µð¹ö±× Gizmo Ç¥½Ã ÇÔ¼ö.
-    /// - ControllerÀÇ OnDrawGizmosSelected¿¡¼­ È£Ãâ
+    /// ï¿½ï¿½ï¿½ï¿½ï¿½ Gizmo Ç¥ï¿½ï¿½ ï¿½Ô¼ï¿½.
+    /// - Controllerï¿½ï¿½ OnDrawGizmosSelectedï¿½ï¿½ï¿½ï¿½ È£ï¿½ï¿½
     /// </summary>
     public void DrawDebugGizmos()
     {
