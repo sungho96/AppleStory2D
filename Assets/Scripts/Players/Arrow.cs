@@ -16,8 +16,6 @@ public class Arrow : MonoBehaviour
 
         if (other.CompareTag("Arrow"))
             return;
-
-        Debug.Log("화살 충돌 대상: " + other.name);
         Destroy(gameObject);
     }
 }

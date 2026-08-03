@@ -539,6 +539,37 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   SpriteName: Left
   SpriteNameFallback: []
+--- !u!1 &830100000000000011
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 830100000000000010}
+  m_Layer: 0
+  m_Name: GroundCheck
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &830100000000000010
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 830100000000000011}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 8893548712250332534}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &864437573733540643
 GameObject:
   m_ObjectHideFlags: 0
@@ -3020,7 +3051,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3264874860769582865}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0.81915206, w: 0.57357645}
+  m_LocalRotation: {x: 0, y: 0, z: 0.3007058, w: 0.95371693}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -3028,7 +3059,7 @@ Transform:
   - {fileID: 1285522511043093209}
   - {fileID: 2961908905530328228}
   m_Father: {fileID: 4612735501613289034}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 110}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 35}
 --- !u!212 &4128512766494200531
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -3780,7 +3811,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3893739767423523898}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: -0.8191521, w: 0.57357645}
+  m_LocalRotation: {x: 0, y: 0, z: -0.3007058, w: 0.95371693}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -3789,7 +3820,7 @@ Transform:
   - {fileID: 6762271451933207312}
   - {fileID: 3345494927949635039}
   m_Father: {fileID: 4946667824009917637}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: -110}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: -35}
 --- !u!212 &6315714250848111844
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -5942,9 +5973,20 @@ GameObject:
   - component: {fileID: 1545179870754946024}
   - component: {fileID: 7402070510392280018}
   - component: {fileID: 6313185021176230067}
-  m_Layer: 0
+  - component: {fileID: 830100000000000001}
+  - component: {fileID: 830100000000000002}
+  - component: {fileID: 830100000000000003}
+  - component: {fileID: 830100000000000004}
+  - component: {fileID: 830100000000000005}
+  - component: {fileID: 830100000000000006}
+  - component: {fileID: 830100000000000007}
+  - component: {fileID: 830100000000000008}
+  - component: {fileID: 830100000000000009}
+  - component: {fileID: 830100000000000013}
+  - component: {fileID: 830100000000000014}
+  m_Layer: 6
   m_Name: warrior 1
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -5965,6 +6007,7 @@ Transform:
   - {fileID: 826608040706591025}
   - {fileID: 5285348894364522422}
   - {fileID: 7953876327309394624}
+  - {fileID: 830100000000000010}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &2313547230333525088
@@ -6271,6 +6314,238 @@ CapsuleCollider2D:
   m_Offset: {x: 0, y: 1}
   m_Size: {x: 2, y: 2.5}
   m_Direction: 0
+--- !u!50 &830100000000000001
+Rigidbody2D:
+  serializedVersion: 4
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5223124047157880945}
+  m_BodyType: 0
+  m_Simulated: 1
+  m_UseFullKinematicContacts: 0
+  m_UseAutoMass: 0
+  m_Mass: 1
+  m_LinearDrag: 0
+  m_AngularDrag: 0.05
+  m_GravityScale: 3
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_Interpolate: 1
+  m_SleepingMode: 1
+  m_CollisionDetection: 1
+  m_Constraints: 4
+--- !u!114 &830100000000000002
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5223124047157880945}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ba7ef703160e6514bbbc2dc3836e00bd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  animationManager: {fileID: 6463703607488329098}
+  quickStepSound: {fileID: 0}
+--- !u!114 &830100000000000003
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5223124047157880945}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2e2b4b2c3539fe546bc117759725c3ef, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &830100000000000004
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5223124047157880945}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 711b0788eb1a08442b96812788d666de, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  moveSpeed: 6
+  jumpVelocity: 12
+--- !u!114 &830100000000000005
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5223124047157880945}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b0e492625a9159846a59f18509d615bf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  climbSpeed: 4
+  ladderAlignSpeed: 20
+  ladderTopEnterInset: 0.65
+  ladderTopExitOffset: 0.08
+  ladderCenterEnterTolerance: 1
+  ladderPlatformIgnoreTime: 0.6
+  ladderTopReenterBlockTime: 0.15
+  groundMask:
+    serializedVersion: 2
+    m_Bits: 128
+  ladderMask:
+    serializedVersion: 2
+    m_Bits: 512
+  ladderTopMask:
+    serializedVersion: 2
+    m_Bits: 1024
+  ladderCheckBoxSize: {x: 0.8, y: 1.8}
+  ladderTopCheckBoxSize: {x: 1.2, y: 0.5}
+  ladderTopCheckYOffset: 0.1
+  groundCheck: {fileID: 830100000000000010}
+  groundCheckDistance: 0.15
+--- !u!114 &830100000000000006
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5223124047157880945}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 55b934dbcb440434495a528f17bcb6ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  knockbackDuration: 0.2
+  hitCooldown: 1
+  enemyLayerName: Enemy
+  cameraShake: {fileID: 0}
+--- !u!114 &830100000000000007
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5223124047157880945}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4ad7dbf5f42b17499830164341f3619, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxHp: 100
+  currentHp: 0
+  hitReaction: {fileID: 830100000000000006}
+  hpBarUI: {fileID: 0}
+  playerStats: {fileID: 830100000000000008}
+--- !u!114 &830100000000000008
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5223124047157880945}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f0394790ada96e943af2cf51b0c79862, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  level: 1
+  maxHp: 100
+  hp: 100
+  maxMp: 100
+  mp: 100
+  exp: 0
+  needExp: 10
+--- !u!114 &830100000000000009
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5223124047157880945}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb854e891b9bc2e4ea53d384f18fe0ac, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  animator: {fileID: 1545179870754946024}
+  playerController: {fileID: 830100000000000002}
+  playerHealth: {fileID: 830100000000000007}
+  attackKey: 306
+  damage: 18
+  attackDelay: 0.45
+  hitStartDelay: 0.12
+  hitBoxSize: {x: 1.25, y: 0.75}
+  hitBoxOffset: {x: 0.75, y: 0}
+  enemyMask:
+    serializedVersion: 2
+    m_Bits: 8
+  attackTriggerName: Slash1H
+  attackWeaponScale: {x: 1, y: 1.5, z: 1}
+  weaponScaleLockPaths:
+  - Left/UpperBody/ArmRAnchor/ArmR/HandR/PrimaryWeapon
+  - Right/UpperBody/ArmRAnchor/ArmR/HandR/PrimaryWeapon
+--- !u!114 &830100000000000013
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5223124047157880945}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2037aa4d8e164b8cb71001f10743d6d9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  warriorAttack: {fileID: 830100000000000009}
+  angerBuffIcon: {fileID: 0}
+  angerDurationSlider: {fileID: 0}
+  angerBuffSprite: {fileID: -7337927233599285411, guid: ced3651d1df0a46409c5842f73bf45c0, type: 3}
+  angerDamageMultiplier: 1.5
+  angerDuration: 10
+  angerVisualFeedback: {fileID: 0}
+--- !u!114 &830100000000000014
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5223124047157880945}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56681aaff3084fcf9a6464401f896c44, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  animator: {fileID: 1545179870754946024}
+  playerController: {fileID: 830100000000000002}
+  playerHealth: {fileID: 830100000000000007}
+  fallbackKey: 0
+  damage: 35
+  cooldown: 1.4
+  hitBoxSize: {x: 1.55, y: 1}
+  hitBoxOffset: {x: 0.85, y: 0.05}
+  enemyMask:
+    serializedVersion: 2
+    m_Bits: 8
+  chargeStateName: Charge2H
+  slashStateName: Slash2H
+  slashTriggerName: 
+  chargeFadeDuration: 0.05
+  chargeHoldDuration: 0.24
+  slashFadeDuration: 0.02
+  slashStartNormalizedTime: 0.64
+  hitDelay: 0.06
+  finishDelay: 0.32
 --- !u!1 &5432784113503853095
 GameObject:
   m_ObjectHideFlags: 0

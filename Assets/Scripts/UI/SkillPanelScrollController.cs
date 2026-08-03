@@ -4,25 +4,55 @@ using UnityEngine.UI;
 
 public class SkillPanelScrollController : MonoBehaviour
 {
+    private enum SkillPanelJob
+    {
+        Auto,
+        Archer,
+        Warrior
+    }
+
+    [SerializeField] private SkillPanelJob panelJob = SkillPanelJob.Auto;
+    [SerializeField] private Sprite angerIcon;
+    [SerializeField] private Sprite downStrikeIcon;
     [SerializeField] private Sprite powerShotIcon;
     [SerializeField] private Sprite rapidVolleyIcon;
 
-    private static readonly string[] IconNames =
+    private static readonly string[] CommonIconNames =
     {
         "MoveSpeedSkillIcon",
         "AttackSpeedSkillIcon",
-        "QuickStepPassiveSkillIcon",
+        "QuickStepPassiveSkillIcon"
+    };
+
+    private static readonly string[] ArcherIconNames =
+    {
         "PowerShotSkillIcon",
         "RapidVolleySkillIcon"
     };
 
-    private static readonly string[] TextNames =
+    private static readonly string[] WarriorIconNames =
+    {
+        "AngerSkillIcon",
+        "DownStrikeSkillIcon"
+    };
+
+    private static readonly string[] CommonTextNames =
     {
         "MoveSpeedSkillText",
         "AttackSpeedSkillText",
-        "QuickStepPassiveSkillText",
+        "QuickStepPassiveSkillText"
+    };
+
+    private static readonly string[] ArcherTextNames =
+    {
         "PowerShotSkillText",
         "RapidVolleySkillText"
+    };
+
+    private static readonly string[] WarriorTextNames =
+    {
+        "AngerSkillText",
+        "DownStrikeSkillText"
     };
 
     private const float RowSpacing = 160f;
@@ -42,7 +72,7 @@ public class SkillPanelScrollController : MonoBehaviour
 
     private void NormalizeExistingSkillIcons()
     {
-        foreach (string iconName in IconNames)
+        foreach (string iconName in GetAllIconNames())
         {
             RectTransform iconRect = FindDescendantRect(iconName);
             if (iconRect == null)
@@ -75,8 +105,18 @@ public class SkillPanelScrollController : MonoBehaviour
             return;
         }
 
-        CreatePowerShotEntry();
-        CreateRapidVolleyEntry();
+        SkillPanelJob resolvedJob = ResolvePanelJob();
+
+        if (resolvedJob == SkillPanelJob.Archer)
+        {
+            CreatePowerShotEntry();
+            CreateRapidVolleyEntry();
+        }
+        else if (resolvedJob == SkillPanelJob.Warrior)
+        {
+            CreateAngerEntry();
+            CreateDownStrikeEntry();
+        }
 
         // [스킬창 스크롤 추가] 기존 스킬 스킨은 유지하고 목록만 클리핑합니다.
         RectTransform viewport = CreateRect("SkillListViewport", transform);
@@ -93,11 +133,13 @@ public class SkillPanelScrollController : MonoBehaviour
         content.anchorMax = new Vector2(0.5f, 1f);
         content.pivot = new Vector2(0.5f, 1f);
         content.anchoredPosition = Vector2.zero;
-        content.sizeDelta = new Vector2(360f, RowSpacing * IconNames.Length);
+        string[] iconNames = GetVisibleIconNames(resolvedJob);
+        string[] textNames = GetVisibleTextNames(resolvedJob);
+        content.sizeDelta = new Vector2(360f, RowSpacing * iconNames.Length);
 
-        for (int i = 0; i < IconNames.Length; i++)
+        for (int i = 0; i < iconNames.Length; i++)
         {
-            CreateSkillRow(content, i);
+            CreateSkillRow(content, i, iconNames[i], textNames[i]);
         }
 
         NormalizeExistingSkillIcons();
@@ -170,7 +212,66 @@ public class SkillPanelScrollController : MonoBehaviour
             "래피드 볼리\n전방으로 화살 3발을\n빠르게 연속 발사";
     }
 
-    private void CreateSkillRow(RectTransform content, int rowIndex)
+    private void CreateAngerEntry()
+    {
+        if (transform.Find("AngerSkillIcon") != null)
+        {
+            return;
+        }
+
+        Transform sourceIcon = transform.Find("MoveSpeedSkillIcon");
+        Transform sourceText = transform.Find("MoveSpeedSkillText");
+        if (sourceIcon == null || sourceText == null)
+        {
+            Debug.LogWarning("[SkillPanel] Anger skill source UI is missing.");
+            return;
+        }
+
+        GameObject iconObject = Instantiate(sourceIcon.gameObject, transform);
+        iconObject.name = "AngerSkillIcon";
+        Image iconImage = iconObject.GetComponent<Image>();
+        if (iconImage != null && angerIcon != null)
+            iconImage.sprite = angerIcon;
+        iconObject.GetComponent<SkillIconDragHandler>()
+            .ConfigureSkillType(KeySettingSkillType.AngerBuff);
+
+        GameObject textObject = Instantiate(sourceText.gameObject, transform);
+        textObject.name = "AngerSkillText";
+        textObject.GetComponent<TMP_Text>().text =
+            "분노\n일정 시간 동안\n공격력이 증가";
+    }
+
+    private void CreateDownStrikeEntry()
+    {
+        if (transform.Find("DownStrikeSkillIcon") != null)
+        {
+            return;
+        }
+
+        Transform sourceIcon = transform.Find("MoveSpeedSkillIcon");
+        Transform sourceText = transform.Find("MoveSpeedSkillText");
+        if (sourceIcon == null || sourceText == null)
+        {
+            Debug.LogWarning("[SkillPanel] DownStrike skill source UI is missing.");
+            return;
+        }
+
+        // [Codex Warrior DownStrike] Clone the existing skill row pieces so the warrior panel keeps the same drag mapping behavior.
+        GameObject iconObject = Instantiate(sourceIcon.gameObject, transform);
+        iconObject.name = "DownStrikeSkillIcon";
+        Image iconImage = iconObject.GetComponent<Image>();
+        if (iconImage != null && downStrikeIcon != null)
+            iconImage.sprite = downStrikeIcon;
+        iconObject.GetComponent<SkillIconDragHandler>()
+            .ConfigureSkillType(KeySettingSkillType.DownStrike);
+
+        GameObject textObject = Instantiate(sourceText.gameObject, transform);
+        textObject.name = "DownStrikeSkillText";
+        textObject.GetComponent<TMP_Text>().text =
+            "Down Strike\nHop, then slam\nfront enemies";
+    }
+
+    private void CreateSkillRow(RectTransform content, int rowIndex, string iconName, string textName)
     {
         // [스킬 Row 스크롤 수정] 배경·아이콘·텍스트를 하나의 부모 아래 묶어 함께 이동시킵니다.
         RectTransform row = CreateRect("SkillRow_" + rowIndex, content);
@@ -187,8 +288,57 @@ public class SkillPanelScrollController : MonoBehaviour
 
         // [Free Aspect 중앙 정렬] 원본 아이콘 중심값(-122)을 유지해 왼쪽 쏠림을 제거합니다.
         // [Free Aspect 중앙 정렬] 모든 스킬 아이콘을 첫 번째 아이콘과 같은 X축 기준으로 통일합니다.
-        MoveEntryIntoRow(IconNames[rowIndex], row, -127f);
-        MoveEntryIntoRow(TextNames[rowIndex], row, 47.126f);
+        MoveEntryIntoRow(iconName, row, -127f);
+        MoveEntryIntoRow(textName, row, 47.126f);
+    }
+
+    private SkillPanelJob ResolvePanelJob()
+    {
+        if (panelJob != SkillPanelJob.Auto)
+            return panelJob;
+
+        // [Codex Job Skill Panel] If the active player has WarriorAttack2D, open the warrior skill list; otherwise keep the archer list.
+        GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
+        if (playerObject != null && playerObject.activeInHierarchy &&
+            playerObject.GetComponent<WarriorAttack2D>() != null)
+        {
+            return SkillPanelJob.Warrior;
+        }
+
+        foreach (WarriorAttack2D warrior in FindObjectsByType<WarriorAttack2D>(FindObjectsSortMode.None))
+        {
+            if (warrior != null && warrior.gameObject.activeInHierarchy)
+                return SkillPanelJob.Warrior;
+        }
+
+        return SkillPanelJob.Archer;
+    }
+
+    private string[] GetVisibleIconNames(SkillPanelJob resolvedJob)
+    {
+        return resolvedJob == SkillPanelJob.Warrior
+            ? Combine(CommonIconNames, WarriorIconNames)
+            : Combine(CommonIconNames, ArcherIconNames);
+    }
+
+    private string[] GetVisibleTextNames(SkillPanelJob resolvedJob)
+    {
+        return resolvedJob == SkillPanelJob.Warrior
+            ? Combine(CommonTextNames, WarriorTextNames)
+            : Combine(CommonTextNames, ArcherTextNames);
+    }
+
+    private string[] GetAllIconNames()
+    {
+        return Combine(Combine(CommonIconNames, ArcherIconNames), WarriorIconNames);
+    }
+
+    private static string[] Combine(string[] first, string[] second)
+    {
+        string[] combined = new string[first.Length + second.Length];
+        first.CopyTo(combined, 0);
+        second.CopyTo(combined, first.Length);
+        return combined;
     }
 
     private void MoveEntryIntoRow(string objectName, RectTransform row, float positionX)

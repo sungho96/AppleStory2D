@@ -61,17 +61,14 @@ public class PlayerHealth2D : MonoBehaviour
     /// </summary>
     public void TakeDamage(int damage, Vector2 knockbackForce)
     {
-        Debug.Log($"TakeDamage 진입 / damage={damage}, force={knockbackForce}");
 
         if (isDead)
         {
-            Debug.Log("이미 죽은 상태라 return");
             return;
         }
 
         if (hitReaction != null && hitReaction.IsHitCooldown)
         {
-            Debug.Log("현재 피격 무적 상태라 return");
             return;
         }
 
@@ -85,7 +82,6 @@ public class PlayerHealth2D : MonoBehaviour
 
         if (currentHp <= 0)
         {
-            Debug.Log("HP 0 이하 -> Die 호출");
             Die();
             return;
         }
@@ -96,14 +92,12 @@ public class PlayerHealth2D : MonoBehaviour
             Debug.LogWarning("hitReaction 이 null 이라 넉백 호출 불가");
             return;
         }
-        Debug.Log($"HP after damage = {currentHp}/{maxHp}");
         hitReaction.ApplyKnockback(knockbackForce);
     }
 
     private void Die()
     {
         isDead = true;
-        Debug.Log("플레이어 사망");
     }
 
     private int CalculateFinalDamage(int rawDamage)

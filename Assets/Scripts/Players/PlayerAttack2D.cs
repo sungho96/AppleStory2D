@@ -768,7 +768,7 @@ public class PlayerAttack2D : MonoBehaviour
         if (rigidbody != null)
         {
             float finalSpeedMultiplier = isFinalShot ? 1.12f : 1f;
-            rigidbody.velocity = new Vector2(
+            rigidbody.linearVelocity = new Vector2(
                 dir * rapidVolleyArrowSpeed * finalSpeedMultiplier,
                 0f);
         }
@@ -895,7 +895,7 @@ public class PlayerAttack2D : MonoBehaviour
         Rigidbody2D rb = arrow.GetComponent<Rigidbody2D>();
         if (rb != null)
         {
-            rb.velocity = new Vector2(dir * launchSpeed, 0f);
+            rb.linearVelocity = new Vector2(dir * launchSpeed, 0f);
         }
 
 

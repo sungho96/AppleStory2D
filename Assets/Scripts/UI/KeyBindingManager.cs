@@ -6,6 +6,8 @@ public enum KeySettingSkillType
     None,
     MoveSpeedBuff,
     AttackSpeedBuff,
+    AngerBuff,
+    DownStrike,
     PowerShot,
     RapidVolley
 }
@@ -15,8 +17,11 @@ public class KeyBindingManager : MonoBehaviour
     public static KeyBindingManager Instance { get; private set; }
 
     [SerializeField] private SpeedBuffController speedBuffController;
+    [SerializeField] private WarriorBuffController warriorBuffController;
+    [SerializeField] private WarriorDownStrike2D warriorDownStrike;
     [SerializeField] private PlayerAttack2D playerAttack;
     [SerializeField] private KeySettingUIController keySettingUIController;
+
     private readonly Dictionary<KeyCode, KeySettingSkillType> keyBindings = new();
 
     private void Awake()
@@ -24,52 +29,54 @@ public class KeyBindingManager : MonoBehaviour
         Instance = this;
 
         if (speedBuffController == null)
-        {
             speedBuffController = GetComponent<SpeedBuffController>();
+
+        if (warriorBuffController == null)
+        {
+            // [Codex Warrior Buff] Anger is warrior-only, so it is routed through WarriorBuffController.
+            warriorBuffController = GetComponent<WarriorBuffController>();
         }
+        if (warriorBuffController == null)
+            warriorBuffController = FindFirstObjectByType<WarriorBuffController>();
+
+        if (warriorDownStrike == null)
+        {
+            // [Codex Warrior Skill] DownStrike is warrior-only and uses its own warrior skill component.
+            warriorDownStrike = GetComponent<WarriorDownStrike2D>();
+        }
+        if (warriorDownStrike == null)
+            warriorDownStrike = FindFirstObjectByType<WarriorDownStrike2D>();
 
         if (keySettingUIController == null)
-        {
             keySettingUIController = FindFirstObjectByType<KeySettingUIController>();
-        }
 
         if (playerAttack == null)
         {
-            // [파워 샷 연결] 매니저와 플레이어가 다른 오브젝트이므로 활성 플레이어 공격기를 찾습니다.
+            // [Codex Skill Mapping] PowerShot/RapidVolley still use the existing archer attack script.
             playerAttack = FindFirstObjectByType<PlayerAttack2D>();
         }
     }
 
     private void Update()
     {
-        // 키 설정 창에서 편집 중일 때는 배치된 스킬이 실수로 발동하지 않게 막습니다.
         if (keySettingUIController != null && keySettingUIController.IsOpen)
-        {
             return;
-        }
 
         foreach (KeyValuePair<KeyCode, KeySettingSkillType> binding in keyBindings)
         {
             if (binding.Value == KeySettingSkillType.PowerShot)
             {
-                // [파워 샷 추가] 누르는 동안 차징하고 키를 떼는 순간 발사합니다.
                 if (Input.GetKeyDown(binding.Key))
-                {
                     playerAttack?.BeginPowerShotCharge();
-                }
 
                 if (Input.GetKeyUp(binding.Key))
-                {
                     playerAttack?.ReleasePowerShot();
-                }
 
                 continue;
             }
 
             if (Input.GetKeyDown(binding.Key))
-            {
                 ExecuteSkill(binding.Value);
-            }
         }
     }
 
@@ -77,17 +84,16 @@ public class KeyBindingManager : MonoBehaviour
     {
         if (!TryConvertKeyCode(keyName, out KeyCode keyCode))
         {
-            Debug.LogWarning($"[키 설정] 지원하지 않는 키 이름입니다: {keyName}");
+            Debug.LogWarning($"[KeySetting] Unsupported key name: {keyName}");
             return;
         }
 
         keyBindings[keyCode] = skillType;
-        Debug.Log($"[키 설정] {keyName} 실행 스킬이 {skillType}(으)로 변경됐습니다.");
+        Debug.Log($"[KeySetting] {keyName} mapped to {skillType}.");
     }
 
     public void Unassign(string keyName)
     {
-        // [키 중복 배치 수정] 스킬이 다른 키로 이동하면 이전 키 바인딩을 제거합니다.
         if (!TryConvertKeyCode(keyName, out KeyCode keyCode))
             return;
 
@@ -96,23 +102,42 @@ public class KeyBindingManager : MonoBehaviour
 
     private void ExecuteSkill(KeySettingSkillType skillType)
     {
-        // [래피드 볼리 키매핑 복구] 공격 스킬은 버프 컨트롤러 검사와 분리해 직접 실행합니다.
         if (skillType == KeySettingSkillType.RapidVolley)
         {
             if (playerAttack != null)
                 playerAttack.UseRapidVolley();
             else
-                Debug.LogWarning("[키 설정] PlayerAttack2D가 연결되지 않았습니다.");
+                Debug.LogWarning("[KeySetting] PlayerAttack2D is not connected.");
+
             return;
         }
 
-        // 파워샷은 Update에서 KeyDown/KeyUp을 따로 처리하므로 여기서는 실행하지 않습니다.
         if (skillType == KeySettingSkillType.PowerShot)
             return;
 
+        if (skillType == KeySettingSkillType.AngerBuff)
+        {
+            if (warriorBuffController != null)
+                warriorBuffController.UseAngerBuff();
+            else
+                Debug.LogWarning("[KeySetting] WarriorBuffController is not connected.");
+
+            return;
+        }
+
+        if (skillType == KeySettingSkillType.DownStrike)
+        {
+            if (warriorDownStrike != null)
+                warriorDownStrike.UseDownStrike();
+            else
+                Debug.LogWarning("[KeySetting] WarriorDownStrike2D is not connected.");
+
+            return;
+        }
+
         if (speedBuffController == null)
         {
-            Debug.LogWarning("[키 설정] SpeedBuffController가 연결되지 않았습니다.");
+            Debug.LogWarning("[KeySetting] SpeedBuffController is not connected.");
             return;
         }
 
@@ -125,16 +150,11 @@ public class KeyBindingManager : MonoBehaviour
             case KeySettingSkillType.AttackSpeedBuff:
                 speedBuffController.UseAttackSpeedBuff();
                 break;
-
-            case KeySettingSkillType.PowerShot:
-            case KeySettingSkillType.RapidVolley:
-                break;
         }
     }
 
     private bool TryConvertKeyCode(string keyName, out KeyCode keyCode)
     {
-        // 화면 표기와 Unity KeyCode 이름이 다른 키들을 먼저 변환합니다.
         switch (keyName)
         {
             case "`":
@@ -161,9 +181,7 @@ public class KeyBindingManager : MonoBehaviour
         }
 
         if (keyName.Length == 1 && char.IsDigit(keyName[0]))
-        {
             return System.Enum.TryParse("Alpha" + keyName, out keyCode);
-        }
 
         return System.Enum.TryParse(keyName, true, out keyCode);
     }
@@ -171,8 +189,6 @@ public class KeyBindingManager : MonoBehaviour
     private void OnDestroy()
     {
         if (Instance == this)
-        {
             Instance = null;
-        }
     }
 }

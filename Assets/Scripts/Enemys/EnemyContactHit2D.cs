@@ -24,9 +24,8 @@ public class EnemyContactHit2D : MonoBehaviour
 
     private void TryHit(Collider2D other)
     {
-        if (!other.CompareTag("Player")) return;
-
-        var health = other.GetComponent<PlayerHealth2D>();
+        // [Codex Warrior Hit] Apply the calculated contact damage and knockback to the player.
+        var health = other.GetComponentInParent<PlayerHealth2D>();
         if (health == null) return;
 
         int rawDamage = (damageSource != null) ? damageSource.ContactDamage : 1;

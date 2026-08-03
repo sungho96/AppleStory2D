@@ -1,11 +1,11 @@
 using UnityEngine;
 
 /// <summary>
-/// ÀÏ¹Ý ÀÌµ¿ / Á¡ÇÁ Àü¿ë.
-/// - ÁÂ¿ì ÀÌµ¿
-/// - Á¡ÇÁ
+/// ï¿½Ï¹ï¿½ ï¿½Ìµï¿½ / ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½.
+/// - ï¿½Â¿ï¿½ ï¿½Ìµï¿½
+/// - ï¿½ï¿½ï¿½ï¿½
 /// 
-/// »ç´Ù¸® / ÇÇ°Ý ¹«Àû / ¹æÇâ ÀüÈ¯Àº ¿©±â¼­ ´ã´çÇÏÁö ¾Ê½À´Ï´Ù.
+/// ï¿½ï¿½Ù¸ï¿½ / ï¿½Ç°ï¿½ ï¿½ï¿½ï¿½ï¿½ / ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½È¯ï¿½ï¿½ ï¿½ï¿½ï¿½â¼­ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ê½ï¿½ï¿½Ï´ï¿½.
 /// </summary>
 public class PlayerMovement2D : MonoBehaviour
 {
@@ -17,18 +17,18 @@ public class PlayerMovement2D : MonoBehaviour
 
     private Rigidbody2D rb;
 
-    //±âº»°ª 1 = ¿ø·¡ ¼Óµµ
-    // 1.5 = 50% Áõ°¡
+    //ï¿½âº»ï¿½ï¿½ 1 = ï¿½ï¿½ï¿½ï¿½ ï¿½Óµï¿½
+    // 1.5 = 50% ï¿½ï¿½ï¿½ï¿½
     private float moveSpeedMultiplier = 1f;
 
     /// <summary>
-    /// ÇöÁ¦ ½ÇÁ¦ ÀÌµ¿¼Óµµ,
-    /// ±âº» ÀÌµ¿¼Óµµ * ¹öÇÁ ¹èÀ²
+    /// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ìµï¿½ï¿½Óµï¿½,
+    /// ï¿½âº» ï¿½Ìµï¿½ï¿½Óµï¿½ * ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     /// </summary>
     public float CurrentMoveSpeed => moveSpeed * moveSpeedMultiplier;
 
     /// <summary>
-    /// ¿ÜºÎ¿¡¼­ Rigidbody2D Àü´Þ¹Þ¾Æ ÃÊ±âÈ­.
+    /// ï¿½ÜºÎ¿ï¿½ï¿½ï¿½ Rigidbody2D ï¿½ï¿½ï¿½Þ¹Þ¾ï¿½ ï¿½Ê±ï¿½È­.
     /// </summary>
     public void Initialize(Rigidbody2D targetRb)
     {
@@ -36,8 +36,8 @@ public class PlayerMovement2D : MonoBehaviour
     }
 
     /// <summary>
-    /// ÀÏ¹Ý ¼öÆò ÀÌµ¿ Ã³¸®.
-    /// - ³Ë¹é µîÀ¸·Î ÀÌµ¿ÀÌ ¸·Èù »óÅÂ¸é Ã³¸®ÇÏÁö ¾ÊÀ½
+    /// ï¿½Ï¹ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ìµï¿½ Ã³ï¿½ï¿½.
+    /// - ï¿½Ë¹ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ìµï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Â¸ï¿½ Ã³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     /// </summary>
     public void HandleNormalMove(float moveInput, bool blockMove)
     {
@@ -47,18 +47,18 @@ public class PlayerMovement2D : MonoBehaviour
         if (blockMove)
             return;
 
-        rb.velocity = new Vector2(moveInput * CurrentMoveSpeed, rb.velocity.y);
+        rb.linearVelocity = new Vector2(moveInput * CurrentMoveSpeed, rb.linearVelocity.y);
     }
     /// <summary>
-    /// ÀÌµ¿¼Óµµ ¹èÀ² Àû¿ë
-    /// 1.5 ÀÔ·Â½Ã 50% Áõ°¡
+    /// ï¿½Ìµï¿½ï¿½Óµï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+    /// 1.5 ï¿½Ô·Â½ï¿½ 50% ï¿½ï¿½ï¿½ï¿½
     /// </summary>
     public void SetMoveSpeedMultiplier(float multiplier)
     {
         moveSpeedMultiplier = Mathf.Max(0f, multiplier);
     }
     /// <summary>
-    /// ÀÌµ¿¼Óµµ¸¦  ±âº» »óÅÂ·Î º¹±¸.
+    /// ï¿½Ìµï¿½ï¿½Óµï¿½ï¿½ï¿½  ï¿½âº» ï¿½ï¿½ï¿½Â·ï¿½ ï¿½ï¿½ï¿½ï¿½.
     /// </summary>
     public void ResetmoveSpeedMultiplier()
     {
@@ -78,14 +78,14 @@ public class PlayerMovement2D : MonoBehaviour
     }
 
     /// <summary>
-    /// Á¡ÇÁ Ã³¸®.
-    /// - ÇöÀç x ¼Óµµ´Â À¯ÁöÇÏ°í y¸¸ Á¡ÇÁ ¼Óµµ·Î º¯°æ
+    /// ï¿½ï¿½ï¿½ï¿½ Ã³ï¿½ï¿½.
+    /// - ï¿½ï¿½ï¿½ï¿½ x ï¿½Óµï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï°ï¿½ yï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Óµï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     /// </summary>
     public void Jump()
     {
         if (rb == null)
             return;
 
-        rb.velocity = new Vector2(rb.velocity.x, jumpVelocity);
+        rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpVelocity);
     }
 }
