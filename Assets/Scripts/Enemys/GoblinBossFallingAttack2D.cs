@@ -10,17 +10,15 @@ public class GoblinBossFallingAttack2D : MonoBehaviour
 {
     [Header("Attack Timing")]
     [SerializeField] private float firstAttackDelay = 2.5f;
-    [SerializeField] private float warningDuration = 1.5f;
+    [SerializeField] private float warningDuration = 1.15f;
     [SerializeField] private float fallDuration = 0.55f;
-    [SerializeField] private float rockStaggerDelay = 0.34f;
     [SerializeField] private float rockDisappearDuration = 0.22f;
     [SerializeField] private Vector2 cooldownRange = new Vector2(4.5f, 6f);
 
     [Header("Phase 2 - HP 50%")]
-    [SerializeField] private float phaseTwoWarningDuration = 1.15f;
-    [SerializeField] private float phaseTwoRockStaggerDelay = 0.24f;
-    [SerializeField] private float phaseTwoCooldownMultiplier = 0.75f;
-    [SerializeField] private int phaseTwoDamage = 25;
+    [SerializeField] private float phaseTwoWarningDuration = 0.85f;
+    [SerializeField] private float phaseTwoCooldownMultiplier = 0.6f;
+    [SerializeField] private int phaseTwoDamage = 30;
 
     [Header("Damage")]
     [SerializeField] private int damage = 20;
@@ -32,6 +30,21 @@ public class GoblinBossFallingAttack2D : MonoBehaviour
     [SerializeField] private float minTargetX = -9f;
     [SerializeField] private float maxTargetX = 9f;
     [SerializeField] private float spawnHeight = 7.5f;
+
+    [Header("Meteor Safe Zone")]
+    [SerializeField] private bool hardMode;
+    [SerializeField] private float phaseOneSafeZoneWidth = 3.4f;
+    [SerializeField] private float phaseTwoSafeZoneWidth = 2.15f;
+    [SerializeField] private float hardSafeZoneWidth = 1.65f;
+    [SerializeField] private float hardWarningDuration = 0.65f;
+    [SerializeField] private int extraFloorMeteors = 3;
+    [SerializeField] private int extraPlatformMeteors = 2;
+    [SerializeField] private float meteorWarningWidth = 1.25f;
+    [SerializeField] private int phaseOnePlayerNearbyMeteorCount = 4;
+    [SerializeField] private int phaseTwoPlayerNearbyMeteorCount = 7;
+    [SerializeField] private float phaseOnePlayerMeteorSpacing = 1.35f;
+    [SerializeField] private float phaseTwoPlayerMeteorSpacing = 1.05f;
+    [SerializeField] private float safeZoneMinDistanceFromPlayer = 4.2f;
 
     private Transform player;
     private GoblinHealth2D bossHealth;
@@ -82,15 +95,22 @@ public class GoblinBossFallingAttack2D : MonoBehaviour
             yield return null;
 
         bool phaseTwo = IsPhaseTwo();
-        int rockCount = phaseTwo ? 3 : 2;
         int attackDamage = phaseTwo ? phaseTwoDamage : damage;
-        float currentWarningDuration = phaseTwo ? phaseTwoWarningDuration : warningDuration;
-        float currentStaggerDelay = phaseTwo ? phaseTwoRockStaggerDelay : rockStaggerDelay;
-        List<Vector2> impactPoints = CreateImpactPoints(rockCount);
-        List<GameObject> warnings = new List<GameObject>(rockCount);
+        float currentWarningDuration = hardMode ? hardWarningDuration : (phaseTwo ? phaseTwoWarningDuration : warningDuration);
+        List<MeteorArea> meteorAreas = CreateMeteorAreas(phaseTwo);
+        List<Vector2> impactPoints = new List<Vector2>();
+        List<GameObject> dangerWarnings = new List<GameObject>(meteorAreas.Count);
+
+        for (int i = 0; i < meteorAreas.Count; i++)
+        {
+            List<Vector2> areaImpactPoints = new List<Vector2>();
+            AddPlayerNearbyImpacts(areaImpactPoints, meteorAreas[i], phaseTwo);
+            AddDistributedImpactPoints(areaImpactPoints, meteorAreas[i].SafeZones, meteorAreas[i].Floor);
+            impactPoints.AddRange(areaImpactPoints);
+        }
 
         for (int i = 0; i < impactPoints.Count; i++)
-            warnings.Add(CreateWarning(impactPoints[i], phaseTwo));
+            dangerWarnings.Add(CreateMeteorWarning(impactPoints[i]));
 
         // [보스 시전 연결] 바닥 예고가 시작되는 순간 보스가 이동을 멈추고 스킬 동작을 재생합니다.
         if (bossCombat != null)
@@ -101,19 +121,27 @@ public class GoblinBossFallingAttack2D : MonoBehaviour
         while (timer < currentWarningDuration)
         {
             timer += Time.deltaTime;
-            float pulse = 1f + Mathf.Sin(timer * 12f) * 0.12f;
-            for (int i = 0; i < warnings.Count; i++)
+            float warningAlphaPulse = 0.82f + Mathf.Sin(timer * 14f) * 0.18f;
+            for (int i = 0; i < dangerWarnings.Count; i++)
             {
-                if (warnings[i] != null)
-                    warnings[i].transform.localScale = new Vector3(2.2f * pulse, 0.38f * pulse, 1f);
+                if (dangerWarnings[i] != null)
+                    SetWarningAlpha(dangerWarnings[i], (hardMode ? 0.72f : 0.58f) * warningAlphaPulse);
             }
             yield return null;
         }
 
         for (int i = 0; i < impactPoints.Count; i++)
         {
-            StartCoroutine(DropRock(impactPoints[i], warnings[i], attackDamage));
-            yield return new WaitForSeconds(currentStaggerDelay);
+            // [Codex Meteor Safe Zone] 제한시간이 끝나면 위험지역 전체가 거의 동시에 떨어져 안전구역 선택이 정답이 되게 합니다.
+            StartCoroutine(DropRock(impactPoints[i], null, attackDamage));
+        }
+
+        yield return new WaitForSeconds(fallDuration);
+        ApplyMeteorImpactDamage(impactPoints, attackDamage);
+        for (int i = 0; i < dangerWarnings.Count; i++)
+        {
+            if (dangerWarnings[i] != null)
+                Destroy(dangerWarnings[i]);
         }
 
         yield return new WaitForSeconds(fallDuration + 0.2f);
@@ -156,7 +184,7 @@ public class GoblinBossFallingAttack2D : MonoBehaviour
             fallingObject.transform.SetPositionAndRotation(end, Quaternion.Euler(0f, 0f, finalAngle));
         }
 
-        ApplyImpactDamage(impactPoint, attackDamage);
+        // [Codex Meteor Safe Zone] 피해는 개별 바위가 아니라 최종 안전구역 판정으로 1회만 처리합니다.
         yield return ShowImpactFlash(impactPoint);
 
         if (warning != null)
@@ -194,24 +222,122 @@ public class GoblinBossFallingAttack2D : MonoBehaviour
         Destroy(fallingObject);
     }
 
-    private List<Vector2> CreateImpactPoints(int count)
+    private List<MeteorArea> CreateMeteorAreas(bool phaseTwo)
     {
-        const float spacing = 2.8f;
-        float primaryX = Mathf.Clamp(player.position.x, minTargetX, maxTargetX);
-        float arenaCenter = (minTargetX + maxTargetX) * 0.5f;
-        float direction = primaryX > arenaCenter ? -1f : 1f;
-        List<Vector2> points = new List<Vector2>(count);
+        List<MeteorArea> areas = new List<MeteorArea>();
+        FloorArea playerFloor = FindTargetFloorArea();
+        areas.Add(new MeteorArea(playerFloor, CreateSafeZones(phaseTwo, playerFloor)));
 
-        for (int i = 0; i < count; i++)
+        if (!phaseTwo)
+            return areas;
+
+        GameObject platformRoot = GameObject.Find("BossArena_SidePlatforms");
+        if (platformRoot == null)
+            return areas;
+
+        Collider2D[] platformColliders = platformRoot.GetComponentsInChildren<Collider2D>(true);
+        for (int i = 0; i < platformColliders.Length; i++)
         {
-            float x = primaryX + direction * spacing * i;
-            if (x < minTargetX || x > maxTargetX)
-                x = primaryX - direction * spacing * i;
+            if (platformColliders[i] == null || !platformColliders[i].enabled)
+                continue;
 
-            points.Add(FindImpactPoint(Mathf.Clamp(x, minTargetX, maxTargetX)));
+            FloorArea platformArea = new FloorArea(platformColliders[i].bounds, true);
+            if (ContainsSimilarFloor(areas, platformArea))
+                continue;
+
+            // [Codex Meteor Phase 2 Platforms] 2페이즈는 공중 발판에도 같은 규칙의 경고/안전지대를 만들어 위층 대피도 압박합니다.
+            areas.Add(new MeteorArea(platformArea, CreateSafeZones(phaseTwo, platformArea)));
         }
 
-        return points;
+        return areas;
+    }
+
+    private List<SafeZone> CreateSafeZones(bool phaseTwo, FloorArea targetFloor)
+    {
+        int safeZoneCount = hardMode ? 1 : 2;
+        if (targetFloor.IsPlatform)
+            safeZoneCount = 1;
+
+        float width = hardMode ? hardSafeZoneWidth : (phaseTwo ? phaseTwoSafeZoneWidth : phaseOneSafeZoneWidth);
+        float halfWidth = Mathf.Max(0.4f, width * 0.5f);
+        halfWidth = Mathf.Min(halfWidth, targetFloor.Width * 0.45f);
+        float playerX = Mathf.Clamp(player.position.x, targetFloor.MinX, targetFloor.MaxX);
+        float leftCenter = targetFloor.MinX + halfWidth;
+        float rightCenter = targetFloor.MaxX - halfWidth;
+        List<SafeZone> safeZones = new List<SafeZone>(safeZoneCount);
+
+        // [Codex Meteor Safe Zone] 플레이어 위치에서 떨어진 안전지대를 먼저 보여줘서 걷기보다 대시 판단이 중요해지게 합니다.
+        if (safeZoneCount == 1)
+        {
+            float center = Mathf.Abs(playerX - leftCenter) > Mathf.Abs(playerX - rightCenter) ? leftCenter : rightCenter;
+            if (Mathf.Abs(playerX - center) < safeZoneMinDistanceFromPlayer)
+                center = center < playerX ? targetFloor.MinX + halfWidth : targetFloor.MaxX - halfWidth;
+
+            safeZones.Add(new SafeZone(center, halfWidth));
+            return safeZones;
+        }
+
+        safeZones.Add(new SafeZone(leftCenter, halfWidth));
+        safeZones.Add(new SafeZone(rightCenter, halfWidth));
+        return safeZones;
+    }
+
+    private void AddDistributedImpactPoints(List<Vector2> points, List<SafeZone> safeZones, FloorArea targetFloor)
+    {
+        int meteorCount = Mathf.Max(0, targetFloor.IsPlatform ? extraPlatformMeteors : extraFloorMeteors);
+        if (meteorCount <= 0)
+            return;
+
+        float spacing = targetFloor.Width / (meteorCount + 1f);
+
+        for (int i = 0; i < meteorCount; i++)
+        {
+            float x = targetFloor.MinX + spacing * (i + 1f);
+            if (IsInsideAnySafeZone(x, safeZones))
+            {
+                x = FindNearestDangerX(x, safeZones, targetFloor);
+                if (IsInsideAnySafeZone(x, safeZones))
+                    continue;
+            }
+
+            if (!TryResolveImpactX(points, targetFloor, x, out x))
+                continue;
+
+            points.Add(new Vector2(Mathf.Clamp(x, targetFloor.MinX, targetFloor.MaxX), targetFloor.TopY));
+        }
+    }
+
+    private void AddPlayerNearbyImpacts(List<Vector2> impactPoints, MeteorArea meteorArea, bool phaseTwo)
+    {
+        GameObject[] players = GameObject.FindGameObjectsWithTag("Player");
+        for (int i = 0; i < players.Length; i++)
+        {
+            if (players[i] == null || !meteorArea.Floor.Contains(players[i].transform.position))
+                continue;
+
+            float playerX = Mathf.Clamp(players[i].transform.position.x, meteorArea.Floor.MinX, meteorArea.Floor.MaxX);
+            float x = playerX;
+            if (!TryResolveImpactX(impactPoints, meteorArea.Floor, x, out x))
+                continue;
+
+            // [Codex Meteor Player Start] 시전 시작 위치에는 항상 메테오를 찍어, 장판을 보고 이동해야 하는 압박을 만듭니다.
+            impactPoints.Add(new Vector2(x, meteorArea.Floor.TopY));
+
+            // [Codex Meteor Player Pressure] 1페이즈는 주변 4개, 2페이즈는 주변 7개로 압박 밀도를 올립니다.
+            int nearbyCount = Mathf.Max(0, phaseTwo ? phaseTwoPlayerNearbyMeteorCount : phaseOnePlayerNearbyMeteorCount);
+            float nearbySpacing = phaseTwo ? phaseTwoPlayerMeteorSpacing : phaseOnePlayerMeteorSpacing;
+            for (int nearbyIndex = 0; nearbyIndex < nearbyCount; nearbyIndex++)
+            {
+                float side = nearbyIndex % 2 == 0 ? -1f : 1f;
+                float ring = nearbyIndex / 2 + 1f;
+                float preferredX = playerX + side * nearbySpacing * ring;
+                x = Mathf.Clamp(preferredX, meteorArea.Floor.MinX, meteorArea.Floor.MaxX);
+                if (!TryResolveImpactX(impactPoints, meteorArea.Floor, x, out x))
+                    continue;
+
+                impactPoints.Add(new Vector2(x, meteorArea.Floor.TopY));
+            }
+        }
     }
 
     private Vector2 FindImpactPoint(float targetX)
@@ -223,6 +349,110 @@ public class GoblinBossFallingAttack2D : MonoBehaviour
         return hit.collider != null
             ? hit.point
             : new Vector2(targetX, -7.9f);
+    }
+
+    private FloorArea FindTargetFloorArea()
+    {
+        int groundLayer = LayerMask.GetMask("Ground");
+        Vector2 rayOrigin = new Vector2(player.position.x, player.position.y + 0.45f);
+        RaycastHit2D hit = Physics2D.Raycast(rayOrigin, Vector2.down, 4f, groundLayer);
+        if (hit.collider != null)
+            return new FloorArea(hit.collider.bounds, IsSidePlatformCollider(hit.collider));
+
+        return new FloorArea(minTargetX, maxTargetX, FindImpactPoint(player.position.x).y, false);
+    }
+
+    private static bool ContainsSimilarFloor(List<MeteorArea> areas, FloorArea candidate)
+    {
+        for (int i = 0; i < areas.Count; i++)
+        {
+            FloorArea floor = areas[i].Floor;
+            bool sameHeight = Mathf.Abs(floor.TopY - candidate.TopY) <= 0.08f;
+            bool overlappingX = candidate.MinX <= floor.MaxX && candidate.MaxX >= floor.MinX;
+            if (sameHeight && overlappingX)
+                return true;
+        }
+
+        return false;
+    }
+
+    private bool TryResolveImpactX(List<Vector2> points, FloorArea targetFloor, float preferredX, out float resolvedX)
+    {
+        float minimumGap = Mathf.Max(0.35f, meteorWarningWidth * 0.9f);
+        resolvedX = Mathf.Clamp(preferredX, targetFloor.MinX, targetFloor.MaxX);
+        if (!ContainsNearbyImpact(points, targetFloor.TopY, resolvedX, minimumGap))
+            return true;
+
+        for (int step = 1; step <= 6; step++)
+        {
+            float offset = minimumGap * step;
+            float leftX = Mathf.Clamp(preferredX - offset, targetFloor.MinX, targetFloor.MaxX);
+            if (!ContainsNearbyImpact(points, targetFloor.TopY, leftX, minimumGap))
+            {
+                resolvedX = leftX;
+                return true;
+            }
+
+            float rightX = Mathf.Clamp(preferredX + offset, targetFloor.MinX, targetFloor.MaxX);
+            if (!ContainsNearbyImpact(points, targetFloor.TopY, rightX, minimumGap))
+            {
+                resolvedX = rightX;
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool ContainsNearbyImpact(List<Vector2> points, float floorY, float x, float minimumGap)
+    {
+        for (int i = 0; i < points.Count; i++)
+        {
+            if (Mathf.Abs(points[i].y - floorY) <= 0.08f && Mathf.Abs(points[i].x - x) < minimumGap)
+                return true;
+        }
+
+        return false;
+    }
+
+    private static float FindNearestDangerX(float preferredX, List<SafeZone> safeZones, FloorArea targetFloor)
+    {
+        float bestX = preferredX;
+        float bestDistance = float.MaxValue;
+        for (int i = 0; i < safeZones.Count; i++)
+        {
+            float leftCandidate = Mathf.Clamp(safeZones[i].CenterX - safeZones[i].HalfWidth - 0.28f, targetFloor.MinX, targetFloor.MaxX);
+            float rightCandidate = Mathf.Clamp(safeZones[i].CenterX + safeZones[i].HalfWidth + 0.28f, targetFloor.MinX, targetFloor.MaxX);
+            float leftDistance = Mathf.Abs(preferredX - leftCandidate);
+            float rightDistance = Mathf.Abs(preferredX - rightCandidate);
+
+            if (leftDistance < bestDistance)
+            {
+                bestDistance = leftDistance;
+                bestX = leftCandidate;
+            }
+            if (rightDistance < bestDistance)
+            {
+                bestDistance = rightDistance;
+                bestX = rightCandidate;
+            }
+        }
+
+        return bestX;
+    }
+
+    private static bool IsSidePlatformCollider(Collider2D collider)
+    {
+        Transform current = collider.transform;
+        while (current != null)
+        {
+            if (current.name == "BossArena_SidePlatforms")
+                return true;
+
+            current = current.parent;
+        }
+
+        return false;
     }
 
     private GameObject CreateWarning(Vector2 impactPoint, bool phaseTwo)
@@ -237,6 +467,21 @@ public class GoblinBossFallingAttack2D : MonoBehaviour
             ? new Color(1f, 0.32f, 0.02f, 0.76f)
             : new Color(1f, 0.08f, 0.03f, 0.62f);
         renderer.sortingOrder = 25;
+        return warning;
+    }
+
+    private GameObject CreateMeteorWarning(Vector2 impactPoint)
+    {
+        GameObject warning = new GameObject("BossFall_MeteorWarning");
+        warning.transform.position = new Vector3(impactPoint.x, impactPoint.y + 0.03f, 0f);
+
+        SpriteRenderer renderer = warning.AddComponent<SpriteRenderer>();
+        renderer.sprite = warningSprite;
+        renderer.color = hardMode
+            ? new Color(1f, 0.03f, 0.01f, 0.72f)
+            : new Color(1f, 0.12f, 0.03f, 0.58f);
+        renderer.sortingOrder = 24;
+        ApplyWarningSize(warning.transform, meteorWarningWidth, meteorWarningWidth * 0.28f);
         return warning;
     }
 
@@ -266,6 +511,107 @@ public class GoblinBossFallingAttack2D : MonoBehaviour
             playerHealth.TakeDamage(attackDamage, new Vector2(direction * knockbackX, knockbackY));
             break;
         }
+    }
+
+    private void ApplyDangerAreaDamage(List<MeteorArea> meteorAreas, int attackDamage)
+    {
+        GameObject[] players = GameObject.FindGameObjectsWithTag("Player");
+        for (int i = 0; i < players.Length; i++)
+        {
+            if (players[i] == null)
+                continue;
+
+            MeteorArea hitArea;
+            if (!TryFindHitArea(players[i].transform.position, meteorAreas, out hitArea) ||
+                IsInsideAnySafeZone(players[i].transform.position.x, hitArea.SafeZones))
+                continue;
+
+            PlayerHealth2D playerHealth = players[i].GetComponentInParent<PlayerHealth2D>();
+            if (playerHealth == null)
+                continue;
+
+            float direction = players[i].transform.position.x >= hitArea.Floor.CenterX ? 1f : -1f;
+            playerHealth.TakeDamage(attackDamage, new Vector2(direction * knockbackX, knockbackY));
+        }
+    }
+
+    private void ApplyMeteorImpactDamage(List<Vector2> impactPoints, int attackDamage)
+    {
+        GameObject[] players = GameObject.FindGameObjectsWithTag("Player");
+        float halfWarningWidth = Mathf.Max(0.1f, meteorWarningWidth * 0.5f);
+        for (int i = 0; i < players.Length; i++)
+        {
+            if (players[i] == null)
+                continue;
+
+            Vector3 playerPosition = players[i].transform.position;
+            for (int pointIndex = 0; pointIndex < impactPoints.Count; pointIndex++)
+            {
+                Vector2 impactPoint = impactPoints[pointIndex];
+                bool sameFloor = Mathf.Abs(playerPosition.y - impactPoint.y) <= 2.2f;
+                bool insideMarkedX = Mathf.Abs(playerPosition.x - impactPoint.x) <= halfWarningWidth;
+                if (!sameFloor || !insideMarkedX)
+                    continue;
+
+                PlayerHealth2D playerHealth = players[i].GetComponentInParent<PlayerHealth2D>();
+                if (playerHealth == null)
+                    break;
+
+                // [Codex Meteor Hit Match] 실제 피해 X 범위를 바닥 경고 표시 폭과 동일하게 맞춥니다.
+                float direction = playerPosition.x >= impactPoint.x ? 1f : -1f;
+                playerHealth.TakeDamage(attackDamage, new Vector2(direction * knockbackX, knockbackY));
+                break;
+            }
+        }
+    }
+
+    private static bool TryFindHitArea(Vector3 playerPosition, List<MeteorArea> meteorAreas, out MeteorArea hitArea)
+    {
+        for (int i = 0; i < meteorAreas.Count; i++)
+        {
+            if (meteorAreas[i].Floor.Contains(playerPosition))
+            {
+                hitArea = meteorAreas[i];
+                return true;
+            }
+        }
+
+        hitArea = new MeteorArea();
+        return false;
+    }
+
+    private static bool IsInsideAnySafeZone(float x, List<SafeZone> safeZones)
+    {
+        for (int i = 0; i < safeZones.Count; i++)
+        {
+            if (safeZones[i].Contains(x))
+                return true;
+        }
+
+        return false;
+    }
+
+    private static void SetWarningAlpha(GameObject warning, float alpha)
+    {
+        SpriteRenderer renderer = warning.GetComponent<SpriteRenderer>();
+        if (renderer == null)
+            return;
+
+        Color color = renderer.color;
+        color.a = Mathf.Clamp01(alpha);
+        renderer.color = color;
+    }
+
+    private void ApplyWarningSize(Transform warningTransform, float worldWidth, float worldHeight)
+    {
+        if (warningSprite == null)
+            return;
+
+        Vector2 spriteSize = warningSprite.bounds.size;
+        warningTransform.localScale = new Vector3(
+            worldWidth / Mathf.Max(0.01f, spriteSize.x),
+            worldHeight / Mathf.Max(0.01f, spriteSize.y),
+            1f);
     }
 
     private IEnumerator ShowImpactFlash(Vector2 impactPoint)
@@ -411,5 +757,66 @@ public class GoblinBossFallingAttack2D : MonoBehaviour
         texture.SetPixels(pixels);
         texture.Apply();
         return Sprite.Create(texture, new Rect(0f, 0f, size, size), new Vector2(0.5f, 0.5f), size);
+    }
+
+    private struct SafeZone
+    {
+        public readonly float CenterX;
+        public readonly float HalfWidth;
+        public float Width => HalfWidth * 2f;
+
+        public SafeZone(float centerX, float halfWidth)
+        {
+            CenterX = centerX;
+            HalfWidth = halfWidth;
+        }
+
+        public bool Contains(float x)
+        {
+            return Mathf.Abs(x - CenterX) <= HalfWidth;
+        }
+    }
+
+    private struct MeteorArea
+    {
+        public readonly FloorArea Floor;
+        public readonly List<SafeZone> SafeZones;
+
+        public MeteorArea(FloorArea floor, List<SafeZone> safeZones)
+        {
+            Floor = floor;
+            SafeZones = safeZones;
+        }
+    }
+
+    private struct FloorArea
+    {
+        public readonly float MinX;
+        public readonly float MaxX;
+        public readonly float TopY;
+        public readonly bool IsPlatform;
+        public float CenterX => (MinX + MaxX) * 0.5f;
+        public float Width => Mathf.Max(0.1f, MaxX - MinX);
+
+        public FloorArea(Bounds bounds, bool isPlatform)
+        {
+            MinX = bounds.min.x;
+            MaxX = bounds.max.x;
+            TopY = bounds.max.y;
+            IsPlatform = isPlatform;
+        }
+
+        public FloorArea(float minX, float maxX, float topY, bool isPlatform)
+        {
+            MinX = minX;
+            MaxX = maxX;
+            TopY = topY;
+            IsPlatform = isPlatform;
+        }
+
+        public bool Contains(Vector3 position)
+        {
+            return position.x >= MinX && position.x <= MaxX && Mathf.Abs(position.y - TopY) <= 2.2f;
+        }
     }
 }

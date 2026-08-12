@@ -49,6 +49,8 @@ public class GoblinBossArenaLayout2D : MonoBehaviour
                 boss.AddComponent<GoblinBossCombatController2D>();
             if (boss.GetComponent<GoblinBossFallingAttack2D>() == null)
                 boss.AddComponent<GoblinBossFallingAttack2D>();
+
+            IgnoreBossSidePlatformCollisions(boss);
         }
 
         GameObject player = GameObject.FindGameObjectWithTag("Player");
@@ -115,8 +117,10 @@ public class GoblinBossArenaLayout2D : MonoBehaviour
             platformRoot = new GameObject("BossArena_SidePlatforms");
 
         // [보스 맵 동선 개선] 좌우 발판은 지상에서 여유 있게 닿도록 조금 낮춥니다.
-        CreateOrUpdatePlatform(source.gameObject, platformRoot.transform, "LeftPlatform", new Vector3(-6.6f, -5.65f, 0f), Vector3.one);
-        CreateOrUpdatePlatform(source.gameObject, platformRoot.transform, "RightPlatform", new Vector3(6.6f, -5.65f, 0f), Vector3.one);
+        // [Codex Side Platform Visual Scale] 교체한 이미지가 커서 좌우 발판은 시각 크기만 0.3으로 줄입니다.
+        Vector3 sidePlatformVisualScale = new Vector3(0.3f, 0.3f, 1f);
+        CreateOrUpdatePlatform(source.gameObject, platformRoot.transform, "LeftPlatform", new Vector3(-6.6f, -5.65f, 0f), sidePlatformVisualScale);
+        CreateOrUpdatePlatform(source.gameObject, platformRoot.transform, "RightPlatform", new Vector3(6.6f, -5.65f, 0f), sidePlatformVisualScale);
 
         // [보스 맵 동선 개선] 기존의 작은 발판 조각을 재사용해 중앙에 두 번째 이동 단계를 만듭니다.
         Transform centerSource = sourceFloor.transform.Find("platform_10_0 (6)");
@@ -215,8 +219,9 @@ public class GoblinBossArenaLayout2D : MonoBehaviour
             }
         }
 
-        if (sourceCollider != null)
+        if (sourceCollider != null && needsGeneratedCollider)
         {
+            // [Codex Manual Collider Keep] 씬에서 직접 맞춘 기존 BoxCollider2D는 덮어쓰지 않고, 새로 만든 콜리더에만 기본값을 복사합니다.
             landingCollider.size = sourceCollider.size;
             landingCollider.offset = sourceCollider.offset;
             landingCollider.edgeRadius = sourceCollider.edgeRadius;
@@ -236,6 +241,36 @@ public class GoblinBossArenaLayout2D : MonoBehaviour
         int groundLayer = LayerMask.NameToLayer("Ground");
         if (groundLayer >= 0)
             platform.layer = groundLayer;
+    }
+
+    private static void IgnoreBossSidePlatformCollisions(GameObject boss)
+    {
+        // [Codex Boss Platform Ignore] Only ignore the floating side/center platforms, not BossArena_MainFloor.
+        if (boss == null)
+            return;
+
+        GameObject platformRoot = FindSceneObject("BossArena_SidePlatforms");
+        if (platformRoot == null)
+            return;
+
+        Collider2D[] bossColliders = boss.GetComponentsInChildren<Collider2D>(true);
+        Collider2D[] platformColliders = platformRoot.GetComponentsInChildren<Collider2D>(true);
+
+        for (int bossIndex = 0; bossIndex < bossColliders.Length; bossIndex++)
+        {
+            Collider2D bossCollider = bossColliders[bossIndex];
+            if (bossCollider == null)
+                continue;
+
+            for (int platformIndex = 0; platformIndex < platformColliders.Length; platformIndex++)
+            {
+                Collider2D platformCollider = platformColliders[platformIndex];
+                if (platformCollider == null || !platformCollider.enabled)
+                    continue;
+
+                Physics2D.IgnoreCollision(bossCollider, platformCollider, true);
+            }
+        }
     }
 
     private static void SetActiveIfFound(string objectName, bool active)

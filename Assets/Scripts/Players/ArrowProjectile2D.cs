@@ -8,6 +8,7 @@ public class ArrowProjectile2D : NetworkBehaviour
 
     private float moveDir;
     private bool applyHitReaction = true;
+    private float powerShotChargeRatio;
 
     private void Start()
     {
@@ -27,7 +28,8 @@ public class ArrowProjectile2D : NetworkBehaviour
             return;
 
         Debug.Log($"Arrow hit target: {other.name}");
-        enemyHealth.TakeDamage(damage, moveDir, applyHitReaction);
+        // [Codex Boss Shield Break] Pass PowerShot charge so the boss shield can require a 50% charged shot.
+        enemyHealth.TakeDamage(damage, moveDir, applyHitReaction, powerShotChargeRatio);
         DespawnOrDestroy();
     }
 
@@ -43,9 +45,15 @@ public class ArrowProjectile2D : NetworkBehaviour
 
     public void Configure(int configuredDamage, float dir, bool useHitReaction, float speed)
     {
+        Configure(configuredDamage, dir, useHitReaction, speed, 0f);
+    }
+
+    public void Configure(int configuredDamage, float dir, bool useHitReaction, float speed, float configuredPowerShotChargeRatio)
+    {
         damage = Mathf.Max(1, configuredDamage);
         moveDir = Mathf.Sign(dir);
         applyHitReaction = useHitReaction;
+        powerShotChargeRatio = Mathf.Clamp01(configuredPowerShotChargeRatio);
 
         Rigidbody2D rigidbody = GetComponent<Rigidbody2D>();
         if (rigidbody == null)

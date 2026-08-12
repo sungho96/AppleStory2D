@@ -989,7 +989,8 @@ public class PlayerAttack2D : NetworkBehaviour
 
         ArrowProjectile2D projectile = arrow.GetComponent<ArrowProjectile2D>();
         if (projectile != null)
-            projectile.Configure(damage, dir, useHitReaction, speed);
+            // [Codex Boss Shield Break] Keep PowerShot charge ratio on the projectile for shield-break judgment.
+            projectile.Configure(damage, dir, useHitReaction, speed, visualStyle == 3 ? visualPower : 0f);
 
         Rigidbody2D rigidbody = arrow.GetComponent<Rigidbody2D>();
         if (rigidbody != null)

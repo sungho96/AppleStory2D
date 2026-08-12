@@ -10,20 +10,27 @@ public class GoblinBossIceWaveAttack2D : MonoBehaviour
     [Header("Attack Timing")]
     [SerializeField] private float firstAttackDelay = 5.5f;
     [SerializeField] private float warningDuration = 0.65f;
-    [SerializeField] private float spikeInterval = 0.085f;
+    [SerializeField] private float spikeInterval = 0.0425f;
+    [SerializeField] private float secondPhaseRepeatDelay = 0.5f;
+    [SerializeField] private float recoveryDuration = 0.45f;
     [SerializeField] private Vector2 cooldownRange = new Vector2(6.5f, 8f);
 
     [Header("Wave")]
+    [SerializeField, Range(0.05f, 0.95f)] private float secondPhaseHpRatio = 0.5f;
     [SerializeField] private int spikeCount = 7;
     [SerializeField] private float firstSpikeDistance = 1.35f;
     [SerializeField] private float spikeSpacing = 0.65f;
     [SerializeField] private float spikeScale = 0.17f;
     [SerializeField] private float spikeGroundOffset = -0.13f;
     [SerializeField] private float spikeHoldDuration = 0.58f;
+    [SerializeField] private float arenaWaveMinX = -13.6f;
+    [SerializeField] private float arenaWaveMaxX = 13.6f;
+    [SerializeField] private float surfaceExtraWidth = 4.4f;
 
     [Header("Damage")]
     [SerializeField] private int damage = 18;
-    [SerializeField] private Vector2 hitBoxSize = new Vector2(1.35f, 1.45f);
+    [SerializeField] private Vector2 hitBoxSize = new Vector2(1.35f, 0.7f);
+    [SerializeField] private float hitBoxGroundOffset = 0.34f;
     [SerializeField] private float knockbackX = 6f;
     [SerializeField] private float knockbackY = 4.5f;
     [SerializeField] private float slowMultiplier = 0.75f;
@@ -64,7 +71,8 @@ public class GoblinBossIceWaveAttack2D : MonoBehaviour
     private IEnumerator PerformIceWave()
     {
         float direction = player.position.x < transform.position.x ? -1f : 1f;
-        List<Vector2> points = CreateWavePoints(direction);
+        bool isSecondPhase = IsSecondPhase();
+        List<Vector2> points = CreateWavePoints();
         if (points.Count == 0)
             yield break;
 
@@ -76,7 +84,10 @@ public class GoblinBossIceWaveAttack2D : MonoBehaviour
         // [얼음 파도 추가] 메테오와 같은 시전 자세를 사용하되 푸른 바닥 경고로 공격 종류를 구분합니다.
         if (bossCombat != null)
         {
-            float attackLockDuration = warningDuration + spikeInterval * Mathf.Max(0, points.Count - 1) + spikeHoldDuration;
+            // [Codex IceWave Repeat] 2페이즈는 전체 바닥 웨이브를 한 번 더 깔아서 점프-착지-점프 리듬을 요구합니다.
+            float singleWaveDuration = spikeInterval * Mathf.Max(0, points.Count - 1) + spikeHoldDuration;
+            float repeatDuration = isSecondPhase ? Mathf.Max(0f, secondPhaseRepeatDelay) + singleWaveDuration : 0f;
+            float attackLockDuration = warningDuration + singleWaveDuration + repeatDuration + recoveryDuration;
             bossCombat.BeginIceCast(attackLockDuration);
         }
 
@@ -93,31 +104,84 @@ public class GoblinBossIceWaveAttack2D : MonoBehaviour
             yield return null;
         }
 
+        yield return SpawnWave(points, direction, warnings);
+
+        if (isSecondPhase)
+        {
+            yield return new WaitForSeconds(Mathf.Max(0f, secondPhaseRepeatDelay));
+            yield return SpawnWave(points, direction, null);
+        }
+
+        yield return new WaitForSeconds(spikeHoldDuration + recoveryDuration);
+    }
+
+    private IEnumerator SpawnWave(List<Vector2> points, float direction, List<GameObject> warnings)
+    {
         for (int i = 0; i < points.Count; i++)
         {
-            if (warnings[i] != null)
+            if (warnings != null && warnings[i] != null)
                 Destroy(warnings[i]);
 
             StartCoroutine(ShowSpike(points[i], direction));
             yield return new WaitForSeconds(spikeInterval);
         }
-
-        yield return new WaitForSeconds(spikeHoldDuration + 0.25f);
     }
 
-    private List<Vector2> CreateWavePoints(float direction)
+    private List<Vector2> CreateWavePoints()
     {
         List<Vector2> points = new List<Vector2>(spikeCount);
-        if (!TryFindPlayerGroundY(out float playerFloorY))
-            return points;
+        bool isSecondPhase = IsSecondPhase();
 
-        for (int i = 0; i < spikeCount; i++)
-        {
-            float x = transform.position.x + direction * (firstSpikeDistance + spikeSpacing * i);
-            if (TryFindGroundPoint(x, playerFloorY, out Vector2 groundPoint))
-                points.Add(groundPoint);
-        }
+        // [Codex IceWave Phase Floor] 1페이즈는 메인 바닥 전체, 2페이즈는 메인 바닥과 모든 공중 발판 전체를 공격합니다.
+        AddFloorWavePoints(points, "BossArena_MainFloor");
+        if (isSecondPhase)
+            AddSidePlatformWavePoints(points);
+
         return points;
+    }
+
+    private bool IsSecondPhase()
+    {
+        return bossHealth != null && bossHealth.HpRatio <= secondPhaseHpRatio;
+    }
+
+    private void AddSidePlatformWavePoints(List<Vector2> points)
+    {
+        GameObject platformRoot = GameObject.Find("BossArena_SidePlatforms");
+        if (platformRoot == null)
+            return;
+
+        Collider2D[] platformColliders = platformRoot.GetComponentsInChildren<Collider2D>(true);
+        for (int i = 0; i < platformColliders.Length; i++)
+        {
+            if (platformColliders[i] == null || !platformColliders[i].enabled)
+                continue;
+
+            // [Codex IceWave Phase 2 Platform] 공중 발판은 발판 위치에 딱 맞게 생성해서 시각적으로 어긋나 보이지 않게 합니다.
+            AddColliderSurfacePoints(points, platformColliders[i], 0f);
+        }
+    }
+
+    private void AddFloorWavePoints(List<Vector2> points, string floorName)
+    {
+        GameObject floor = GameObject.Find(floorName);
+        Collider2D floorCollider = floor != null ? floor.GetComponent<Collider2D>() : null;
+        if (floorCollider != null && floorCollider.enabled)
+            AddColliderSurfacePoints(points, floorCollider, surfaceExtraWidth);
+    }
+
+    private void AddColliderSurfacePoints(List<Vector2> points, Collider2D surfaceCollider, float extraWidth)
+    {
+        Bounds bounds = surfaceCollider.bounds;
+        // [Codex IceWave Range] 카메라 밖까지 길게 깔리도록 각 바닥의 좌우 생성 범위를 추가로 넓힙니다.
+        float minX = Mathf.Max(bounds.min.x - extraWidth, arenaWaveMinX);
+        float maxX = Mathf.Min(bounds.max.x + extraWidth, arenaWaveMaxX);
+        if (maxX < minX)
+            return;
+
+        float startX = minX + firstSpikeDistance;
+        for (float x = startX; x <= maxX; x += Mathf.Max(0.1f, spikeSpacing))
+            points.Add(new Vector2(x, bounds.max.y));
     }
 
     private bool TryFindPlayerGroundY(out float groundY)
@@ -333,7 +397,8 @@ public class GoblinBossIceWaveAttack2D : MonoBehaviour
 
     private void ApplyDamage(Vector2 point)
     {
-        Vector2 hitCenter = point + Vector2.up * (hitBoxSize.y * 0.5f);
+        // [Codex IceWave Phase 1] 낮은 가로 판정만 사용해서 정답 회피가 확실히 점프가 되도록 합니다.
+        Vector2 hitCenter = point + Vector2.up * hitBoxGroundOffset;
         Collider2D[] hits = Physics2D.OverlapBoxAll(hitCenter, hitBoxSize, 0f);
         for (int i = 0; i < hits.Length; i++)
         {

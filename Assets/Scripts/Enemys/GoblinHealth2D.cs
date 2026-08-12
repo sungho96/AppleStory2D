@@ -8,6 +8,7 @@ public class GoblinHealth2D : MonoBehaviour
     [Header("HP")]
     [SerializeField] private int maxHp = 100;     // 고블린의 최대 체력
     [SerializeField] private int currentHp;       // 현재 체력
+    [SerializeField] private int startHpOverride = -1;
 
     [Header("Hit")]
     [SerializeField] private Color hitColor = Color.red;   // 피격 시 잠시 변경할 색상
@@ -26,11 +27,13 @@ public class GoblinHealth2D : MonoBehaviour
     private bool isHitStun;                      // 피격 경직 상태용 변수 (현재 이 스크립트에서는 직접 사용하지 않음)
 
     [SerializeField] private int expReward = 3;   // 처치 시 지급 EXP(메이플식: 몬스터가 보상값 소유)
+    private GoblinBossCombatController2D bossCombat;
     private bool isDead;                          // 중복 처치/중복 EXP 지급 방지
 
     // Codex recovery compatibility: GoblinBoss scripts need read-only HP/death state.
     public int CurrentHp => currentHp;
     public int MaxHp => maxHp;
+    public float HpRatio => maxHp > 0 ? Mathf.Clamp01(currentHp / (float)maxHp) : 0f;
     public bool IsDead => isDead;
 
     /// <summary>
@@ -42,6 +45,7 @@ public class GoblinHealth2D : MonoBehaviour
     private void Awake()
     {
         goblinController = GetComponent<GoblinController2D>();
+        bossCombat = GetComponent<GoblinBossCombatController2D>();
         renderers = GetComponentsInChildren<SpriteRenderer>(true);
         originalColors = new Color[renderers.Length];
 
@@ -56,7 +60,8 @@ public class GoblinHealth2D : MonoBehaviour
 
     void Start()
     {
-        currentHp = maxHp;
+        // [Codex Boss HP Test] -1이면 최대 체력, 0 이상이면 인스펙터 값으로 시작해서 2페이즈 테스트를 쉽게 합니다.
+        currentHp = startHpOverride >= 0 ? Mathf.Clamp(startHpOverride, 0, maxHp) : maxHp;
         SyncHpUI();
     }
 
@@ -65,11 +70,32 @@ public class GoblinHealth2D : MonoBehaviour
         float hitDir,
         bool applyHitReaction = true)
     {
+        TakeDamage(damage, hitDir, applyHitReaction, 0f);
+    }
+
+    public void TakeDamage(
+        int damage,
+        float hitDir,
+        bool applyHitReaction,
+        float powerShotChargeRatio)
+    {
         if (isDead) return;
 
-        currentHp -= damage;
+        // [Codex Boss Shield Break] ShieldBlockU 중에는 50% 이상 차징 파워샷만 방어 파괴 판정으로 받습니다.
+        if (bossCombat != null && bossCombat.TryHandleShieldDamage(powerShotChargeRatio, hitDir))
+            return;
+
+        // [Codex Boss Shield Groggy] 방어 파괴 후 Dance 그로기 동안 받는 피해를 강화합니다.
+        int finalDamage = bossCombat != null
+            ? Mathf.Max(1, Mathf.RoundToInt(damage * bossCombat.CurrentDamageMultiplier))
+            : damage;
+
+        currentHp -= finalDamage;
 
         SyncHpUI();
+
+        // [Codex Boss Heal Cast] 회복 캐스팅은 취소하지 않지만, 맞았다는 피드백은 보스 흔들림으로 보여줍니다.
+        bossCombat?.NotifyHealCastHit();
 
         if (currentHp <= 0)
         {
@@ -167,6 +193,16 @@ public class GoblinHealth2D : MonoBehaviour
 
         float ratio = maxHp > 0 ? Mathf.Clamp01(currentHp / (float)maxHp) : 0f;
         hpSlider.value = ratio;
+    }
+
+    public void HealBossHp(int amount)
+    {
+        // [Codex Boss Heal Cast] 보스 회복 패턴 전용 HP 회복입니다. 최대 HP를 넘지 않도록 제한합니다.
+        if (isDead || amount <= 0)
+            return;
+
+        currentHp = Mathf.Min(maxHp, currentHp + amount);
+        SyncHpUI();
     }
     /// <summary>
     /// 피격 색상 연출 코루틴.
