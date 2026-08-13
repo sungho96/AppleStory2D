@@ -5,6 +5,9 @@ public class NetworkStartUI : MonoBehaviour
 {
     private void OnGUI()
     {
+        if (NetworkManager.Singleton == null)
+            return;
+
         GUILayout.BeginArea(new Rect(10, 10, 200, 200));
 
         if (!NetworkManager.Singleton.IsClient &&

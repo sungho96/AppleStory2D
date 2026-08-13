@@ -13263,9 +13263,8 @@ MonoBehaviour:
   hitColorDuration: 0.2
   hitStunDuration: 0.25
   hpSlider: {fileID: 7211659716818869610}
-  deathDuration: 0.5
-  deathRotateZ: 25
-  deathFloatY: 0.2
+  deathFadeDelay: 1
+  deathFreezeCrossFadeBuffer: 0.08
   expReward: 3
 --- !u!114 &1023007409053892855
 MonoBehaviour:

@@ -1,5 +1,6 @@
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections;
+using Assets.HeroEditor4D.Common.Scripts.CharacterScripts;
+using Assets.HeroEditor4D.Common.Scripts.Enums;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -17,11 +18,12 @@ public class GoblinHealth2D : MonoBehaviour
     [SerializeField] private Slider hpSlider;
 
     [Header("Death Effect")]
-    [SerializeField] private float deathDuration = 0.5f;
-    [SerializeField] private float deathRotateZ = 25f;
-    [SerializeField] private float deathFloatY = 0.2f;
+    [SerializeField] private float deathFadeDelay = 1.0f;
+    [SerializeField] private float deathFreezeCrossFadeBuffer = 0.08f;
 
     private GoblinController2D goblinController; // 이동/넉백/경직 처리를 맡는 컨트롤러 참조
+    private AnimationManager animationManager;
+    private Animator animator;
     private SpriteRenderer[] renderers;          // 자신 및 자식에 있는 모든 SpriteRenderer
     private Color[] originalColors;              // 각 SpriteRenderer의 원래 색상 저장용
     private bool isHitStun;                      // 피격 경직 상태용 변수 (현재 이 스크립트에서는 직접 사용하지 않음)
@@ -29,7 +31,7 @@ public class GoblinHealth2D : MonoBehaviour
     [SerializeField] private int expReward = 3;   // 처치 시 지급 EXP(메이플식: 몬스터가 보상값 소유)
     private GoblinBossCombatController2D bossCombat;
     private bool isDead;                          // 중복 처치/중복 EXP 지급 방지
-
+    private bool deathAnimationStarted;
     // Codex recovery compatibility: GoblinBoss scripts need read-only HP/death state.
     public int CurrentHp => currentHp;
     public int MaxHp => maxHp;
@@ -46,6 +48,8 @@ public class GoblinHealth2D : MonoBehaviour
     {
         goblinController = GetComponent<GoblinController2D>();
         bossCombat = GetComponent<GoblinBossCombatController2D>();
+        animationManager = GetComponent<AnimationManager>();
+        animator = GetComponentInChildren<Animator>(true);
         renderers = GetComponentsInChildren<SpriteRenderer>(true);
         originalColors = new Color[renderers.Length];
 
@@ -94,9 +98,6 @@ public class GoblinHealth2D : MonoBehaviour
 
         SyncHpUI();
 
-        // [Codex Boss Heal Cast] 회복 캐스팅은 취소하지 않지만, 맞았다는 피드백은 보스 흔들림으로 보여줍니다.
-        bossCombat?.NotifyHealCastHit();
-
         if (currentHp <= 0)
         {
             isDead = true;
@@ -121,6 +122,9 @@ public class GoblinHealth2D : MonoBehaviour
             return;
         }
 
+        // [Codex Boss Heal Cast] 살아있는 피격에서만 회복 캐스팅 피드백을 갱신한다.
+        bossCombat?.NotifyHealCastHit();
+
         StartCoroutine(CoHitColor());
 
         if (applyHitReaction && goblinController != null)
@@ -133,14 +137,21 @@ public class GoblinHealth2D : MonoBehaviour
     /// <summary>
     /// 사망 연출 코루틴.
     /// - 컨트롤러/충돌/물리 동작을 정지
-    /// - 살짝 기울이며 위로 이동
-    /// - 알파값을 줄여 사라지게 처리
-    /// - 연출 종료 후 오브젝트 제거
+    /// - HeroEditor Death 애니메이션만 1회 실행
+    /// - 오브젝트 삭제/페이드 처리 없음
     /// </summary>
     private IEnumerator CoDie()
     {
         if (goblinController != null)
+        {
+            goblinController.StopAllCoroutines();
             goblinController.enabled = false;
+        }
+        if (bossCombat != null)
+        {
+            bossCombat.StopAllCoroutines();
+            bossCombat.enabled = false;
+        }
 
         Collider2D[] cols = GetComponentsInChildren<Collider2D>(true);
         foreach (Collider2D col in cols)
@@ -156,37 +167,71 @@ public class GoblinHealth2D : MonoBehaviour
             rb.bodyType = RigidbodyType2D.Kinematic;
         }
 
-        Vector3 startPos = transform.position;
-        Quaternion startRot = transform.rotation;
+        // [Codex Boss Death Single Play] 사라지는 연출 없이 Death 애니메이션만 1회 실행한다.
+        PlayDeathAnimation();
+        yield break;
+    }
+    private void PlayDeathAnimation()
+    {
+        if (deathAnimationStarted)
+            return;
 
-        Vector3 endPos = startPos + Vector3.up * deathFloatY;
-        Quaternion endRot = Quaternion.Euler(0f, 0f, deathRotateZ);
+        deathAnimationStarted = true;
+
+        if (animator != null)
+        {
+            // [Codex Boss Death Single Play] 공격/캐스팅 Action이 Death 전환을 막지 않게 끄고 속도를 정상화한다.
+            animator.speed = 1f;
+            animator.SetBool("Action", false);
+        }
+
+        if (animationManager != null)
+        {
+            // [Codex Boss Death Single Play] HeroEditor 정식 경로로 State=Death를 넣어 빈 Death 상태를 직접 잡지 않는다.
+            animationManager.enabled = true;
+            animationManager.SetState(CharacterState.Death);
+        }
+
+        if (animator != null)
+            StartCoroutine(CoFreezeCurrentDeathAfterOnePlay(animator));
+    }
+
+    private IEnumerator CoFreezeCurrentDeathAfterOnePlay(Animator targetAnimator)
+    {
+        // [Codex Boss Death Single Play] Death 전환이 일어난 뒤 현재 Death 상태가 1회 끝나면 마지막 자세에서 멈춘다.
+        if (targetAnimator == null)
+            yield break;
+
+        if (deathFreezeCrossFadeBuffer > 0f)
+            yield return new WaitForSeconds(deathFreezeCrossFadeBuffer);
 
         float elapsed = 0f;
-
-        while (elapsed < deathDuration)
+        while (targetAnimator != null)
         {
-            float t = elapsed / deathDuration;
-
-            transform.position = Vector3.Lerp(startPos, endPos, t);
-            transform.rotation = Quaternion.Lerp(startRot, endRot, t);
-
-            for (int i = 0; i < renderers.Length; i++)
+            for (int layer = 0; layer < targetAnimator.layerCount; layer++)
             {
-                if (renderers[i] == null)
-                    continue;
-
-                Color c = renderers[i].color;
-                c.a = Mathf.Lerp(originalColors[i].a, 0f, t);
-                renderers[i].color = c;
+                AnimatorStateInfo stateInfo = targetAnimator.GetCurrentAnimatorStateInfo(layer);
+                if (stateInfo.IsName("Death") || stateInfo.IsName("Complex.Death") || stateInfo.shortNameHash == Animator.StringToHash("Death"))
+                {
+                    if (stateInfo.normalizedTime >= 1f)
+                    {
+                        targetAnimator.speed = 0f;
+                        yield break;
+                    }
+                }
             }
 
             elapsed += Time.deltaTime;
+            if (elapsed >= deathFadeDelay)
+            {
+                targetAnimator.speed = 0f;
+                yield break;
+            }
+
             yield return null;
         }
-
-        Destroy(gameObject);
     }
+
     private void SyncHpUI()
     {
         if (hpSlider == null) return;

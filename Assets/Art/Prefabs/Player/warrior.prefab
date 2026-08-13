@@ -6810,6 +6810,9 @@ MonoBehaviour:
   hitReaction: {fileID: 830100000000000006}
   hpBarUI: {fileID: 0}
   playerStats: {fileID: 830100000000000008}
+  deathFadeDelay: 1
+  deathFadeDuration: 0.8
+  deathFreezeCrossFadeBuffer: 0.08
 --- !u!114 &830100000000000008
 MonoBehaviour:
   m_ObjectHideFlags: 0
