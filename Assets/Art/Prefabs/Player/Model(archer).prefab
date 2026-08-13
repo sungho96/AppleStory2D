@@ -16310,6 +16310,7 @@ GameObject:
   - component: {fileID: 3747159885613898228}
   - component: {fileID: 1262381800652168579}
   - component: {fileID: 7224375001734147463}
+  - component: {fileID: 3437013220332117061}
   - component: {fileID: 3197061422020926529}
   - component: {fileID: 268150137115684623}
   - component: {fileID: 4910311054295029632}
@@ -16317,13 +16318,8 @@ GameObject:
   - component: {fileID: 4856803503507890905}
   - component: {fileID: 7822624666821371382}
   - component: {fileID: 1684008500124945262}
-  - component: {fileID: 2224797612917638885}
-  - component: {fileID: 8388202618693096838}
-  - component: {fileID: 6124801938465720142}
-  - component: {fileID: 7119304862417052934}
-  - component: {fileID: 5482163379024416831}
   m_Layer: 0
-  m_Name: Player 1
+  m_Name: Model(archer)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -16697,6 +16693,32 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   animationManager: {fileID: 3280000191478180616}
   quickStepSound: {fileID: 0}
+--- !u!114 &3437013220332117061
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7540131496875148918}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
+  GlobalObjectIdHash: 3912597052
+  InScenePlacedSourceGlobalObjectIdHash: 0
+  DeferredDespawnTick: 0
+  Ownership: 1
+  AlwaysReplicateAsRoot: 0
+  SynchronizeTransform: 1
+  <InScenePlaced>k__BackingField: 0
+  ActiveSceneSynchronization: 0
+  SceneMigrationSynchronization: 1
+  SpawnWithObservers: 1
+  DontDestroyWithOwner: 0
+  AutoObjectParentSync: 1
+  SyncOwnerTransformWhenParented: 1
+  AllowOwnerToParent: 0
 --- !u!114 &3197061422020926529
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -16711,8 +16733,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ShowTopMostFoldoutHeaderGroup: 1
   animator: {fileID: 3999014679397083579}
-  arrowPrefab: {fileID: 2527895611890464109, guid: ff83026fc81c30243a48965c398695a7, type: 3}
-  firePoint: {fileID: 526470597085608203}
+  arrowPrefab: {fileID: 0}
+  firePoint: {fileID: 0}
   arrowSpeed: 12
   playerController: {fileID: 7224375001734147463}
   baseAttackDelay: 0.4
@@ -16843,262 +16865,6 @@ MonoBehaviour:
   mp: 100
   exp: 0
   needExp: 10
---- !u!114 &2224797612917638885
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7540131496875148918}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  GlobalObjectIdHash: 3601030392
-  InScenePlacedSourceGlobalObjectIdHash: 0
-  DeferredDespawnTick: 0
-  Ownership: 1
-  AlwaysReplicateAsRoot: 0
-  SynchronizeTransform: 1
-  <InScenePlaced>k__BackingField: 0
-  ActiveSceneSynchronization: 0
-  SceneMigrationSynchronization: 1
-  SpawnWithObservers: 1
-  DontDestroyWithOwner: 0
-  AutoObjectParentSync: 1
-  SyncOwnerTransformWhenParented: 1
-  AllowOwnerToParent: 0
---- !u!114 &8388202618693096838
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7540131496875148918}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 994fe8ddf3a4ba441bcfdf0108074ed1, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  ShowTopMostFoldoutHeaderGroup: 1
-  playerController: {fileID: 7224375001734147463}
-  playerAttack: {fileID: 3197061422020926529}
---- !u!114 &6124801938465720142
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7540131496875148918}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e96cb6065543e43c4a752faaa1468eb1, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  ShowTopMostFoldoutHeaderGroup: 1
-  NetworkTransformExpanded: 0
-  AutoOwnerAuthorityTickOffset: 1
-  PositionInterpolationType: 0
-  RotationInterpolationType: 0
-  ScaleInterpolationType: 0
-  PositionLerpSmoothing: 1
-  PositionMaxInterpolationTime: 0.1
-  RotationLerpSmoothing: 1
-  RotationMaxInterpolationTime: 0.1
-  ScaleLerpSmoothing: 1
-  ScaleMaxInterpolationTime: 0.1
-  AuthorityMode: 1
-  TickSyncChildren: 0
-  UseUnreliableDeltas: 0
-  SyncPositionX: 1
-  SyncPositionY: 1
-  SyncPositionZ: 0
-  SyncRotAngleX: 0
-  SyncRotAngleY: 0
-  SyncRotAngleZ: 0
-  SyncScaleX: 0
-  SyncScaleY: 0
-  SyncScaleZ: 0
-  PositionThreshold: 0.001
-  RotAngleThreshold: 0.01
-  ScaleThreshold: 0.01
-  UseQuaternionSynchronization: 0
-  UseQuaternionCompression: 0
-  UseHalfFloatPrecision: 0
-  InLocalSpace: 0
-  SwitchTransformSpaceWhenParented: 0
-  Interpolate: 1
-  SlerpPosition: 0
---- !u!114 &7119304862417052934
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7540131496875148918}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e8d0727d5ae3244e3b569694d3912374, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  ShowTopMostFoldoutHeaderGroup: 1
-  NetworkAnimatorExpanded: 0
-  AuthorityMode: 1
-  m_Animator: {fileID: 3999014679397083579}
-  TransitionStateInfoList:
-  - IsCrossFadeExit: 0
-    Layer: 1
-    OriginatingState: 2074866571
-    DestinationState: -1913596231
-    TransitionDuration: 0.1
-    TriggerNameHash: -1913596231
-    TransitionIndex: 0
-  - IsCrossFadeExit: 0
-    Layer: 1
-    OriginatingState: 1195977751
-    DestinationState: 809152110
-    TransitionDuration: 0.1
-    TriggerNameHash: 1375353473
-    TransitionIndex: 0
-  - IsCrossFadeExit: 0
-    Layer: 1
-    OriginatingState: 297999820
-    DestinationState: 946710486
-    TransitionDuration: 0.1
-    TriggerNameHash: 1375353473
-    TransitionIndex: 0
-  AnimatorParameterEntries:
-    ParameterEntries:
-    - name: State
-      NameHash: 1649606143
-      Synchronize: 1
-      ParameterType: 3
-    - name: TwoHanded
-      NameHash: -1812484158
-      Synchronize: 1
-      ParameterType: 4
-    - name: Action
-      NameHash: 1080068516
-      Synchronize: 1
-      ParameterType: 4
-    - name: Slash1H
-      NameHash: -719198606
-      Synchronize: 1
-      ParameterType: 9
-    - name: HeavySlash1H
-      NameHash: 720853949
-      Synchronize: 1
-      ParameterType: 9
-    - name: HeavySlash2H
-      NameHash: 31066238
-      Synchronize: 1
-      ParameterType: 9
-    - name: Slash2H
-      NameHash: -32721487
-      Synchronize: 1
-      ParameterType: 9
-    - name: Jab
-      NameHash: 1561758614
-      Synchronize: 1
-      ParameterType: 9
-    - name: ShieldPush
-      NameHash: -1913596231
-      Synchronize: 1
-      ParameterType: 9
-    - name: FastStab
-      NameHash: 1945063520
-      Synchronize: 1
-      ParameterType: 9
-    - name: ShotBow
-      NameHash: -875316115
-      Synchronize: 1
-      ParameterType: 9
-    - name: ShotCrossbow
-      NameHash: -764652387
-      Synchronize: 1
-      ParameterType: 9
-    - name: Fire
-      NameHash: -118708495
-      Synchronize: 1
-      ParameterType: 9
-    - name: Hit
-      NameHash: 1654612129
-      Synchronize: 1
-      ParameterType: 9
-    - name: Evade
-      NameHash: 1832469767
-      Synchronize: 1
-      ParameterType: 9
-    - name: Speed
-      NameHash: -823668238
-      Synchronize: 1
-      ParameterType: 1
-    - name: Charge
-      NameHash: 1388814594
-      Synchronize: 1
-      ParameterType: 9
-    - name: Release
-      NameHash: 1375353473
-      Synchronize: 1
-      ParameterType: 9
-    - name: WeaponType
-      NameHash: -1936256502
-      Synchronize: 1
-      ParameterType: 3
-    - name: TripleStab
-      NameHash: -720190494
-      Synchronize: 1
-      ParameterType: 9
-    - name: Throw
-      NameHash: -1907200461
-      Synchronize: 1
-      ParameterType: 9
-    - name: Cast
-      NameHash: -1299573048
-      Synchronize: 1
-      ParameterType: 9
-    - name: SecondaryShot
-      NameHash: -1752708054
-      Synchronize: 1
-      ParameterType: 9
-    - name: JumpR
-      NameHash: 1658189318
-      Synchronize: 1
-      ParameterType: 4
-    - name: JumpL
-      NameHash: -1730491547
-      Synchronize: 1
-      ParameterType: 4
-    - name: MoveSpeedBuff
-      NameHash: 1888608750
-      Synchronize: 1
-      ParameterType: 9
-    - name: AttackSpeedBuff
-      NameHash: -2143267677
-      Synchronize: 1
-      ParameterType: 9
-    - name: RapidVolley
-      NameHash: -178942713
-      Synchronize: 1
-      ParameterType: 9
-  AnimatorParametersExpanded: 0
---- !u!114 &5482163379024416831
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7540131496875148918}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6ffde8d554cc40a4ba0ac573f229105c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  ShowTopMostFoldoutHeaderGroup: 1
-  playerDirection: {fileID: 268150137115684623}
-  playerLadder: {fileID: 6644943936061090762}
-  animationManager: {fileID: 3280000191478180616}
 --- !u!1 &7570741826955583570
 GameObject:
   m_ObjectHideFlags: 0

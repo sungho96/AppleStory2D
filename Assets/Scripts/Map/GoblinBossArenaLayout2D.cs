@@ -117,10 +117,10 @@ public class GoblinBossArenaLayout2D : MonoBehaviour
             platformRoot = new GameObject("BossArena_SidePlatforms");
 
         // [보스 맵 동선 개선] 좌우 발판은 지상에서 여유 있게 닿도록 조금 낮춥니다.
-        // [Codex Side Platform Visual Scale] 교체한 이미지가 커서 좌우 발판은 시각 크기만 0.3으로 줄입니다.
-        Vector3 sidePlatformVisualScale = new Vector3(0.3f, 0.3f, 1f);
-        CreateOrUpdatePlatform(source.gameObject, platformRoot.transform, "LeftPlatform", new Vector3(-6.6f, -5.65f, 0f), sidePlatformVisualScale);
-        CreateOrUpdatePlatform(source.gameObject, platformRoot.transform, "RightPlatform", new Vector3(6.6f, -5.65f, 0f), sidePlatformVisualScale);
+        // [Codex Platform Scene Scale] 씬에 이미 있는 발판은 직접 맞춘 Transform 값을 유지하고, 새 발판만 기본값으로 만듭니다.
+        Vector3 platformDefaultScale = new Vector3(0.3f, 0.3f, 1f);
+        CreateOrUpdatePlatform(source.gameObject, platformRoot.transform, "LeftPlatform", new Vector3(-6.6f, -5.65f, 0f), platformDefaultScale);
+        CreateOrUpdatePlatform(source.gameObject, platformRoot.transform, "RightPlatform", new Vector3(6.6f, -5.65f, 0f), platformDefaultScale);
 
         // [보스 맵 동선 개선] 기존의 작은 발판 조각을 재사용해 중앙에 두 번째 이동 단계를 만듭니다.
         Transform centerSource = sourceFloor.transform.Find("platform_10_0 (6)");
@@ -131,7 +131,7 @@ public class GoblinBossArenaLayout2D : MonoBehaviour
                 platformRoot.transform,
                 "CenterPlatform",
                 new Vector3(0f, -3.65f, 0f),
-                new Vector3(0.82f, 0.82f, 1f));
+                platformDefaultScale);
         }
     }
 
@@ -166,13 +166,17 @@ public class GoblinBossArenaLayout2D : MonoBehaviour
         Vector3 scale)
     {
         Transform existing = parent.Find(objectName);
-        GameObject platform = existing != null
-            ? existing.gameObject
-            : Instantiate(source, position, Quaternion.identity, parent);
+        bool isNewPlatform = existing == null;
+        GameObject platform = isNewPlatform
+            ? Instantiate(source, position, Quaternion.identity, parent)
+            : existing.gameObject;
 
         platform.name = objectName;
-        platform.transform.SetPositionAndRotation(position, Quaternion.identity);
-        platform.transform.localScale = scale;
+        if (isNewPlatform)
+        {
+            platform.transform.SetPositionAndRotation(position, Quaternion.identity);
+            platform.transform.localScale = scale;
+        }
         platform.SetActive(true);
 
         ConfigureLandingPlatform(platform, source);

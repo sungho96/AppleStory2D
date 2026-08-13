@@ -11,5 +11,8 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/NetworkTest.unity
     guid: f3812030d3eb41741bd0e431a424f11f
+  - enabled: 1
+    path: Assets/Scenes/GoblinBoss.unity
+    guid: 982c10a420244b46997f457240dde778
   m_configObjects: {}
   m_UseUCBPForAssetBundles: 0

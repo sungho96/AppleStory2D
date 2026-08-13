@@ -41,6 +41,7 @@ public class GoblinBossCombatController2D : MonoBehaviour
     [SerializeField] private float closeCounterReadyLean = 0.16f;
 
     [Header("PowerShot Shield")]
+    [SerializeField] private bool disablePowerShotShieldForNetworkTest = true;
     [SerializeField] private float shieldFirstDelay = 7f;
     [SerializeField] private Vector2 shieldPhaseOneCooldownRange = new Vector2(12f, 16f);
     [SerializeField] private Vector2 shieldPhaseTwoCooldownRange = new Vector2(16f, 22f);
@@ -214,7 +215,10 @@ public class GoblinBossCombatController2D : MonoBehaviour
         leftVisualBaseScale = leftVisual != null ? leftVisual.localScale : Vector3.one;
         rightVisualBaseScale = rightVisual != null ? rightVisual.localScale : Vector3.one;
         nextJumpMoveTime = Time.time + Mathf.Max(0f, jumpMoveFirstDelay);
-        nextShieldTime = Time.time + Mathf.Max(0f, shieldFirstDelay);
+        // Codex: Temporarily disable the defensive shield while testing the network boss room.
+        nextShieldTime = disablePowerShotShieldForNetworkTest
+            ? float.PositiveInfinity
+            : Time.time + Mathf.Max(0f, shieldFirstDelay);
 
         // [보스 이동] 보스 인스턴스에서는 일반 고블린의 랜덤 순찰을 사용하지 않습니다.
         GoblinController2D normalController = GetComponent<GoblinController2D>();
@@ -252,7 +256,7 @@ public class GoblinBossCombatController2D : MonoBehaviour
             return;
         }
 
-        if (Time.time >= nextShieldTime)
+        if (!disablePowerShotShieldForNetworkTest && Time.time >= nextShieldTime)
         {
             shieldRoutine = StartCoroutine(CoShieldBlock());
             return;
@@ -321,6 +325,10 @@ public class GoblinBossCombatController2D : MonoBehaviour
 
     public bool TryHandleShieldDamage(float powerShotChargeRatio, float hitDir)
     {
+        // Codex: When the temporary test flag is on, PowerShot Shield never blocks incoming damage.
+        if (disablePowerShotShieldForNetworkTest)
+            return false;
+
         if (!isShieldBlocking)
             return false;
 
@@ -354,6 +362,9 @@ public class GoblinBossCombatController2D : MonoBehaviour
 
     private IEnumerator CoShieldBlock()
     {
+        if (disablePowerShotShieldForNetworkTest)
+            yield break;
+
         // [Codex Boss Shield Break] ShieldBlockU stays up until a valid 50%+ PowerShot breaks it.
         isShieldBlocking = true;
         isCasting = true;
@@ -670,6 +681,12 @@ public class GoblinBossCombatController2D : MonoBehaviour
 
     private void ScheduleNextShield()
     {
+        if (disablePowerShotShieldForNetworkTest)
+        {
+            nextShieldTime = float.PositiveInfinity;
+            return;
+        }
+
         Vector2 range = health != null && health.HpRatio <= 0.5f
             ? shieldPhaseTwoCooldownRange
             : shieldPhaseOneCooldownRange;
@@ -714,7 +731,7 @@ public class GoblinBossCombatController2D : MonoBehaviour
         float pulse = 1f + Mathf.Sin(timer * 8f) * 0.05f + Mathf.Sin(timer * 17f) * 0.018f;
         shieldEffect.transform.localScale = Vector3.one * Mathf.Lerp(1.55f, 1.82f, strength) * pulse;
         float alpha = shieldBreakColor.a * Mathf.Lerp(0.58f, 0.82f, strength);
-        shieldEffectRenderer.color = new Color(shieldBreakColor.r, shieldBreakColor.g, shieldBreakColor.b, alpha *0f);
+        shieldEffectRenderer.color = new Color(shieldBreakColor.r, shieldBreakColor.g, shieldBreakColor.b, alpha * 0f);
 
         if (shieldPlateRenderer != null)
         {

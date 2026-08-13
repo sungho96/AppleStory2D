@@ -17037,6 +17037,7 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   playerController: {fileID: 7224375001734147463}
   playerAttack: {fileID: 3197061422020926529}
+  warriorAttack: {fileID: 0}
 --- !u!114 &6124801938465720142
 MonoBehaviour:
   m_ObjectHideFlags: 0
