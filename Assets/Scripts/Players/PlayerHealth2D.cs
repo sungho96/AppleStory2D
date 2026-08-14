@@ -6,12 +6,12 @@ using UnityEngine;
 public class PlayerHealth2D : MonoBehaviour
 {
     /// <summary>
-    /// ÇÃ·¹ÀÌ¾î Ã¼·Â °ü¸® Àü¿ë Ã³¸®.
-    /// - HP º¸°ü
-    /// - µ¥¹ÌÁö ÁøÀÔ
-    /// - ¹«Àû »óÅÂ Ã¼Å©
-    /// - »ç¸Á Ã³¸®
-    /// - ÇÇ°İ ¹İÀÀ ½ºÅ©¸³Æ® È£Ãâ
+    /// ï¿½Ã·ï¿½ï¿½Ì¾ï¿½ Ã¼ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ Ã³ï¿½ï¿½.
+    /// - HP ï¿½ï¿½ï¿½ï¿½
+    /// - ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+    /// - ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ Ã¼Å©
+    /// - ï¿½ï¿½ï¿½ Ã³ï¿½ï¿½
+    /// - ï¿½Ç°ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Å©ï¿½ï¿½Æ® È£ï¿½ï¿½
     /// </summary>
     [Header("HP")]
     [SerializeField] private int maxHp = 100;
@@ -21,6 +21,7 @@ public class PlayerHealth2D : MonoBehaviour
     [SerializeField] private PlayerHitReaction2D hitReaction;
     [SerializeField] private PlayerHpBarUI hpBarUI;
     [SerializeField] private PlayerStats playerStats;
+    [SerializeField] private WarriorShieldBlock2D warriorShieldBlock;
 
     [Header("Death Effect")]
     [SerializeField] private float deathFadeDelay = 1.0f;
@@ -30,14 +31,14 @@ public class PlayerHealth2D : MonoBehaviour
     private bool isDead;
 
     /// <summary>
-    /// ÇöÀç HP ¹İÈ¯.
+    /// ï¿½ï¿½ï¿½ï¿½ HP ï¿½ï¿½È¯.
     /// </summary>
     public int CurrentHp => currentHp;
     public int MaxHp => maxHp;
     public float NormalizedHp => maxHp > 0 ? (float)currentHp / maxHp : 0f;
 
     /// <summary>
-    /// »ç¸Á »óÅÂ ¿©ºÎ.
+    /// ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½.
     /// </summary>
     public bool IsDead => isDead;
 
@@ -49,6 +50,8 @@ public class PlayerHealth2D : MonoBehaviour
             hpBarUI = Object.FindFirstObjectByType<PlayerHpBarUI>();
         if (playerStats == null)
             playerStats = GetComponent<PlayerStats>();
+        if (warriorShieldBlock == null)
+            warriorShieldBlock = GetComponent<WarriorShieldBlock2D>();
 
     }
     void Start()
@@ -60,28 +63,36 @@ public class PlayerHealth2D : MonoBehaviour
     }
 
     /// <summary>
-    /// µ¥¹ÌÁö Àû¿ë ¿äÃ».
-    /// - ÀÌ¹Ì »ç¸Á »óÅÂ¸é ¹«½Ã
-    /// - ÇÇ°İ ¹«Àû »óÅÂ¸é ¹«½Ã
-    /// - HP °¨¼Ò ÈÄ »ì¾ÆÀÖÀ¸¸é ÇÇ°İ ¹İÀÀ È£Ãâ
+    /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ã».
+    /// - ï¿½Ì¹ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Â¸ï¿½ ï¿½ï¿½ï¿½ï¿½
+    /// - ï¿½Ç°ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Â¸ï¿½ ï¿½ï¿½ï¿½ï¿½
+    /// - HP ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ç°ï¿½ ï¿½ï¿½ï¿½ï¿½ È£ï¿½ï¿½
     /// </summary>
     public void TakeDamage(int damage, Vector2 knockbackForce)
     {
-        Debug.Log($"TakeDamage ÁøÀÔ / damage={damage}, force={knockbackForce}");
+        Debug.Log($"TakeDamage ï¿½ï¿½ï¿½ï¿½ / damage={damage}, force={knockbackForce}");
 
         if (isDead)
         {
-            Debug.Log("ÀÌ¹Ì Á×Àº »óÅÂ¶ó return");
+            Debug.Log("ï¿½Ì¹ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Â¶ï¿½ return");
             return;
         }
 
         if (hitReaction != null && hitReaction.IsHitCooldown)
         {
-            Debug.Log("ÇöÀç ÇÇ°İ ¹«Àû »óÅÂ¶ó return");
+            Debug.Log("ï¿½ï¿½ï¿½ï¿½ ï¿½Ç°ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Â¶ï¿½ return");
             return;
         }
 
-        currentHp -= damage;
+        if (warriorShieldBlock == null)
+            warriorShieldBlock = GetComponent<WarriorShieldBlock2D>();
+
+        // [Codex Warrior ShieldBlock] ë°©íŒ¨ë§‰ê¸° ì¤‘ì´ë©´ HPì— ì ìš©ë˜ëŠ” í”¼í•´ëŸ‰ë§Œ ì¤„ì…ë‹ˆë‹¤.
+        int finalDamage = warriorShieldBlock != null
+            ? warriorShieldBlock.ReduceDamage(damage)
+            : damage;
+
+        currentHp -= finalDamage;
 
         if (currentHp < 0)
             currentHp = 0;
@@ -91,15 +102,15 @@ public class PlayerHealth2D : MonoBehaviour
 
         if (currentHp <= 0)
         {
-            Debug.Log("HP 0 ÀÌÇÏ -> Die È£Ãâ");
+            Debug.Log("HP 0 ï¿½ï¿½ï¿½ï¿½ -> Die È£ï¿½ï¿½");
             Die();
             return;
         }
-        playerStats.Damage(damage);
+        playerStats.Damage(finalDamage);
 
         if (hitReaction == null)
         {
-            Debug.LogWarning("hitReaction ÀÌ null ÀÌ¶ó ³Ë¹é È£Ãâ ºÒ°¡");
+            Debug.LogWarning("hitReaction ï¿½ï¿½ null ï¿½Ì¶ï¿½ ï¿½Ë¹ï¿½ È£ï¿½ï¿½ ï¿½Ò°ï¿½");
             return;
         }
         Debug.Log($"HP after damage = {currentHp}/{maxHp}");
@@ -111,7 +122,7 @@ public class PlayerHealth2D : MonoBehaviour
         isDead = true;
         PlayDeathAnimation();
         StartCoroutine(CoFadeOutAfterDeath());
-        Debug.Log("ÇÃ·¹ÀÌ¾î »ç¸Á");
+        Debug.Log("ï¿½Ã·ï¿½ï¿½Ì¾ï¿½ ï¿½ï¿½ï¿½");
     }
 
     private void PlayDeathAnimation()
@@ -297,11 +308,11 @@ public class PlayerHealth2D : MonoBehaviour
 
     private int CalculateFinalDamage(int rawDamage)
     {
-        // ³ªÁß¿¡ ¹æ¾î·Â/°¨¼ÒÀ² ³ÖÀ» ÀÚ¸®
-        // ¿¹: rawDamage - defense, ÃÖ¼Ò 1 º¸Àå µî
+        // ï¿½ï¿½ï¿½ß¿ï¿½ ï¿½ï¿½ï¿½ï¿½/ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ú¸ï¿½
+        // ï¿½ï¿½: rawDamage - defense, ï¿½Ö¼ï¿½ 1 ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½
         int finalDamage = rawDamage;
 
-        // ÃÖ¼Ò 1 µ¥¹ÌÁö º¸Àå(¸ŞÀÌÇÃ½Ä ´À³¦)
+        // ï¿½Ö¼ï¿½ 1 ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½(ï¿½ï¿½ï¿½ï¿½ï¿½Ã½ï¿½ ï¿½ï¿½ï¿½ï¿½)
         finalDamage = Mathf.Max(1, finalDamage);
 
         return finalDamage;

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Unity.Netcode;
 using UnityEngine;
 
 public enum KeySettingSkillType
@@ -7,7 +8,9 @@ public enum KeySettingSkillType
     MoveSpeedBuff,
     AttackSpeedBuff,
     PowerShot,
-    RapidVolley
+    RapidVolley,
+    WarriorDownStrike,
+    WarriorShieldBlock
 }
 
 public class KeyBindingManager : MonoBehaviour
@@ -16,6 +19,8 @@ public class KeyBindingManager : MonoBehaviour
 
     [SerializeField] private SpeedBuffController speedBuffController;
     [SerializeField] private PlayerAttack2D playerAttack;
+    [SerializeField] private WarriorDownStrike2D warriorDownStrike;
+    [SerializeField] private WarriorShieldBlock2D warriorShieldBlock;
     [SerializeField] private KeySettingUIController keySettingUIController;
     private readonly Dictionary<KeyCode, KeySettingSkillType> keyBindings = new();
 
@@ -36,7 +41,19 @@ public class KeyBindingManager : MonoBehaviour
         if (playerAttack == null)
         {
             // [파워 샷 연결] 매니저와 플레이어가 다른 오브젝트이므로 활성 플레이어 공격기를 찾습니다.
-            playerAttack = FindFirstObjectByType<PlayerAttack2D>();
+            playerAttack = FindLocalPlayerComponent<PlayerAttack2D>();
+        }
+
+        if (warriorDownStrike == null)
+        {
+            // [Codex Warrior Skill Binding] 네트워크 방에서는 내 소유 전사 스킬을 우선 연결합니다.
+            warriorDownStrike = FindLocalPlayerComponent<WarriorDownStrike2D>();
+        }
+
+        if (warriorShieldBlock == null)
+        {
+            // [Codex Warrior Skill Binding] 방패막기도 키 매니저에서 직접 실행할 수 있게 찾습니다.
+            warriorShieldBlock = FindLocalPlayerComponent<WarriorShieldBlock2D>();
         }
     }
 
@@ -99,6 +116,7 @@ public class KeyBindingManager : MonoBehaviour
         // [래피드 볼리 키매핑 복구] 공격 스킬은 버프 컨트롤러 검사와 분리해 직접 실행합니다.
         if (skillType == KeySettingSkillType.RapidVolley)
         {
+            EnsurePlayerAttack();
             if (playerAttack != null)
                 playerAttack.UseRapidVolley();
             else
@@ -109,6 +127,26 @@ public class KeyBindingManager : MonoBehaviour
         // 파워샷은 Update에서 KeyDown/KeyUp을 따로 처리하므로 여기서는 실행하지 않습니다.
         if (skillType == KeySettingSkillType.PowerShot)
             return;
+
+        if (skillType == KeySettingSkillType.WarriorDownStrike)
+        {
+            EnsureWarriorSkills();
+            if (warriorDownStrike != null)
+                warriorDownStrike.UseDownStrike();
+            else
+                Debug.LogWarning("[키 설정] WarriorDownStrike2D가 연결되지 않았습니다.");
+            return;
+        }
+
+        if (skillType == KeySettingSkillType.WarriorShieldBlock)
+        {
+            EnsureWarriorSkills();
+            if (warriorShieldBlock != null)
+                warriorShieldBlock.UseShieldBlock();
+            else
+                Debug.LogWarning("[키 설정] WarriorShieldBlock2D가 연결되지 않았습니다.");
+            return;
+        }
 
         if (speedBuffController == null)
         {
@@ -128,8 +166,42 @@ public class KeyBindingManager : MonoBehaviour
 
             case KeySettingSkillType.PowerShot:
             case KeySettingSkillType.RapidVolley:
+            case KeySettingSkillType.WarriorDownStrike:
+            case KeySettingSkillType.WarriorShieldBlock:
                 break;
         }
+    }
+
+    private void EnsurePlayerAttack()
+    {
+        if (playerAttack == null)
+            playerAttack = FindLocalPlayerComponent<PlayerAttack2D>();
+    }
+
+    private void EnsureWarriorSkills()
+    {
+        if (warriorDownStrike == null)
+            warriorDownStrike = FindLocalPlayerComponent<WarriorDownStrike2D>();
+        if (warriorShieldBlock == null)
+            warriorShieldBlock = FindLocalPlayerComponent<WarriorShieldBlock2D>();
+        if (warriorShieldBlock == null && warriorDownStrike != null)
+        {
+            // [Codex Warrior ShieldBlock] 프리팹 연결 전에도 워리어 스킬 테스트가 가능하도록 같은 플레이어에 보장합니다.
+            warriorShieldBlock = warriorDownStrike.gameObject.AddComponent<WarriorShieldBlock2D>();
+        }
+    }
+
+    private T FindLocalPlayerComponent<T>() where T : Component
+    {
+        T[] components = FindObjectsByType<T>(FindObjectsSortMode.None);
+        for (int i = 0; i < components.Length; i++)
+        {
+            NetworkObject networkObject = components[i].GetComponent<NetworkObject>();
+            if (networkObject != null && networkObject.IsSpawned && networkObject.IsOwner)
+                return components[i];
+        }
+
+        return components.Length > 0 ? components[0] : null;
     }
 
     private bool TryConvertKeyCode(string keyName, out KeyCode keyCode)

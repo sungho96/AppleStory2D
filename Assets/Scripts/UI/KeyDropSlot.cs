@@ -26,7 +26,10 @@ public class KeyDropSlot : MonoBehaviour, IDropHandler, IPointerEnterHandler, IP
     {
         // [매핑 아이콘 재정렬] 키세팅 창을 다시 열 때 모든 슬롯의 이미지를 정중앙으로 복구합니다.
         if (assignedSkillIcon != null)
+        {
+            RefreshAssignedSkillIcon();
             ApplyAssignedIconLayout();
+        }
     }
 
     private void Awake()
@@ -86,6 +89,31 @@ public class KeyDropSlot : MonoBehaviour, IDropHandler, IPointerEnterHandler, IP
         Debug.Log($"[키 설정] {keyName} 키에 스킬을 임시 배치했습니다.");
         SetDropAreaColor(0f);
         return true;
+    }
+
+    private void RefreshAssignedSkillIcon()
+    {
+        if (assignedSkillType == KeySettingSkillType.None || assignedSkillIcon == null)
+            return;
+
+        SkillIconDragHandler[] skillIcons = FindObjectsByType<SkillIconDragHandler>(
+            FindObjectsInactive.Include,
+            FindObjectsSortMode.None);
+
+        for (int i = 0; i < skillIcons.Length; i++)
+        {
+            if (skillIcons[i] == null || skillIcons[i].SkillType != assignedSkillType)
+                continue;
+
+            Sprite skillIcon = skillIcons[i].SkillIcon;
+            if (skillIcon == null)
+                continue;
+
+            // [Codex Skill Icon Outside Panel] Inspector에서 바꾼 스킬 이미지를 패널 밖 키 슬롯 아이콘에도 반영합니다.
+            assignedSkillIcon.sprite = skillIcon;
+            assignedSkillIcon.gameObject.SetActive(true);
+            return;
+        }
     }
 
     private void ClearAssignedSkill()

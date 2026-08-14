@@ -29,6 +29,8 @@ public class PlayerController2D : MonoBehaviour
     private PlayerHitReaction2D hitReaction;
     private PlayerHealth2D health;
     private PlayerQuickStep2D quickStep;
+    private WarriorDownStrike2D warriorDownStrike;
+    private WarriorShieldBlock2D warriorShieldBlock;
 
     private float moveInput;
     private float verticalInput;
@@ -49,6 +51,8 @@ public class PlayerController2D : MonoBehaviour
         hitReaction = GetComponent<PlayerHitReaction2D>();
         health = GetComponent<PlayerHealth2D>();
         quickStep = GetComponent<PlayerQuickStep2D>();
+        warriorDownStrike = GetComponent<WarriorDownStrike2D>();
+        warriorShieldBlock = GetComponent<WarriorShieldBlock2D>();
 
         // [퀵 스텝 추가] 씬 참조를 늘리지 않고 플레이어에 필요한 스텝 컴포넌트를 한 번만 보장합니다.
         if (quickStep == null)
@@ -245,6 +249,11 @@ public class PlayerController2D : MonoBehaviour
     private void UpdateAnimationState()
     {
         if (animationManager == null)
+            return;
+
+        // [Codex Warrior Skill Animation] 워리어 스킬 중에는 Idle/Run 갱신이 스킬 포즈를 덮지 않게 합니다.
+        if ((warriorDownStrike != null && warriorDownStrike.IsUsingSkill) ||
+            (warriorShieldBlock != null && warriorShieldBlock.IsBlocking))
             return;
 
         // 현재 바라보는 방향

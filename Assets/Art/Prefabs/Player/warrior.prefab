@@ -6341,6 +6341,7 @@ GameObject:
   - component: {fileID: 830100000000000009}
   - component: {fileID: 830100000000000013}
   - component: {fileID: 830100000000000014}
+  - component: {fileID: 830100000000000020}
   - component: {fileID: 830100000000000015}
   - component: {fileID: 830100000000000016}
   - component: {fileID: 830100000000000017}
@@ -6810,6 +6811,7 @@ MonoBehaviour:
   hitReaction: {fileID: 830100000000000006}
   hpBarUI: {fileID: 0}
   playerStats: {fileID: 830100000000000008}
+  warriorShieldBlock: {fileID: 830100000000000020}
   deathFadeDelay: 1
   deathFadeDuration: 0.8
   deathFreezeCrossFadeBuffer: 0.08
@@ -6903,15 +6905,36 @@ MonoBehaviour:
   enemyMask:
     serializedVersion: 2
     m_Bits: 8
-  chargeStateName: Charge2H
-  slashStateName: Slash2H
-  slashTriggerName: 
-  chargeFadeDuration: 0.05
-  chargeHoldDuration: 0.24
-  slashFadeDuration: 0.02
-  slashStartNormalizedTime: 0.64
-  hitDelay: 0.06
-  finishDelay: 0.32
+  downStrikeClip: {fileID: 7400000, guid: 4b60454a97290ed42b647d8ca31b85e8, type: 2}
+  directClipSpeed: 1
+  downStrikeStateName: downstrike
+  downStrikeTriggerName: 
+  downStrikeFadeDuration: 0.02
+  downStrikeStartNormalizedTime: 0
+  hitNormalizedTime: 0.45
+  maxDownStrikeWaitDuration: 1.4
+--- !u!114 &830100000000000020
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5223124047157880945}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b4954db467839114ab678a998d081a75, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  animator: {fileID: 1545179870754946024}
+  playerHealth: {fileID: 830100000000000007}
+  fallbackKey: 0
+  duration: 1.2
+  cooldown: 3
+  damageMultiplier: 0.25
+  shieldBlockClip: {fileID: 7400000, guid: 0202e1d010d06c544bc183faa81a777f, type: 2}
+  directClipSpeed: 1
+  shieldBlockStateName: ShieldBlock
+  fadeDuration: 0.05
 --- !u!114 &830100000000000015
 MonoBehaviour:
   m_ObjectHideFlags: 0

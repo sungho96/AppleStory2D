@@ -1,5 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.Animations;
+using UnityEngine.Playables;
 using UnityEngine;
 
 public class WarriorDownStrike2D : MonoBehaviour
@@ -18,18 +20,20 @@ public class WarriorDownStrike2D : MonoBehaviour
     [SerializeField] private LayerMask enemyMask;
 
     [Header("Animator Blend")]
-    [SerializeField] private string chargeStateName = "Charge2H";
-    [SerializeField] private string slashStateName = "Slash2H";
-    [SerializeField] private string slashTriggerName = "";
-    [SerializeField] private float chargeFadeDuration = 0.05f;
-    [SerializeField] private float chargeHoldDuration = 0.24f;
-    [SerializeField] private float slashFadeDuration = 0.02f;
-    [SerializeField, Range(0f, 1f)] private float slashStartNormalizedTime = 0.64f;
-    [SerializeField] private float hitDelay = 0.06f;
-    [SerializeField] private float finishDelay = 0.32f;
+    [SerializeField] private AnimationClip downStrikeClip;
+    [SerializeField] private float directClipSpeed = 1f;
+    [SerializeField] private string downStrikeStateName = "downstrike";
+    [SerializeField] private string downStrikeTriggerName = "";
+    [SerializeField] private float downStrikeFadeDuration = 0.02f;
+    [SerializeField, Range(0f, 1f)] private float downStrikeStartNormalizedTime = 0f;
+    [SerializeField, Range(0f, 1f)] private float hitNormalizedTime = 0.45f;
+    [SerializeField] private float maxDownStrikeWaitDuration = 1.4f;
 
     private bool isUsingSkill;
     private float nextUseTime;
+    private PlayableGraph downStrikeGraph;
+
+    public bool IsUsingSkill => isUsingSkill;
 
     private void Awake()
     {
@@ -64,32 +68,97 @@ public class WarriorDownStrike2D : MonoBehaviour
     {
         isUsingSkill = true;
 
-        // [Codex Warrior DownStrike 3.0] Use the asset-provided 2H charge and slash animations instead of manual transform posing.
-        PlayAnimatorState(chargeStateName, chargeFadeDuration);
-        yield return new WaitForSeconds(chargeHoldDuration);
+        PlayDownStrike();
 
-        PlaySlash2H();
-        yield return new WaitForSeconds(hitDelay);
+        // [Codex Warrior DownStrike 1st] 새로 만든 downstrike 상태를 처음부터 끝까지 한 번 재생하고, 중간 타이밍에만 판정을 넣습니다.
+        yield return WaitForDownStrikeHitTiming();
 
         ApplyDownStrikeHit();
-        yield return new WaitForSeconds(finishDelay);
+        yield return WaitForDownStrikeAnimationEnd();
 
         nextUseTime = Time.time + cooldown;
         isUsingSkill = false;
     }
 
-    private void PlaySlash2H()
+    private void PlayDownStrike()
     {
         if (animator == null)
             return;
 
-        if (!string.IsNullOrEmpty(slashTriggerName))
+        if (downStrikeClip != null)
         {
-            animator.ResetTrigger(slashTriggerName);
-            animator.SetTrigger(slashTriggerName);
+            PlayDirectClip(downStrikeClip, directClipSpeed);
+            return;
         }
 
-        PlayAnimatorState(slashStateName, slashFadeDuration, slashStartNormalizedTime);
+        if (!string.IsNullOrEmpty(downStrikeTriggerName))
+        {
+            animator.ResetTrigger(downStrikeTriggerName);
+            animator.SetTrigger(downStrikeTriggerName);
+        }
+
+        PlayAnimatorState(downStrikeStateName, downStrikeFadeDuration, downStrikeStartNormalizedTime);
+    }
+
+    private IEnumerator WaitForDownStrikeHitTiming()
+    {
+        if (downStrikeClip != null)
+        {
+            yield return new WaitForSeconds(GetDirectClipDuration() * hitNormalizedTime);
+            yield break;
+        }
+
+        if (animator == null || string.IsNullOrEmpty(downStrikeStateName))
+        {
+            yield return null;
+            yield break;
+        }
+
+        float elapsed = 0f;
+        while (elapsed < maxDownStrikeWaitDuration)
+        {
+            if (IsAnimatorStateAtOrPast(downStrikeStateName, hitNormalizedTime))
+                yield break;
+
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+    }
+
+    private IEnumerator WaitForDownStrikeAnimationEnd()
+    {
+        if (downStrikeClip != null)
+        {
+            yield return new WaitForSeconds(GetDirectClipDuration() * (1f - hitNormalizedTime));
+            StopDirectClip();
+            yield break;
+        }
+
+        if (animator == null || string.IsNullOrEmpty(downStrikeStateName))
+            yield break;
+
+        float elapsed = 0f;
+        while (elapsed < maxDownStrikeWaitDuration)
+        {
+            if (IsAnimatorStateAtOrPast(downStrikeStateName, 0.98f))
+                yield break;
+
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+    }
+
+    private bool IsAnimatorStateAtOrPast(string stateName, float normalizedTime)
+    {
+        int stateHash = Animator.StringToHash(stateName);
+        for (int layer = 0; layer < animator.layerCount; layer++)
+        {
+            AnimatorStateInfo stateInfo = animator.GetCurrentAnimatorStateInfo(layer);
+            if (stateInfo.shortNameHash == stateHash && stateInfo.normalizedTime >= normalizedTime)
+                return true;
+        }
+
+        return false;
     }
 
     private void PlayAnimatorState(string stateName, float fadeDuration, float normalizedStartTime = 0f)
@@ -103,7 +172,7 @@ public class WarriorDownStrike2D : MonoBehaviour
             if (!animator.HasState(layer, stateHash))
                 continue;
 
-            // [Codex Warrior DownStrike 3.1] Slash2H starts after its wind-up so Charge2H does not raise the sword twice.
+            // [Codex Warrior DownStrike 1st] 내려찍기 첫 구현은 상태를 중간부터 건너뛰지 않고 1회 재생합니다.
             animator.CrossFade(stateHash, fadeDuration, layer, normalizedStartTime);
             return;
         }
@@ -118,6 +187,42 @@ public class WarriorDownStrike2D : MonoBehaviour
             animator.CrossFade(qualifiedHash, fadeDuration, layer, normalizedStartTime);
             return;
         }
+    }
+
+    private void PlayDirectClip(AnimationClip clip, float speed)
+    {
+        StopDirectClip();
+
+        // [Codex Warrior Direct Clip] Inspector에 넣은 애니메이션 클립을 Animator Controller 상태 전환 없이 그대로 재생합니다.
+        downStrikeGraph = PlayableGraph.Create("WarriorDownStrikeClip");
+        AnimationPlayableOutput output = AnimationPlayableOutput.Create(
+            downStrikeGraph,
+            "DownStrikeOutput",
+            animator);
+        AnimationClipPlayable clipPlayable = AnimationClipPlayable.Create(downStrikeGraph, clip);
+        clipPlayable.SetSpeed(Mathf.Max(0.01f, speed));
+        output.SetSourcePlayable(clipPlayable);
+        downStrikeGraph.Play();
+    }
+
+    private float GetDirectClipDuration()
+    {
+        if (downStrikeClip == null)
+            return maxDownStrikeWaitDuration;
+
+        return downStrikeClip.length / Mathf.Max(0.01f, directClipSpeed);
+    }
+
+    private void StopDirectClip()
+    {
+        if (downStrikeGraph.IsValid())
+            downStrikeGraph.Destroy();
+    }
+
+    private void OnDisable()
+    {
+        StopDirectClip();
+        isUsingSkill = false;
     }
 
     private void ApplyDownStrikeHit()

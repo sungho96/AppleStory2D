@@ -1,33 +1,69 @@
 using TMPro;
+using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class SkillPanelScrollController : MonoBehaviour
 {
+    [Header("Skill Icons")]
     [SerializeField] private Sprite powerShotIcon;
     [SerializeField] private Sprite rapidVolleyIcon;
+    [SerializeField] private Sprite downStrikeIcon;
+    [SerializeField] private Sprite shieldBlockIcon;
 
-    private static readonly string[] IconNames =
+    [Header("Skill Text")]
+    [SerializeField, TextArea(2, 4)] private string powerShotText =
+        "파워 샷\n최대 1.5초 차징\n피해·속도·크기 증가";
+    [SerializeField, TextArea(2, 4)] private string rapidVolleyText =
+        "래피드 볼리\n전방으로 화살 3발을\n빠르게 연속 발사";
+    [SerializeField, TextArea(2, 4)] private string downStrikeText =
+        "내려찍기\n검을 크게 내려쳐\n전방 적에게 피해";
+    [SerializeField, TextArea(2, 4)] private string shieldBlockText =
+        "방패막기\n짧은 시간 동안\n받는 피해 감소";
+
+    private static readonly string[] CommonIconNames =
     {
         "MoveSpeedSkillIcon",
         "AttackSpeedSkillIcon",
-        "QuickStepPassiveSkillIcon",
+        "QuickStepPassiveSkillIcon"
+    };
+
+    private static readonly string[] ArcherIconNames =
+    {
         "PowerShotSkillIcon",
         "RapidVolleySkillIcon"
     };
 
-    private static readonly string[] TextNames =
+    private static readonly string[] WarriorIconNames =
+    {
+        "DownStrikeSkillIcon",
+        "ShieldBlockSkillIcon"
+    };
+
+    private static readonly string[] CommonTextNames =
     {
         "MoveSpeedSkillText",
         "AttackSpeedSkillText",
-        "QuickStepPassiveSkillText",
+        "QuickStepPassiveSkillText"
+    };
+
+    private static readonly string[] ArcherTextNames =
+    {
         "PowerShotSkillText",
         "RapidVolleySkillText"
+    };
+
+    private static readonly string[] WarriorTextNames =
+    {
+        "DownStrikeSkillText",
+        "ShieldBlockSkillText"
     };
 
     private const float RowSpacing = 160f;
     private Sprite runtimeRowSprite;
     private Texture2D runtimeRowTexture;
+    private string[] activeIconNames;
+    private string[] activeTextNames;
 
     private void Awake()
     {
@@ -42,7 +78,7 @@ public class SkillPanelScrollController : MonoBehaviour
 
     private void NormalizeExistingSkillIcons()
     {
-        foreach (string iconName in IconNames)
+        foreach (string iconName in GetAllSkillIconNames())
         {
             RectTransform iconRect = FindDescendantRect(iconName);
             if (iconRect == null)
@@ -72,11 +108,15 @@ public class SkillPanelScrollController : MonoBehaviour
     {
         if (transform.Find("SkillListViewport") != null)
         {
+            RefreshVisibleJobSkills();
             return;
         }
 
         CreatePowerShotEntry();
         CreateRapidVolleyEntry();
+        CreateDownStrikeEntry();
+        CreateShieldBlockEntry();
+        RefreshVisibleJobSkills();
 
         // [스킬창 스크롤 추가] 기존 스킬 스킨은 유지하고 목록만 클리핑합니다.
         RectTransform viewport = CreateRect("SkillListViewport", transform);
@@ -93,9 +133,9 @@ public class SkillPanelScrollController : MonoBehaviour
         content.anchorMax = new Vector2(0.5f, 1f);
         content.pivot = new Vector2(0.5f, 1f);
         content.anchoredPosition = Vector2.zero;
-        content.sizeDelta = new Vector2(360f, RowSpacing * IconNames.Length);
+        content.sizeDelta = new Vector2(360f, RowSpacing * activeIconNames.Length);
 
-        for (int i = 0; i < IconNames.Length; i++)
+        for (int i = 0; i < activeIconNames.Length; i++)
         {
             CreateSkillRow(content, i);
         }
@@ -118,6 +158,7 @@ public class SkillPanelScrollController : MonoBehaviour
     {
         if (transform.Find("PowerShotSkillIcon") != null)
         {
+            ApplySkillIcon("PowerShotSkillIcon", powerShotIcon, KeySettingSkillType.PowerShot);
             return;
         }
 
@@ -138,14 +179,14 @@ public class SkillPanelScrollController : MonoBehaviour
 
         GameObject textObject = Instantiate(sourceText.gameObject, transform);
         textObject.name = "PowerShotSkillText";
-        textObject.GetComponent<TMP_Text>().text =
-            "파워 샷\n최대 1.5초 차징\n피해·속도·크기 증가";
+        textObject.GetComponent<TMP_Text>().text = powerShotText;
     }
 
     private void CreateRapidVolleyEntry()
     {
         if (transform.Find("RapidVolleySkillIcon") != null)
         {
+            ApplySkillIcon("RapidVolleySkillIcon", rapidVolleyIcon, KeySettingSkillType.RapidVolley);
             return;
         }
 
@@ -166,8 +207,86 @@ public class SkillPanelScrollController : MonoBehaviour
 
         GameObject textObject = Instantiate(sourceText.gameObject, transform);
         textObject.name = "RapidVolleySkillText";
-        textObject.GetComponent<TMP_Text>().text =
-            "래피드 볼리\n전방으로 화살 3발을\n빠르게 연속 발사";
+        textObject.GetComponent<TMP_Text>().text = rapidVolleyText;
+    }
+
+    private void CreateDownStrikeEntry()
+    {
+        if (transform.Find("DownStrikeSkillIcon") != null)
+        {
+            ApplySkillIcon("DownStrikeSkillIcon", downStrikeIcon, KeySettingSkillType.WarriorDownStrike);
+            return;
+        }
+
+        Transform sourceIcon = transform.Find("MoveSpeedSkillIcon");
+        Transform sourceText = transform.Find("MoveSpeedSkillText");
+        if (sourceIcon == null || sourceText == null)
+        {
+            Debug.LogWarning("[스킬창] 내려찍기 항목 생성에 필요한 참조가 부족합니다.");
+            return;
+        }
+
+        // [Codex Warrior Skill Panel] 전사 전용 스킬도 기존 스킬 슬롯 스킨을 복제해서 같은 크기로 맞춥니다.
+        GameObject iconObject = Instantiate(sourceIcon.gameObject, transform);
+        iconObject.name = "DownStrikeSkillIcon";
+        iconObject.GetComponent<Image>().sprite = downStrikeIcon != null
+            ? downStrikeIcon
+            : sourceIcon.GetComponent<Image>().sprite;
+        iconObject.GetComponent<SkillIconDragHandler>()
+            .ConfigureSkillType(KeySettingSkillType.WarriorDownStrike);
+
+        GameObject textObject = Instantiate(sourceText.gameObject, transform);
+        textObject.name = "DownStrikeSkillText";
+        textObject.GetComponent<TMP_Text>().text = downStrikeText;
+    }
+
+    private void CreateShieldBlockEntry()
+    {
+        if (transform.Find("ShieldBlockSkillIcon") != null)
+        {
+            ApplySkillIcon("ShieldBlockSkillIcon", shieldBlockIcon, KeySettingSkillType.WarriorShieldBlock);
+            return;
+        }
+
+        Transform sourceIcon = transform.Find("MoveSpeedSkillIcon");
+        Transform sourceText = transform.Find("MoveSpeedSkillText");
+        if (sourceIcon == null || sourceText == null)
+        {
+            Debug.LogWarning("[스킬창] 방패막기 항목 생성에 필요한 참조가 부족합니다.");
+            return;
+        }
+
+        // [Codex Warrior Skill Panel] 방패막기는 워리어일 때만 Row에 들어가도록 별도 타입을 부여합니다.
+        GameObject iconObject = Instantiate(sourceIcon.gameObject, transform);
+        iconObject.name = "ShieldBlockSkillIcon";
+        iconObject.GetComponent<Image>().sprite = shieldBlockIcon != null ? shieldBlockIcon : rapidVolleyIcon;
+        iconObject.GetComponent<SkillIconDragHandler>()
+            .ConfigureSkillType(KeySettingSkillType.WarriorShieldBlock);
+
+        GameObject textObject = Instantiate(sourceText.gameObject, transform);
+        textObject.name = "ShieldBlockSkillText";
+        textObject.GetComponent<TMP_Text>().text = shieldBlockText;
+    }
+
+    private void ApplySkillIcon(
+        string iconName,
+        Sprite configuredIcon,
+        KeySettingSkillType skillType)
+    {
+        Transform icon = FindDescendantRect(iconName);
+        if (icon == null)
+            return;
+
+        Image image = icon.GetComponent<Image>();
+        if (image != null && configuredIcon != null)
+        {
+            // [Codex Skill Icon Inspector] Inspector에 넣은 Sprite가 있으면 기존 씬 아이콘보다 우선 적용합니다.
+            image.sprite = configuredIcon;
+        }
+
+        SkillIconDragHandler dragHandler = icon.GetComponent<SkillIconDragHandler>();
+        if (dragHandler != null)
+            dragHandler.ConfigureSkillType(skillType);
     }
 
     private void CreateSkillRow(RectTransform content, int rowIndex)
@@ -187,8 +306,65 @@ public class SkillPanelScrollController : MonoBehaviour
 
         // [Free Aspect 중앙 정렬] 원본 아이콘 중심값(-122)을 유지해 왼쪽 쏠림을 제거합니다.
         // [Free Aspect 중앙 정렬] 모든 스킬 아이콘을 첫 번째 아이콘과 같은 X축 기준으로 통일합니다.
-        MoveEntryIntoRow(IconNames[rowIndex], row, -127f);
-        MoveEntryIntoRow(TextNames[rowIndex], row, 47.126f);
+        MoveEntryIntoRow(activeIconNames[rowIndex], row, -127f);
+        MoveEntryIntoRow(activeTextNames[rowIndex], row, 47.126f);
+    }
+
+    private void RefreshVisibleJobSkills()
+    {
+        bool isWarrior = IsLocalWarriorPlayer();
+        activeIconNames = CombineNames(CommonIconNames, isWarrior ? WarriorIconNames : ArcherIconNames);
+        activeTextNames = CombineNames(CommonTextNames, isWarrior ? WarriorTextNames : ArcherTextNames);
+
+        SetSkillEntriesActive(ArcherIconNames, ArcherTextNames, !isWarrior);
+        SetSkillEntriesActive(WarriorIconNames, WarriorTextNames, isWarrior);
+    }
+
+    private bool IsLocalWarriorPlayer()
+    {
+        WarriorDownStrike2D[] warriorSkills = FindObjectsByType<WarriorDownStrike2D>(FindObjectsSortMode.None);
+        for (int i = 0; i < warriorSkills.Length; i++)
+        {
+            NetworkObject networkObject = warriorSkills[i].GetComponent<NetworkObject>();
+            if (networkObject != null && networkObject.IsSpawned)
+            {
+                if (networkObject.IsOwner)
+                    return true;
+                continue;
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
+    private string[] CombineNames(string[] first, string[] second)
+    {
+        string[] combined = new string[first.Length + second.Length];
+        first.CopyTo(combined, 0);
+        second.CopyTo(combined, first.Length);
+        return combined;
+    }
+
+    private string[] GetAllSkillIconNames()
+    {
+        string[] first = CombineNames(CommonIconNames, ArcherIconNames);
+        return CombineNames(first, WarriorIconNames);
+    }
+
+    private void SetSkillEntriesActive(string[] iconNames, string[] textNames, bool active)
+    {
+        for (int i = 0; i < iconNames.Length; i++)
+        {
+            Transform icon = FindDescendantRect(iconNames[i]);
+            if (icon != null)
+                icon.gameObject.SetActive(active);
+
+            Transform text = FindDescendantRect(textNames[i]);
+            if (text != null)
+                text.gameObject.SetActive(active);
+        }
     }
 
     private void MoveEntryIntoRow(string objectName, RectTransform row, float positionX)

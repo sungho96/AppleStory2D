@@ -16846,6 +16846,7 @@ MonoBehaviour:
   hitReaction: {fileID: 4910311054295029632}
   hpBarUI: {fileID: 0}
   playerStats: {fileID: 0}
+  warriorShieldBlock: {fileID: 0}
   deathFadeDelay: 1
   deathFadeDuration: 0.8
   deathFreezeCrossFadeBuffer: 0.08
