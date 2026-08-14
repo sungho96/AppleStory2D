@@ -292,6 +292,9 @@ public class GoblinBossCombatController2D : MonoBehaviour
 
     private void LateUpdate()
     {
+        // [Codex Animator 루트 고정 방지] Animator가 보스 루트 위치를 덮어써도 Rigidbody2D 이동/점프 위치를 유지합니다.
+        SyncRootTransformToRigidbody();
+
         if ((!isCasting && !isShieldBlocking) || castingArm == null)
             return;
 
@@ -313,6 +316,21 @@ public class GoblinBossCombatController2D : MonoBehaviour
         Vector3 readyLean = isCloseCounterCasting ? Vector3.right * (leanDirection * closeCounterReadyLean * liftRatio) : Vector3.zero;
         castingArm.localPosition = castingArmBasePosition + Vector3.up * (raiseHeight * liftRatio) + readyLean;
         castingArm.localRotation = castingArmBaseRotation * Quaternion.Euler(0f, 0f, (raisedAngle + shake) * liftRatio);
+    }
+
+    private void SyncRootTransformToRigidbody()
+    {
+        if (rb == null || rb.bodyType != RigidbodyType2D.Dynamic || !rb.simulated)
+            return;
+
+        Vector3 currentPosition = transform.position;
+        Vector2 physicsPosition = rb.position;
+
+        if (Mathf.Abs(currentPosition.x - physicsPosition.x) < 0.001f &&
+            Mathf.Abs(currentPosition.y - physicsPosition.y) < 0.001f)
+            return;
+
+        transform.position = new Vector3(physicsPosition.x, physicsPosition.y, currentPosition.z);
     }
 
     private void OnDisable()

@@ -1,0 +1,325 @@
+fileFormatVersion: 2
+guid: f4ad9d0401a74424a8db5ecaeb04ea86
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 6461741230038109705
+    second: GameEntry_LoadingSwirl_Cartoon_0
+  - first:
+      213: 571396220877831051
+    second: GameEntry_LoadingSwirl_Cartoon_1
+  - first:
+      213: -4170460826343930903
+    second: GameEntry_LoadingSwirl_Cartoon_2
+  - first:
+      213: 6435328627921938810
+    second: GameEntry_LoadingSwirl_Cartoon_3
+  - first:
+      213: 4997195901180230120
+    second: GameEntry_LoadingSwirl_Cartoon_4
+  - first:
+      213: -9058007364157392047
+    second: GameEntry_LoadingSwirl_Cartoon_5
+  - first:
+      213: -3251872525390237038
+    second: GameEntry_LoadingSwirl_Cartoon_6
+  - first:
+      213: 3407382807866223775
+    second: GameEntry_LoadingSwirl_Cartoon_7
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 1
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: GameEntry_LoadingSwirl_Cartoon_0
+      rect:
+        serializedVersion: 2
+        x: 249
+        y: 657
+        width: 536
+        height: 370
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 90ecae6b967bca950800000000000000
+      internalID: 6461741230038109705
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GameEntry_LoadingSwirl_Cartoon_1
+      rect:
+        serializedVersion: 2
+        x: 572
+        y: 1006
+        width: 112
+        height: 113
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b8b7c63e5d10ee700800000000000000
+      internalID: 571396220877831051
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GameEntry_LoadingSwirl_Cartoon_2
+      rect:
+        serializedVersion: 2
+        x: 658
+        y: 497
+        width: 362
+        height: 526
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9e3861879fb8f16c0800000000000000
+      internalID: -4170460826343930903
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GameEntry_LoadingSwirl_Cartoon_3
+      rect:
+        serializedVersion: 2
+        x: 145
+        y: 571
+        width: 112
+        height: 113
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a7960309a41ee4950800000000000000
+      internalID: 6435328627921938810
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GameEntry_LoadingSwirl_Cartoon_4
+      rect:
+        serializedVersion: 2
+        x: 236
+        y: 236
+        width: 360
+        height: 546
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8e9b2e2223b995540800000000000000
+      internalID: 4997195901180230120
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GameEntry_LoadingSwirl_Cartoon_5
+      rect:
+        serializedVersion: 2
+        x: 468
+        y: 226
+        width: 550
+        height: 382
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 15bb68e2b4e7b4280800000000000000
+      internalID: -9058007364157392047
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GameEntry_LoadingSwirl_Cartoon_6
+      rect:
+        serializedVersion: 2
+        x: 1002
+        y: 571
+        width: 111
+        height: 113
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2923345da270fd2d0800000000000000
+      internalID: -3251872525390237038
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: GameEntry_LoadingSwirl_Cartoon_7
+      rect:
+        serializedVersion: 2
+        x: 572
+        y: 138
+        width: 112
+        height: 112
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f9ca3a45c94794f20800000000000000
+      internalID: 3407382807866223775
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      GameEntry_LoadingSwirl_Cartoon_0: 6461741230038109705
+      GameEntry_LoadingSwirl_Cartoon_1: 571396220877831051
+      GameEntry_LoadingSwirl_Cartoon_2: -4170460826343930903
+      GameEntry_LoadingSwirl_Cartoon_3: 6435328627921938810
+      GameEntry_LoadingSwirl_Cartoon_4: 4997195901180230120
+      GameEntry_LoadingSwirl_Cartoon_5: -9058007364157392047
+      GameEntry_LoadingSwirl_Cartoon_6: -3251872525390237038
+      GameEntry_LoadingSwirl_Cartoon_7: 3407382807866223775
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
