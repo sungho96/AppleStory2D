@@ -128,6 +128,7 @@ public class GameEntryNetworkConnectionController : MonoBehaviour
         waitingAsHost = true;
         waitingAsClient = false;
         readyPanelSequenceStarted = false;
+        KeyBindingManager.SetBindingProfile(KeyBindingManager.HostArcherProfile);
         SetButtonsInteractable(false);
         loadingOverlay.Show("방을 만드는 중...");
 
@@ -155,6 +156,7 @@ public class GameEntryNetworkConnectionController : MonoBehaviour
         waitingAsHost = false;
         waitingAsClient = true;
         readyPanelSequenceStarted = false;
+        KeyBindingManager.SetBindingProfile(KeyBindingManager.ClientWarriorProfile);
         SetButtonsInteractable(false);
         loadingOverlay.Show("접속하는 중...");
 
@@ -541,6 +543,7 @@ public class GameEntryNetworkConnectionController : MonoBehaviour
 
         if (IsLocalClientWarrior())
         {
+            KeyBindingManager.SetBindingProfile(KeyBindingManager.ClientWarriorProfile);
             // [Codex Client Warrior ReadyPanel] 참가하기(Client)는 워리어라서 아처 공격 스킬 슬롯을 워리어 스킬로 교체합니다.
             ApplySkillSlotOverride(
                 keySettingPreview,
@@ -557,6 +560,7 @@ public class GameEntryNetworkConnectionController : MonoBehaviour
             return;
         }
 
+        KeyBindingManager.SetBindingProfile(KeyBindingManager.HostArcherProfile);
         ApplyReadySkillIconOverrides(keySettingPreview.gameObject);
     }
 

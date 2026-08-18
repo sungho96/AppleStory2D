@@ -16,6 +16,11 @@ public enum KeySettingSkillType
 public class KeyBindingManager : MonoBehaviour
 {
     public static KeyBindingManager Instance { get; private set; }
+    private const string SavedBindingPrefix = "AppleStory.KeyBinding.";
+    public const string HostArcherProfile = "HostArcher";
+    public const string ClientWarriorProfile = "ClientWarrior";
+
+    private static string bindingProfile = HostArcherProfile;
 
     [SerializeField] private SpeedBuffController speedBuffController;
     [SerializeField] private PlayerAttack2D playerAttack;
@@ -55,6 +60,9 @@ public class KeyBindingManager : MonoBehaviour
             // [Codex Warrior Skill Binding] 방패막기도 키 매니저에서 직접 실행할 수 있게 찾습니다.
             warriorShieldBlock = FindLocalPlayerComponent<WarriorShieldBlock2D>();
         }
+
+        ResolveProfileFromNetwork();
+        LoadSavedBindings();
     }
 
     private void Update()
@@ -99,6 +107,7 @@ public class KeyBindingManager : MonoBehaviour
         }
 
         keyBindings[keyCode] = skillType;
+        SaveBinding(keyCode, skillType);
         Debug.Log($"[키 설정] {keyName} 실행 스킬이 {skillType}(으)로 변경됐습니다.");
     }
 
@@ -109,6 +118,59 @@ public class KeyBindingManager : MonoBehaviour
             return;
 
         keyBindings.Remove(keyCode);
+        RemoveSavedBinding(keyCode);
+    }
+
+    public static void SaveBinding(string keyName, KeySettingSkillType skillType)
+    {
+        if (!TryConvertKeyCodeStatic(keyName, out KeyCode keyCode))
+            return;
+
+        SaveBinding(keyCode, skillType);
+    }
+
+    public static void SetBindingProfile(string profile)
+    {
+        if (string.IsNullOrWhiteSpace(profile))
+            return;
+
+        // [Codex KeyBinding Profile] Host 아처와 Client 워리어 키 설정이 같은 PC PlayerPrefs에서 섞이지 않게 분리합니다.
+        bindingProfile = profile;
+        Instance?.LoadSavedBindings();
+    }
+
+    public static void RemoveSavedBinding(string keyName)
+    {
+        if (!TryConvertKeyCodeStatic(keyName, out KeyCode keyCode))
+            return;
+
+        RemoveSavedBinding(keyCode);
+    }
+
+    public static void SaveCurrentBindings()
+    {
+        if (Instance == null)
+        {
+            PlayerPrefs.Save();
+            return;
+        }
+
+        foreach (KeyValuePair<KeyCode, KeySettingSkillType> binding in Instance.keyBindings)
+            SaveBinding(binding.Key, binding.Value);
+
+        PlayerPrefs.Save();
+    }
+
+    public static bool TryGetSavedBinding(string keyName, out KeySettingSkillType skillType)
+    {
+        skillType = KeySettingSkillType.None;
+
+        if (!TryConvertKeyCodeStatic(keyName, out KeyCode keyCode))
+            return false;
+
+        Dictionary<KeyCode, KeySettingSkillType> savedBindings = LoadSavedBindingDictionary();
+        return savedBindings.TryGetValue(keyCode, out skillType) &&
+            skillType != KeySettingSkillType.None;
     }
 
     private void ExecuteSkill(KeySettingSkillType skillType)
@@ -206,6 +268,11 @@ public class KeyBindingManager : MonoBehaviour
 
     private bool TryConvertKeyCode(string keyName, out KeyCode keyCode)
     {
+        return TryConvertKeyCodeStatic(keyName, out keyCode);
+    }
+
+    private static bool TryConvertKeyCodeStatic(string keyName, out KeyCode keyCode)
+    {
         // 화면 표기와 Unity KeyCode 이름이 다른 키들을 먼저 변환합니다.
         switch (keyName)
         {
@@ -238,6 +305,113 @@ public class KeyBindingManager : MonoBehaviour
         }
 
         return System.Enum.TryParse(keyName, true, out keyCode);
+    }
+
+    private void LoadSavedBindings()
+    {
+        keyBindings.Clear();
+
+        int count = PlayerPrefs.GetInt(GetSavedBindingCountKey(), 0);
+        for (int i = 0; i < count; i++)
+        {
+            string keyName = PlayerPrefs.GetString(GetSavedBindingKey(i), "");
+            string skillName = PlayerPrefs.GetString(GetSavedBindingSkillKey(i), "");
+
+            if (!System.Enum.TryParse(keyName, out KeyCode keyCode) ||
+                !System.Enum.TryParse(skillName, out KeySettingSkillType skillType) ||
+                skillType == KeySettingSkillType.None)
+            {
+                continue;
+            }
+
+            keyBindings[keyCode] = skillType;
+        }
+    }
+
+    private static void SaveBinding(KeyCode keyCode, KeySettingSkillType skillType)
+    {
+        Dictionary<KeyCode, KeySettingSkillType> savedBindings = LoadSavedBindingDictionary();
+        savedBindings[keyCode] = skillType;
+        SaveBindingDictionary(savedBindings);
+    }
+
+    private static void RemoveSavedBinding(KeyCode keyCode)
+    {
+        Dictionary<KeyCode, KeySettingSkillType> savedBindings = LoadSavedBindingDictionary();
+        savedBindings.Remove(keyCode);
+        SaveBindingDictionary(savedBindings);
+    }
+
+    private static Dictionary<KeyCode, KeySettingSkillType> LoadSavedBindingDictionary()
+    {
+        Dictionary<KeyCode, KeySettingSkillType> savedBindings = new();
+        int count = PlayerPrefs.GetInt(GetSavedBindingCountKey(), 0);
+        for (int i = 0; i < count; i++)
+        {
+            string keyName = PlayerPrefs.GetString(GetSavedBindingKey(i), "");
+            string skillName = PlayerPrefs.GetString(GetSavedBindingSkillKey(i), "");
+
+            if (System.Enum.TryParse(keyName, out KeyCode keyCode) &&
+                System.Enum.TryParse(skillName, out KeySettingSkillType skillType) &&
+                skillType != KeySettingSkillType.None)
+            {
+                savedBindings[keyCode] = skillType;
+            }
+        }
+
+        return savedBindings;
+    }
+
+    private static void SaveBindingDictionary(Dictionary<KeyCode, KeySettingSkillType> bindings)
+    {
+        int previousCount = PlayerPrefs.GetInt(GetSavedBindingCountKey(), 0);
+        for (int i = 0; i < previousCount; i++)
+        {
+            PlayerPrefs.DeleteKey(GetSavedBindingKey(i));
+            PlayerPrefs.DeleteKey(GetSavedBindingSkillKey(i));
+        }
+
+        int index = 0;
+        foreach (KeyValuePair<KeyCode, KeySettingSkillType> binding in bindings)
+        {
+            PlayerPrefs.SetString(GetSavedBindingKey(index), binding.Key.ToString());
+            PlayerPrefs.SetString(GetSavedBindingSkillKey(index), binding.Value.ToString());
+            index++;
+        }
+
+        PlayerPrefs.SetInt(GetSavedBindingCountKey(), index);
+        PlayerPrefs.Save();
+    }
+
+    private static string GetProfilePrefix()
+    {
+        return SavedBindingPrefix + bindingProfile + ".";
+    }
+
+    private static string GetSavedBindingCountKey()
+    {
+        return GetProfilePrefix() + "Count";
+    }
+
+    private static string GetSavedBindingKey(int index)
+    {
+        return $"{GetProfilePrefix()}Key{index}";
+    }
+
+    private static string GetSavedBindingSkillKey(int index)
+    {
+        return $"{GetProfilePrefix()}Skill{index}";
+    }
+
+    private static void ResolveProfileFromNetwork()
+    {
+        NetworkManager manager = NetworkManager.Singleton;
+        if (manager == null || !manager.IsListening)
+            return;
+
+        bindingProfile = manager.IsClient && !manager.IsServer
+            ? ClientWarriorProfile
+            : HostArcherProfile;
     }
 
     private void OnDestroy()

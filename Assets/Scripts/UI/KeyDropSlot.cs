@@ -24,6 +24,8 @@ public class KeyDropSlot : MonoBehaviour, IDropHandler, IPointerEnterHandler, IP
 
     private void OnEnable()
     {
+        RestoreSavedSkill();
+
         // [매핑 아이콘 재정렬] 키세팅 창을 다시 열 때 모든 슬롯의 이미지를 정중앙으로 복구합니다.
         if (assignedSkillIcon != null)
         {
@@ -42,6 +44,7 @@ public class KeyDropSlot : MonoBehaviour, IDropHandler, IPointerEnterHandler, IP
     {
         // 배치 도구가 생성한 슬롯에도 Console과 저장용 키 이름을 정확히 전달합니다.
         keyName = configuredKeyName;
+        RestoreSavedSkill();
     }
 
     public void OnDrop(PointerEventData eventData)
@@ -85,6 +88,11 @@ public class KeyDropSlot : MonoBehaviour, IDropHandler, IPointerEnterHandler, IP
         {
             KeyBindingManager.Instance.Assign(keyName, draggedSkill.SkillType);
         }
+        else
+        {
+            // [Codex Ready Key Save] GameEntry처럼 입력 매니저가 없는 씬에서도 보스씬으로 넘길 키 설정을 저장합니다.
+            KeyBindingManager.SaveBinding(keyName, draggedSkill.SkillType);
+        }
 
         Debug.Log($"[키 설정] {keyName} 키에 스킬을 임시 배치했습니다.");
         SetDropAreaColor(0f);
@@ -116,6 +124,18 @@ public class KeyDropSlot : MonoBehaviour, IDropHandler, IPointerEnterHandler, IP
         }
     }
 
+    private void RestoreSavedSkill()
+    {
+        if (!KeyBindingManager.TryGetSavedBinding(keyName, out KeySettingSkillType savedSkillType))
+            return;
+
+        assignedSkillType = savedSkillType;
+        RefreshAssignedSkillIcon();
+
+        if (KeyBindingManager.Instance != null)
+            KeyBindingManager.Instance.Assign(keyName, savedSkillType);
+    }
+
     private void ClearAssignedSkill()
     {
         if (assignedSkillType == KeySettingSkillType.None)
@@ -129,6 +149,8 @@ public class KeyDropSlot : MonoBehaviour, IDropHandler, IPointerEnterHandler, IP
         }
 
         KeyBindingManager.Instance?.Unassign(keyName);
+        if (KeyBindingManager.Instance == null)
+            KeyBindingManager.RemoveSavedBinding(keyName);
         assignedSkillType = KeySettingSkillType.None;
     }
 

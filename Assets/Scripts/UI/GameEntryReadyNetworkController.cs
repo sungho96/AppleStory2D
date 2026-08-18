@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using TMPro;
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class GameEntryReadyNetworkController : MonoBehaviour
@@ -12,11 +13,14 @@ public class GameEntryReadyNetworkController : MonoBehaviour
 
     [SerializeField] private Button readyButton;
     [SerializeField] private TextMeshProUGUI readyStatusText;
+    [SerializeField] private float fadeOutDuration = 0.75f;
+    [SerializeField] private string bossNetworkSceneName = "GoblinBoss_Network";
 
     private readonly HashSet<ulong> readyClients = new();
     private NetworkManager networkManager;
     private bool isLocalReady;
     private bool messageRegistered;
+    private bool transitionStarted;
 
     private void OnEnable()
     {
@@ -154,6 +158,7 @@ public class GameEntryReadyNetworkController : MonoBehaviour
         {
             readyStatusText.text = "두 플레이어 준비 완료";
             readyStatusText.color = new Color(0.7f, 1f, 0.55f, 1f);
+            BeginBossSceneTransition();
             return;
         }
 
@@ -164,5 +169,64 @@ public class GameEntryReadyNetworkController : MonoBehaviour
         readyStatusText.color = isLocalReady
             ? new Color(0.78f, 0.92f, 1f, 1f)
             : new Color(1f, 0.92f, 0.62f, 1f);
+    }
+
+    private void BeginBossSceneTransition()
+    {
+        if (transitionStarted)
+            return;
+
+        transitionStarted = true;
+        KeyBindingManager.SaveCurrentBindings();
+        StartCoroutine(FadeOutAndLoadBossScene());
+    }
+
+    private System.Collections.IEnumerator FadeOutAndLoadBossScene()
+    {
+        if (readyButton != null)
+            readyButton.interactable = false;
+
+        CanvasGroup fadeGroup = BuildFadeOverlay();
+        float elapsed = 0f;
+        while (elapsed < fadeOutDuration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            fadeGroup.alpha = Mathf.Clamp01(elapsed / Mathf.Max(0.01f, fadeOutDuration));
+            yield return null;
+        }
+
+        fadeGroup.alpha = 1f;
+
+        if (networkManager != null && networkManager.IsServer)
+        {
+            // [Codex Ready Scene Transition] 서버만 Netcode 씬 전환을 요청하고, 클라이언트는 같은 전환을 따라갑니다.
+            networkManager.SceneManager.LoadScene(bossNetworkSceneName, LoadSceneMode.Single);
+        }
+    }
+
+    private CanvasGroup BuildFadeOverlay()
+    {
+        Canvas rootCanvas = GetComponentInParent<Canvas>()?.rootCanvas;
+        Transform parent = rootCanvas != null ? rootCanvas.transform : transform;
+
+        GameObject overlay = new GameObject("ReadyBossSceneFade", typeof(RectTransform), typeof(CanvasGroup), typeof(Image));
+        overlay.transform.SetParent(parent, false);
+        overlay.transform.SetAsLastSibling();
+
+        RectTransform rect = overlay.GetComponent<RectTransform>();
+        rect.anchorMin = Vector2.zero;
+        rect.anchorMax = Vector2.one;
+        rect.anchoredPosition = Vector2.zero;
+        rect.sizeDelta = Vector2.zero;
+
+        Image image = overlay.GetComponent<Image>();
+        image.color = Color.black;
+        image.raycastTarget = true;
+
+        CanvasGroup group = overlay.GetComponent<CanvasGroup>();
+        group.alpha = 0f;
+        group.blocksRaycasts = true;
+        group.interactable = true;
+        return group;
     }
 }
