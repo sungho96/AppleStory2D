@@ -1999,7 +1999,7 @@ BoxCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: -11.14, y: 5.35}
+  m_Offset: {x: -11.14, y: 4.92}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
@@ -2443,8 +2443,8 @@ GameObject:
   - component: {fileID: 519420032}
   - component: {fileID: 519420031}
   - component: {fileID: 519420029}
-  - component: {fileID: 519420033}
   - component: {fileID: 519420034}
+  - component: {fileID: 519420035}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -2526,21 +2526,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &519420033
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 519420028}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ccb15b834acdff04599f4d9ff15d1d3e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  target: {fileID: 0}
-  smoothSpeed: 5
-  offset: {x: 0, y: 2, z: 10}
 --- !u!114 &519420034
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2553,6 +2538,37 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6fd393bbe5aa4c5a876ba99e68f02181, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &519420035
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 519420028}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e641a6bf0a89a5641b49769e0c956182, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BossIntroCameraSequence
+  bossTarget: {fileID: 1984428910}
+  playerTag: Player
+  bossOffset: {x: 0, y: 1, z: 0}
+  bossZoomSize: 3
+  moveToBossDuration: 0.8
+  bossHoldDuration: 0.6
+  bossAnimator: {fileID: 1984428932}
+  bossCastClip: {fileID: 7400000, guid: 99b95ce2635926145a57cc13661fc4d7, type: 2}
+  fitAnimationToHoldDuration: 1
+  forceBossFaceLeftDuringIntro: 1
+  useCameraShake: 1
+  shakeStrength: 0.1
+  shakeFrequency: 22
+  playerOffset: {x: 0, y: -10, z: 0}
+  playerZoomSize: 3.5
+  moveToPlayerDuration: 0.9
+  playerHoldDuration: 0.5
+  returnDuration: 1.2
+  playerFindTimeout: 5
 --- !u!1001 &522854252
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2657,7 +2673,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 2661738493166848559, guid: a72f840df2870664ebfbbe635223eb1a, type: 3}
       propertyPath: m_Enabled
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3197302324974954825, guid: a72f840df2870664ebfbbe635223eb1a, type: 3}
       propertyPath: m_Name
@@ -2665,7 +2681,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3197302324974954825, guid: a72f840df2870664ebfbbe635223eb1a, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3414093990116752948, guid: a72f840df2870664ebfbbe635223eb1a, type: 3}
       propertyPath: m_LocalPosition.x
@@ -2709,15 +2725,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5601817928160589284, guid: a72f840df2870664ebfbbe635223eb1a, type: 3}
       propertyPath: m_Enabled
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7130256274919972027, guid: a72f840df2870664ebfbbe635223eb1a, type: 3}
       propertyPath: m_Enabled
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 9120502345969191522, guid: a72f840df2870664ebfbbe635223eb1a, type: 3}
       propertyPath: m_Enabled
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -5661,7 +5677,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1246869696
 RectTransform:
   m_ObjectHideFlags: 0
@@ -7339,7 +7355,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5223124047157880945, guid: 4ff7a910b50121042b5254f323de72c3, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8893548712250332534, guid: 4ff7a910b50121042b5254f323de72c3, type: 3}
       propertyPath: m_LocalPosition.x
@@ -9292,6 +9308,11 @@ MonoBehaviour:
   healAmountRatio: 0.15
   healCastColor: {r: 0.58, g: 0.16, b: 0.92, a: 0.62}
   healBurstColor: {r: 1, g: 0.78, b: 0.22, a: 0.88}
+--- !u!95 &1984428932 stripped
+Animator:
+  m_CorrespondingSourceObject: {fileID: 6085802689827250652, guid: f300f28359b7b894d8045771eea8216d, type: 3}
+  m_PrefabInstance: {fileID: 941899615}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1996240930
 GameObject:
   m_ObjectHideFlags: 0
@@ -10820,7 +10841,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7540131496875148918, guid: bd7eab963590c7a43a1f2e2752e8733c, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8388202618693096838, guid: bd7eab963590c7a43a1f2e2752e8733c, type: 3}
       propertyPath: m_Enabled

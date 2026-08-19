@@ -2,52 +2,117 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public class KeyDropSlot : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPointerExitHandler
+public class KeyDropSlot : MonoBehaviour,
+    IDropHandler,
+    IPointerEnterHandler,
+    IPointerExitHandler
 {
-    // [키 슬롯 아이콘 크기 통일] 모든 스킬을 동일한 정사각형 크기로 표시합니다.
     private const float AssignedIconSize = 62f;
 
     [SerializeField] private string keyName = "Q";
     [SerializeField] private Image assignedSkillIcon;
+
     private Image dropAreaImage;
-    private KeySettingSkillType assignedSkillType = KeySettingSkillType.None;
+
+    private KeySettingSkillType assignedSkillType =
+        KeySettingSkillType.None;
+
+    private bool isConfigured;
+
+
+    // =========================================================
+    // Unity
+    // =========================================================
+
+    private void Awake()
+    {
+        dropAreaImage = GetComponent<Image>();
+
+        EnsureAssignedSkillIcon();
+    }
 
     private void Start()
     {
-        // [Free Aspect 중앙 정렬] 키 스킨 중심과 드롭 슬롯 사이의 공통 4.5px 오차를 보정합니다.
-        RectTransform slotRect = transform as RectTransform;
+        RectTransform slotRect =
+            transform as RectTransform;
+
         if (slotRect != null)
-            slotRect.anchoredPosition += Vector2.right * 4.5f;
+        {
+            slotRect.anchoredPosition +=
+                Vector2.right * 4.5f;
+        }
 
         ApplyAssignedIconLayout();
     }
 
     private void OnEnable()
     {
-        RestoreSavedSkill();
+        /*
+         * 여기서 RestoreSavedSkill() 호출 금지.
+         *
+         * 런타임 생성 슬롯은 Configure() 전에
+         * keyName 기본값 Q를 가지고 있기 때문에
+         * 다시 DownStrike 도배 문제가 발생할 수 있습니다.
+         */
 
-        // [매핑 아이콘 재정렬] 키세팅 창을 다시 열 때 모든 슬롯의 이미지를 정중앙으로 복구합니다.
-        if (assignedSkillIcon != null)
-        {
-            RefreshAssignedSkillIcon();
-            ApplyAssignedIconLayout();
-        }
-    }
-
-    private void Awake()
-    {
-        dropAreaImage = GetComponent<Image>();
         EnsureAssignedSkillIcon();
+
+        ApplyAssignedIconLayout();
     }
 
-    public void Configure(string configuredKeyName)
+
+    // =========================================================
+    // Configure
+    // =========================================================
+
+    public void Configure(
+        string configuredKeyName)
     {
-        // 배치 도구가 생성한 슬롯에도 Console과 저장용 키 이름을 정확히 전달합니다.
-        keyName = configuredKeyName;
+        if (string.IsNullOrWhiteSpace(
+                configuredKeyName))
+        {
+            return;
+        }
+
+        keyName =
+            configuredKeyName;
+
+        isConfigured =
+            true;
+
         RestoreSavedSkill();
     }
 
-    public void OnDrop(PointerEventData eventData)
+
+    // =========================================================
+    // 외부 강제 Refresh
+    // =========================================================
+
+    public void RefreshFromSavedBinding()
+    {
+        /*
+         * 이미 Configure된 슬롯만 복원합니다.
+         *
+         * 이를 통해 GoblinBoss_Network에서
+         * . 키로 UI를 열 때 저장된 키 설정을
+         * 다시 화면에 반영할 수 있습니다.
+         */
+
+        if (!isConfigured)
+        {
+            return;
+        }
+
+        RestoreSavedSkill();
+    }
+
+
+    // =========================================================
+    // Drag
+    // =========================================================
+
+    public void OnDrop(
+        PointerEventData eventData)
     {
         if (eventData.pointerDrag == null)
         {
@@ -55,116 +120,262 @@ public class KeyDropSlot : MonoBehaviour, IDropHandler, IPointerEnterHandler, IP
         }
 
         SkillIconDragHandler draggedSkill =
-            eventData.pointerDrag.GetComponent<SkillIconDragHandler>();
+            eventData.pointerDrag
+                .GetComponent<SkillIconDragHandler>();
 
         TryAssign(draggedSkill);
     }
 
-    public bool TryAssign(SkillIconDragHandler draggedSkill)
+    public bool TryAssign(
+        SkillIconDragHandler draggedSkill)
     {
         EnsureAssignedSkillIcon();
 
-        if (assignedSkillIcon == null || draggedSkill == null || draggedSkill.SkillIcon == null)
+        if (!isConfigured)
         {
             return false;
         }
 
-        // 스킬 목록의 원본은 유지하고, 키 위에는 아이콘 스프라이트만 복사합니다.
-        // [키 중복 배치 수정] 같은 스킬의 이전 키를 비워 한 스킬당 한 자리만 유지합니다.
-        foreach (KeyDropSlot slot in FindObjectsByType<KeyDropSlot>(FindObjectsSortMode.None))
+        if (draggedSkill == null ||
+            draggedSkill.SkillIcon == null ||
+            draggedSkill.SkillType ==
+            KeySettingSkillType.None)
         {
-            if (slot != this && slot.assignedSkillType == draggedSkill.SkillType)
-                slot.ClearAssignedSkill();
+            return false;
         }
 
-        assignedSkillIcon.sprite = draggedSkill.SkillIcon;
-        assignedSkillIcon.preserveAspect = true;
-        assignedSkillIcon.gameObject.SetActive(true);
-        assignedSkillType = draggedSkill.SkillType;
+        KeyDropSlot[] allSlots =
+            FindObjectsByType<KeyDropSlot>(
+                FindObjectsSortMode.None);
+
+        for (int i = 0;
+             i < allSlots.Length;
+             i++)
+        {
+            KeyDropSlot slot =
+                allSlots[i];
+
+            if (slot == null ||
+                slot == this)
+            {
+                continue;
+            }
+
+            if (slot.assignedSkillType ==
+                draggedSkill.SkillType)
+            {
+                slot.ClearAssignedSkill();
+            }
+        }
+
+        assignedSkillType =
+            draggedSkill.SkillType;
+
+        assignedSkillIcon.sprite =
+            draggedSkill.SkillIcon;
+
+        assignedSkillIcon.preserveAspect =
+            true;
+
+        assignedSkillIcon.gameObject
+            .SetActive(true);
+
+        ApplyAssignedIconLayout();
+
         draggedSkill.NotifySuccessfulDrop();
 
-        // 화면에 배치한 키 이름과 스킬 종류를 실제 입력 관리자에 함께 전달합니다.
+
         if (KeyBindingManager.Instance != null)
         {
-            KeyBindingManager.Instance.Assign(keyName, draggedSkill.SkillType);
+            KeyBindingManager.Instance.Assign(
+                keyName,
+                assignedSkillType);
         }
         else
         {
-            // [Codex Ready Key Save] GameEntry처럼 입력 매니저가 없는 씬에서도 보스씬으로 넘길 키 설정을 저장합니다.
-            KeyBindingManager.SaveBinding(keyName, draggedSkill.SkillType);
+            KeyBindingManager.SaveBinding(
+                keyName,
+                assignedSkillType);
         }
 
-        Debug.Log($"[키 설정] {keyName} 키에 스킬을 임시 배치했습니다.");
+        Debug.Log(
+            $"[키 설정] 배치: " +
+            $"{keyName} = {assignedSkillType}");
+
         SetDropAreaColor(0f);
+
         return true;
     }
 
-    private void RefreshAssignedSkillIcon()
-    {
-        if (assignedSkillType == KeySettingSkillType.None || assignedSkillIcon == null)
-            return;
 
-        SkillIconDragHandler[] skillIcons = FindObjectsByType<SkillIconDragHandler>(
-            FindObjectsInactive.Include,
-            FindObjectsSortMode.None);
-
-        for (int i = 0; i < skillIcons.Length; i++)
-        {
-            if (skillIcons[i] == null || skillIcons[i].SkillType != assignedSkillType)
-                continue;
-
-            Sprite skillIcon = skillIcons[i].SkillIcon;
-            if (skillIcon == null)
-                continue;
-
-            // [Codex Skill Icon Outside Panel] Inspector에서 바꾼 스킬 이미지를 패널 밖 키 슬롯 아이콘에도 반영합니다.
-            assignedSkillIcon.sprite = skillIcon;
-            assignedSkillIcon.gameObject.SetActive(true);
-            return;
-        }
-    }
+    // =========================================================
+    // Restore
+    // =========================================================
 
     private void RestoreSavedSkill()
     {
-        if (!KeyBindingManager.TryGetSavedBinding(keyName, out KeySettingSkillType savedSkillType))
+        if (!isConfigured)
+        {
             return;
+        }
 
-        assignedSkillType = savedSkillType;
+        EnsureAssignedSkillIcon();
+
+        // 먼저 이전 상태 완전 제거
+        assignedSkillType =
+            KeySettingSkillType.None;
+
+        ClearVisualOnly();
+
+
+        if (!KeyBindingManager.TryGetSavedBinding(
+                keyName,
+                out KeySettingSkillType savedSkillType))
+        {
+            return;
+        }
+
+        if (savedSkillType ==
+            KeySettingSkillType.None)
+        {
+            return;
+        }
+
+        assignedSkillType =
+            savedSkillType;
+
         RefreshAssignedSkillIcon();
 
-        if (KeyBindingManager.Instance != null)
-            KeyBindingManager.Instance.Assign(keyName, savedSkillType);
+        /*
+         * 복원할 때 Assign()을 다시 호출하면 안 됩니다.
+         * 여기서는 읽기만 합니다.
+         */
+
+        Debug.Log(
+            $"[키 설정] UI 복원: " +
+            $"{keyName} = {savedSkillType}");
     }
+
+
+    // =========================================================
+    // Icon
+    // =========================================================
+
+    private void RefreshAssignedSkillIcon()
+    {
+        EnsureAssignedSkillIcon();
+
+        if (assignedSkillType ==
+            KeySettingSkillType.None)
+        {
+            ClearVisualOnly();
+            return;
+        }
+
+        SkillIconDragHandler[] skillIcons =
+            FindObjectsByType<SkillIconDragHandler>(
+                FindObjectsInactive.Include,
+                FindObjectsSortMode.None);
+
+        for (int i = 0;
+             i < skillIcons.Length;
+             i++)
+        {
+            SkillIconDragHandler skill =
+                skillIcons[i];
+
+            if (skill == null)
+            {
+                continue;
+            }
+
+            if (skill.SkillType !=
+                assignedSkillType)
+            {
+                continue;
+            }
+
+            if (skill.SkillIcon == null)
+            {
+                continue;
+            }
+
+            assignedSkillIcon.sprite =
+                skill.SkillIcon;
+
+            assignedSkillIcon.preserveAspect =
+                true;
+
+            assignedSkillIcon.gameObject
+                .SetActive(true);
+
+            ApplyAssignedIconLayout();
+
+            return;
+        }
+
+        ClearVisualOnly();
+    }
+
+
+    // =========================================================
+    // Clear
+    // =========================================================
 
     private void ClearAssignedSkill()
     {
-        if (assignedSkillType == KeySettingSkillType.None)
-            return;
+        ClearVisualOnly();
 
-        // [키 중복 배치 수정] 이전 아이콘과 실제 키 입력을 함께 제거합니다.
-        if (assignedSkillIcon != null)
+        if (isConfigured)
         {
-            assignedSkillIcon.sprite = null;
-            assignedSkillIcon.gameObject.SetActive(false);
+            if (KeyBindingManager.Instance != null)
+            {
+                KeyBindingManager.Instance.Unassign(
+                    keyName);
+            }
+            else
+            {
+                KeyBindingManager.RemoveSavedBinding(
+                    keyName);
+            }
         }
 
-        KeyBindingManager.Instance?.Unassign(keyName);
-        if (KeyBindingManager.Instance == null)
-            KeyBindingManager.RemoveSavedBinding(keyName);
-        assignedSkillType = KeySettingSkillType.None;
+        assignedSkillType =
+            KeySettingSkillType.None;
     }
 
-    public void OnPointerEnter(PointerEventData eventData)
+    private void ClearVisualOnly()
     {
-        // 드래그 중 Q 키의 실제 판정 범위를 눈으로 확인할 수 있게 표시합니다.
+        if (assignedSkillIcon == null)
+        {
+            return;
+        }
+
+        assignedSkillIcon.sprite =
+            null;
+
+        assignedSkillIcon.gameObject
+            .SetActive(false);
+    }
+
+
+    // =========================================================
+    // Pointer
+    // =========================================================
+
+    public void OnPointerEnter(
+        PointerEventData eventData)
+    {
         if (eventData.pointerDrag != null &&
-            eventData.pointerDrag.GetComponent<SkillIconDragHandler>() != null)
+            eventData.pointerDrag
+                .GetComponent<SkillIconDragHandler>() != null)
         {
             SetDropAreaColor(0.22f);
         }
     }
 
-    public void OnPointerExit(PointerEventData eventData)
+    public void OnPointerExit(
+        PointerEventData eventData)
     {
         SetDropAreaColor(0f);
     }
@@ -173,9 +384,19 @@ public class KeyDropSlot : MonoBehaviour, IDropHandler, IPointerEnterHandler, IP
     {
         if (dropAreaImage != null)
         {
-            dropAreaImage.color = new Color(0.45f, 1f, 0.35f, alpha);
+            dropAreaImage.color =
+                new Color(
+                    0.45f,
+                    1f,
+                    0.35f,
+                    alpha);
         }
     }
+
+
+    // =========================================================
+    // Create Icon
+    // =========================================================
 
     private void EnsureAssignedSkillIcon()
     {
@@ -185,36 +406,82 @@ public class KeyDropSlot : MonoBehaviour, IDropHandler, IPointerEnterHandler, IP
             return;
         }
 
-        // 반복되는 키 슬롯은 표시용 아이콘을 런타임에 생성해 씬 구조를 단순하게 유지합니다.
-        GameObject iconObject = new GameObject(
-            "AssignedSkillIcon",
-            typeof(RectTransform),
-            typeof(CanvasRenderer),
-            typeof(Image));
+        GameObject iconObject =
+            new GameObject(
+                "AssignedSkillIcon",
+                typeof(RectTransform),
+                typeof(CanvasRenderer),
+                typeof(Image));
 
-        RectTransform iconRect = iconObject.GetComponent<RectTransform>();
-        iconRect.SetParent(transform, false);
-        iconRect.anchorMin = new Vector2(0.5f, 0.5f);
-        iconRect.anchorMax = new Vector2(0.5f, 0.5f);
-        iconRect.anchoredPosition = Vector2.zero;
-        // 키 위에서 스킬이 확실히 보이도록 기존 60px보다 30% 크게 표시합니다.
-        assignedSkillIcon = iconObject.GetComponent<Image>();
-        assignedSkillIcon.raycastTarget = false;
+        RectTransform iconRect =
+            iconObject.GetComponent<RectTransform>();
+
+        iconRect.SetParent(
+            transform,
+            false);
+
+        iconRect.anchorMin =
+            new Vector2(0.5f, 0.5f);
+
+        iconRect.anchorMax =
+            new Vector2(0.5f, 0.5f);
+
+        iconRect.pivot =
+            new Vector2(0.5f, 0.5f);
+
+        iconRect.anchoredPosition =
+            Vector2.zero;
+
+        assignedSkillIcon =
+            iconObject.GetComponent<Image>();
+
+        assignedSkillIcon.raycastTarget =
+            false;
+
+        assignedSkillIcon.preserveAspect =
+            true;
+
+        assignedSkillIcon.sprite =
+            null;
+
         ApplyAssignedIconLayout();
+
         iconObject.SetActive(false);
     }
 
+
     private void ApplyAssignedIconLayout()
     {
-        // [키 슬롯 아이콘 크기 통일] 기존 씬 참조와 런타임 생성 아이콘 모두 같은 규격을 사용합니다.
-        RectTransform iconRect = assignedSkillIcon.rectTransform;
-        iconRect.anchorMin = new Vector2(0.5f, 0.5f);
-        iconRect.anchorMax = new Vector2(0.5f, 0.5f);
-        iconRect.pivot = new Vector2(0.5f, 0.5f);
-        iconRect.anchoredPosition3D = Vector3.zero;
-        iconRect.localRotation = Quaternion.identity;
-        iconRect.localScale = Vector3.one;
-        iconRect.sizeDelta = Vector2.one * AssignedIconSize;
-        assignedSkillIcon.preserveAspect = true;
+        if (assignedSkillIcon == null)
+        {
+            return;
+        }
+
+        RectTransform iconRect =
+            assignedSkillIcon.rectTransform;
+
+        iconRect.anchorMin =
+            new Vector2(0.5f, 0.5f);
+
+        iconRect.anchorMax =
+            new Vector2(0.5f, 0.5f);
+
+        iconRect.pivot =
+            new Vector2(0.5f, 0.5f);
+
+        iconRect.anchoredPosition3D =
+            Vector3.zero;
+
+        iconRect.localRotation =
+            Quaternion.identity;
+
+        iconRect.localScale =
+            Vector3.one;
+
+        iconRect.sizeDelta =
+            Vector2.one * AssignedIconSize;
+
+        assignedSkillIcon.preserveAspect =
+            true;
     }
 }

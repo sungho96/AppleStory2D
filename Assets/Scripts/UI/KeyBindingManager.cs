@@ -16,409 +16,1030 @@ public enum KeySettingSkillType
 public class KeyBindingManager : MonoBehaviour
 {
     public static KeyBindingManager Instance { get; private set; }
-    private const string SavedBindingPrefix = "AppleStory.KeyBinding.";
-    public const string HostArcherProfile = "HostArcher";
-    public const string ClientWarriorProfile = "ClientWarrior";
 
-    private static string bindingProfile = HostArcherProfile;
 
-    [SerializeField] private SpeedBuffController speedBuffController;
-    [SerializeField] private PlayerAttack2D playerAttack;
-    [SerializeField] private WarriorDownStrike2D warriorDownStrike;
-    [SerializeField] private WarriorShieldBlock2D warriorShieldBlock;
-    [SerializeField] private KeySettingUIController keySettingUIController;
-    private readonly Dictionary<KeyCode, KeySettingSkillType> keyBindings = new();
+    // =========================================================
+    // Profile
+    // =========================================================
+
+    public const string HostArcherProfile =
+        "HostArcher";
+
+    public const string ClientWarriorProfile =
+        "ClientWarrior";
+
+
+    private static string bindingProfile =
+        HostArcherProfile;
+
+
+    // =========================================================
+    // ★ 이번 Play 동안만 유지되는 키 설정
+    // =========================================================
+
+    /*
+     * PlayerPrefs를 더 이상 사용하지 않습니다.
+     *
+     * static Dictionary이므로
+     *
+     * GameEntry
+     *     ↓
+     * GoblinBoss_Network
+     *
+     * 씬이 바뀌어도 유지됩니다.
+     *
+     * 하지만 Play를 종료하면 자동으로 사라집니다.
+     */
+
+    private static readonly
+        Dictionary<KeyCode, KeySettingSkillType>
+        hostArcherBindings =
+            new Dictionary<KeyCode, KeySettingSkillType>();
+
+
+    private static readonly
+        Dictionary<KeyCode, KeySettingSkillType>
+        clientWarriorBindings =
+            new Dictionary<KeyCode, KeySettingSkillType>();
+
+
+    // 현재 씬의 KeyBindingManager가 사용하는 복사본
+    private readonly
+        Dictionary<KeyCode, KeySettingSkillType>
+        keyBindings =
+            new Dictionary<KeyCode, KeySettingSkillType>();
+
+
+    // =========================================================
+    // References
+    // =========================================================
+
+    [Header("Refs")]
+
+    [SerializeField]
+    private SpeedBuffController speedBuffController;
+
+
+    [SerializeField]
+    private PlayerAttack2D playerAttack;
+
+
+    [SerializeField]
+    private WarriorDownStrike2D warriorDownStrike;
+
+
+    [SerializeField]
+    private WarriorShieldBlock2D warriorShieldBlock;
+
+
+    [SerializeField]
+    private KeySettingUIController keySettingUIController;
+
+
+    // =========================================================
+    // ★ 새로운 Play가 시작될 때 static 메모리 초기화
+    // =========================================================
+
+    [RuntimeInitializeOnLoadMethod(
+        RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetPlaySession()
+    {
+        /*
+         * Reload Domain이 꺼져 있어도
+         * 새 Play 시작 시 실행됩니다.
+         */
+
+        hostArcherBindings.Clear();
+        clientWarriorBindings.Clear();
+
+        bindingProfile =
+            HostArcherProfile;
+
+        Instance =
+            null;
+
+
+        Debug.Log(
+            "[키 설정] 새 Play 세션 시작 - " +
+            "Host/Client 키매핑 메모리 초기화");
+    }
+
+
+    // =========================================================
+    // Unity
+    // =========================================================
 
     private void Awake()
     {
-        Instance = this;
+        Instance =
+            this;
+
 
         if (speedBuffController == null)
         {
-            speedBuffController = GetComponent<SpeedBuffController>();
+            speedBuffController =
+                GetComponent<SpeedBuffController>();
         }
+
 
         if (keySettingUIController == null)
         {
-            keySettingUIController = FindFirstObjectByType<KeySettingUIController>();
+            keySettingUIController =
+                FindFirstObjectByType<KeySettingUIController>();
         }
 
-        if (playerAttack == null)
-        {
-            // [파워 샷 연결] 매니저와 플레이어가 다른 오브젝트이므로 활성 플레이어 공격기를 찾습니다.
-            playerAttack = FindLocalPlayerComponent<PlayerAttack2D>();
-        }
 
-        if (warriorDownStrike == null)
-        {
-            // [Codex Warrior Skill Binding] 네트워크 방에서는 내 소유 전사 스킬을 우선 연결합니다.
-            warriorDownStrike = FindLocalPlayerComponent<WarriorDownStrike2D>();
-        }
+        RefreshProfileAndBindings();
 
-        if (warriorShieldBlock == null)
-        {
-            // [Codex Warrior Skill Binding] 방패막기도 키 매니저에서 직접 실행할 수 있게 찾습니다.
-            warriorShieldBlock = FindLocalPlayerComponent<WarriorShieldBlock2D>();
-        }
 
-        ResolveProfileFromNetwork();
-        LoadSavedBindings();
+        Debug.Log(
+            $"[키 설정] KeyBindingManager Awake - " +
+            $"Profile={bindingProfile}, " +
+            $"Count={keyBindings.Count}");
     }
+
 
     private void Update()
     {
-        // 키 설정 창에서 편집 중일 때는 배치된 스킬이 실수로 발동하지 않게 막습니다.
-        if (keySettingUIController != null && keySettingUIController.IsOpen)
+        // 키설정 UI가 열려 있을 때 실제 스킬 사용 방지
+        if (keySettingUIController != null &&
+            keySettingUIController.IsOpen)
         {
             return;
         }
 
-        foreach (KeyValuePair<KeyCode, KeySettingSkillType> binding in keyBindings)
+
+        foreach (
+            KeyValuePair<KeyCode, KeySettingSkillType> binding
+            in keyBindings)
         {
-            if (binding.Value == KeySettingSkillType.PowerShot)
+            // =================================================
+            // PowerShot은 누름 / 뗌을 따로 처리
+            // =================================================
+
+            if (binding.Value ==
+                KeySettingSkillType.PowerShot)
             {
-                // [파워 샷 추가] 누르는 동안 차징하고 키를 떼는 순간 발사합니다.
-                if (Input.GetKeyDown(binding.Key))
+                EnsurePlayerAttack();
+
+
+                if (Input.GetKeyDown(
+                        binding.Key))
                 {
-                    playerAttack?.BeginPowerShotCharge();
+                    playerAttack?
+                        .BeginPowerShotCharge();
                 }
 
-                if (Input.GetKeyUp(binding.Key))
+
+                if (Input.GetKeyUp(
+                        binding.Key))
                 {
-                    playerAttack?.ReleasePowerShot();
+                    playerAttack?
+                        .ReleasePowerShot();
                 }
+
 
                 continue;
             }
 
-            if (Input.GetKeyDown(binding.Key))
+
+            // =================================================
+            // 일반 스킬
+            // =================================================
+
+            if (Input.GetKeyDown(
+                    binding.Key))
             {
-                ExecuteSkill(binding.Value);
+                ExecuteSkill(
+                    binding.Value);
             }
         }
     }
 
-    public void Assign(string keyName, KeySettingSkillType skillType)
+
+    // =========================================================
+    // 현재 프로필 Dictionary
+    // =========================================================
+
+    private static
+        Dictionary<KeyCode, KeySettingSkillType>
+        GetCurrentProfileBindings()
     {
-        if (!TryConvertKeyCode(keyName, out KeyCode keyCode))
+        if (bindingProfile ==
+            ClientWarriorProfile)
         {
-            Debug.LogWarning($"[키 설정] 지원하지 않는 키 이름입니다: {keyName}");
+            return clientWarriorBindings;
+        }
+
+
+        return hostArcherBindings;
+    }
+
+
+    // =========================================================
+    // Profile Refresh
+    // =========================================================
+
+    public void RefreshProfileAndBindings()
+    {
+        ResolveProfileFromNetwork();
+
+
+        keyBindings.Clear();
+
+
+        Dictionary<KeyCode, KeySettingSkillType>
+            source =
+                GetCurrentProfileBindings();
+
+
+        foreach (
+            KeyValuePair<KeyCode, KeySettingSkillType> pair
+            in source)
+        {
+            keyBindings[pair.Key] =
+                pair.Value;
+        }
+
+
+        Debug.Log(
+            $"[키 설정] 프로필 재로드: " +
+            $"{bindingProfile}, " +
+            $"Count={keyBindings.Count}");
+    }
+
+
+    // =========================================================
+    // 프로필 명시 변경
+    // =========================================================
+
+    public static void SetBindingProfile(
+        string profile)
+    {
+        if (string.IsNullOrWhiteSpace(
+                profile))
+        {
             return;
         }
 
-        keyBindings[keyCode] = skillType;
-        SaveBinding(keyCode, skillType);
-        Debug.Log($"[키 설정] {keyName} 실행 스킬이 {skillType}(으)로 변경됐습니다.");
+
+        bindingProfile =
+            profile;
+
+
+        Debug.Log(
+            $"[키 설정] 프로필 변경: " +
+            $"{bindingProfile}");
+
+
+        if (Instance != null)
+        {
+            Instance.LoadCurrentProfileBindings();
+        }
     }
 
-    public void Unassign(string keyName)
+
+    private void LoadCurrentProfileBindings()
     {
-        // [키 중복 배치 수정] 스킬이 다른 키로 이동하면 이전 키 바인딩을 제거합니다.
-        if (!TryConvertKeyCode(keyName, out KeyCode keyCode))
-            return;
+        keyBindings.Clear();
 
-        keyBindings.Remove(keyCode);
-        RemoveSavedBinding(keyCode);
+
+        Dictionary<KeyCode, KeySettingSkillType>
+            source =
+                GetCurrentProfileBindings();
+
+
+        foreach (
+            KeyValuePair<KeyCode, KeySettingSkillType> pair
+            in source)
+        {
+            keyBindings[pair.Key] =
+                pair.Value;
+        }
+
+
+        Debug.Log(
+            $"[키 설정] 현재 세션 바인딩 로드: " +
+            $"Profile={bindingProfile}, " +
+            $"Count={keyBindings.Count}");
     }
 
-    public static void SaveBinding(string keyName, KeySettingSkillType skillType)
+
+    // =========================================================
+    // Assign
+    // =========================================================
+
+    public void Assign(
+        string keyName,
+        KeySettingSkillType skillType)
     {
-        if (!TryConvertKeyCodeStatic(keyName, out KeyCode keyCode))
+        if (skillType ==
+            KeySettingSkillType.None)
+        {
             return;
+        }
 
-        SaveBinding(keyCode, skillType);
+
+        if (!TryConvertKeyCodeStatic(
+                keyName,
+                out KeyCode keyCode))
+        {
+            Debug.LogWarning(
+                $"[키 설정] 지원하지 않는 키: " +
+                $"{keyName}");
+
+            return;
+        }
+
+
+        Dictionary<KeyCode, KeySettingSkillType>
+            profileBindings =
+                GetCurrentProfileBindings();
+
+
+        // =====================================================
+        // 같은 스킬이 다른 키에 있으면 제거
+        // =====================================================
+
+        List<KeyCode> duplicateKeys =
+            new List<KeyCode>();
+
+
+        foreach (
+            KeyValuePair<KeyCode, KeySettingSkillType> pair
+            in profileBindings)
+        {
+            if (pair.Value ==
+                    skillType &&
+                pair.Key !=
+                    keyCode)
+            {
+                duplicateKeys.Add(
+                    pair.Key);
+            }
+        }
+
+
+        for (int i = 0;
+             i < duplicateKeys.Count;
+             i++)
+        {
+            profileBindings.Remove(
+                duplicateKeys[i]);
+
+
+            keyBindings.Remove(
+                duplicateKeys[i]);
+        }
+
+
+        // =====================================================
+        // 저장
+        // =====================================================
+
+        profileBindings[keyCode] =
+            skillType;
+
+
+        keyBindings[keyCode] =
+            skillType;
+
+
+        Debug.Log(
+            $"[키 설정] 세션 저장: " +
+            $"Profile={bindingProfile}, " +
+            $"{keyName} = {skillType}, " +
+            $"Count={profileBindings.Count}");
     }
 
-    public static void SetBindingProfile(string profile)
+
+    // =========================================================
+    // Unassign
+    // =========================================================
+
+    public void Unassign(
+        string keyName)
     {
-        if (string.IsNullOrWhiteSpace(profile))
+        if (!TryConvertKeyCodeStatic(
+                keyName,
+                out KeyCode keyCode))
+        {
             return;
+        }
 
-        // [Codex KeyBinding Profile] Host 아처와 Client 워리어 키 설정이 같은 PC PlayerPrefs에서 섞이지 않게 분리합니다.
-        bindingProfile = profile;
-        Instance?.LoadSavedBindings();
+
+        Dictionary<KeyCode, KeySettingSkillType>
+            profileBindings =
+                GetCurrentProfileBindings();
+
+
+        profileBindings.Remove(
+            keyCode);
+
+
+        keyBindings.Remove(
+            keyCode);
+
+
+        Debug.Log(
+            $"[키 설정] 세션 제거: " +
+            $"Profile={bindingProfile}, " +
+            $"Key={keyName}");
     }
 
-    public static void RemoveSavedBinding(string keyName)
+
+    // =========================================================
+    // KeyDropSlot fallback용 static Save
+    // =========================================================
+
+    public static void SaveBinding(
+        string keyName,
+        KeySettingSkillType skillType)
     {
-        if (!TryConvertKeyCodeStatic(keyName, out KeyCode keyCode))
+        if (skillType ==
+            KeySettingSkillType.None)
+        {
             return;
+        }
 
-        RemoveSavedBinding(keyCode);
+
+        if (!TryConvertKeyCodeStatic(
+                keyName,
+                out KeyCode keyCode))
+        {
+            return;
+        }
+
+
+        Dictionary<KeyCode, KeySettingSkillType>
+            profileBindings =
+                GetCurrentProfileBindings();
+
+
+        // 같은 스킬의 기존 키 제거
+        List<KeyCode> duplicateKeys =
+            new List<KeyCode>();
+
+
+        foreach (
+            KeyValuePair<KeyCode, KeySettingSkillType> pair
+            in profileBindings)
+        {
+            if (pair.Value ==
+                    skillType &&
+                pair.Key !=
+                    keyCode)
+            {
+                duplicateKeys.Add(
+                    pair.Key);
+            }
+        }
+
+
+        for (int i = 0;
+             i < duplicateKeys.Count;
+             i++)
+        {
+            profileBindings.Remove(
+                duplicateKeys[i]);
+        }
+
+
+        profileBindings[keyCode] =
+            skillType;
+
+
+        if (Instance != null)
+        {
+            Instance.keyBindings.Clear();
+
+
+            foreach (
+                KeyValuePair<KeyCode, KeySettingSkillType> pair
+                in profileBindings)
+            {
+                Instance.keyBindings[pair.Key] =
+                    pair.Value;
+            }
+        }
+
+
+        Debug.Log(
+            $"[키 설정] static 세션 저장: " +
+            $"Profile={bindingProfile}, " +
+            $"{keyName}={skillType}");
     }
+
+
+    // =========================================================
+    // Saved Binding Remove
+    // =========================================================
+
+    public static void RemoveSavedBinding(
+        string keyName)
+    {
+        if (!TryConvertKeyCodeStatic(
+                keyName,
+                out KeyCode keyCode))
+        {
+            return;
+        }
+
+
+        Dictionary<KeyCode, KeySettingSkillType>
+            profileBindings =
+                GetCurrentProfileBindings();
+
+
+        profileBindings.Remove(
+            keyCode);
+
+
+        Instance?.keyBindings.Remove(
+            keyCode);
+    }
+
+
+    // =========================================================
+    // ★ KeyDropSlot에서 저장값 읽기
+    // =========================================================
+
+    public static bool TryGetSavedBinding(
+        string keyName,
+        out KeySettingSkillType skillType)
+    {
+        skillType =
+            KeySettingSkillType.None;
+
+
+        if (!TryConvertKeyCodeStatic(
+                keyName,
+                out KeyCode keyCode))
+        {
+            return false;
+        }
+
+
+        Dictionary<KeyCode, KeySettingSkillType>
+            profileBindings =
+                GetCurrentProfileBindings();
+
+
+        if (!profileBindings.TryGetValue(
+                keyCode,
+                out skillType))
+        {
+            return false;
+        }
+
+
+        return skillType !=
+               KeySettingSkillType.None;
+    }
+
+
+    // =========================================================
+    // ★ Ready 버튼에서 호출되는 기존 함수
+    // =========================================================
 
     public static void SaveCurrentBindings()
     {
-        if (Instance == null)
-        {
-            PlayerPrefs.Save();
-            return;
-        }
+        /*
+         * 이제 PlayerPrefs.Save()는 필요 없습니다.
+         *
+         * 이미 static Dictionary에 저장되어 있으므로
+         * 이 함수는 현재 상태 확인용 역할만 합니다.
+         *
+         * 기존 GameEntryReadyNetworkController에서
+         * 이 함수를 호출하고 있으므로 삭제하면 안 됩니다.
+         */
 
-        foreach (KeyValuePair<KeyCode, KeySettingSkillType> binding in Instance.keyBindings)
-            SaveBinding(binding.Key, binding.Value);
 
-        PlayerPrefs.Save();
+        Dictionary<KeyCode, KeySettingSkillType>
+            profileBindings =
+                GetCurrentProfileBindings();
+
+
+        Debug.Log(
+            $"[키 설정] 현재 바인딩 세션 유지: " +
+            $"Profile={bindingProfile}, " +
+            $"Count={profileBindings.Count}");
     }
 
-    public static bool TryGetSavedBinding(string keyName, out KeySettingSkillType skillType)
+
+    // =========================================================
+    // 필요할 경우 수동으로 세션 전체 초기화
+    // =========================================================
+
+    public static void ClearAllSessionBindings()
     {
-        skillType = KeySettingSkillType.None;
+        hostArcherBindings.Clear();
+        clientWarriorBindings.Clear();
 
-        if (!TryConvertKeyCodeStatic(keyName, out KeyCode keyCode))
-            return false;
 
-        Dictionary<KeyCode, KeySettingSkillType> savedBindings = LoadSavedBindingDictionary();
-        return savedBindings.TryGetValue(keyCode, out skillType) &&
-            skillType != KeySettingSkillType.None;
+        if (Instance != null)
+        {
+            Instance.keyBindings.Clear();
+        }
+
+
+        Debug.Log(
+            "[키 설정] Host/Client 세션 키설정 수동 초기화");
     }
 
-    private void ExecuteSkill(KeySettingSkillType skillType)
+
+    // =========================================================
+    // Network Profile
+    // =========================================================
+
+    private static void ResolveProfileFromNetwork()
     {
-        // [래피드 볼리 키매핑 복구] 공격 스킬은 버프 컨트롤러 검사와 분리해 직접 실행합니다.
-        if (skillType == KeySettingSkillType.RapidVolley)
+        NetworkManager manager =
+            NetworkManager.Singleton;
+
+
+        if (manager == null)
         {
-            EnsurePlayerAttack();
-            if (playerAttack != null)
-                playerAttack.UseRapidVolley();
-            else
-                Debug.LogWarning("[키 설정] PlayerAttack2D가 연결되지 않았습니다.");
             return;
         }
 
-        // 파워샷은 Update에서 KeyDown/KeyUp을 따로 처리하므로 여기서는 실행하지 않습니다.
-        if (skillType == KeySettingSkillType.PowerShot)
-            return;
 
-        if (skillType == KeySettingSkillType.WarriorDownStrike)
+        // =====================================================
+        // Pure Client = Warrior
+        // =====================================================
+
+        if (manager.IsClient &&
+            !manager.IsServer)
         {
-            EnsureWarriorSkills();
-            if (warriorDownStrike != null)
-                warriorDownStrike.UseDownStrike();
-            else
-                Debug.LogWarning("[키 설정] WarriorDownStrike2D가 연결되지 않았습니다.");
+            bindingProfile =
+                ClientWarriorProfile;
+
             return;
         }
 
-        if (skillType == KeySettingSkillType.WarriorShieldBlock)
-        {
-            EnsureWarriorSkills();
-            if (warriorShieldBlock != null)
-                warriorShieldBlock.UseShieldBlock();
-            else
-                Debug.LogWarning("[키 설정] WarriorShieldBlock2D가 연결되지 않았습니다.");
-            return;
-        }
 
-        if (speedBuffController == null)
-        {
-            Debug.LogWarning("[키 설정] SpeedBuffController가 연결되지 않았습니다.");
-            return;
-        }
+        // =====================================================
+        // Host / Server = Archer
+        // =====================================================
 
+        if (manager.IsServer)
+        {
+            bindingProfile =
+                HostArcherProfile;
+        }
+    }
+
+
+    // =========================================================
+    // Skill Execute
+    // =========================================================
+
+    private void ExecuteSkill(
+        KeySettingSkillType skillType)
+    {
         switch (skillType)
         {
-            case KeySettingSkillType.MoveSpeedBuff:
-                speedBuffController.UseSpeedBuff();
+            // =================================================
+            // Rapid Volley
+            // =================================================
+
+            case KeySettingSkillType.RapidVolley:
+
+                EnsurePlayerAttack();
+
+
+                if (playerAttack != null)
+                {
+                    playerAttack.UseRapidVolley();
+                }
+
                 break;
 
-            case KeySettingSkillType.AttackSpeedBuff:
-                speedBuffController.UseAttackSpeedBuff();
-                break;
+
+            // =================================================
+            // Power Shot
+            // Update에서 처리
+            // =================================================
 
             case KeySettingSkillType.PowerShot:
-            case KeySettingSkillType.RapidVolley:
+
+                break;
+
+
+            // =================================================
+            // Warrior DownStrike
+            // =================================================
+
             case KeySettingSkillType.WarriorDownStrike:
+
+                EnsureWarriorSkills();
+
+
+                if (warriorDownStrike != null)
+                {
+                    warriorDownStrike
+                        .UseDownStrike();
+                }
+                else
+                {
+                    Debug.LogWarning(
+                        "[키 설정] 로컬 WarriorDownStrike2D를 " +
+                        "찾지 못했습니다.");
+                }
+
+                break;
+
+
+            // =================================================
+            // Warrior ShieldBlock
+            // =================================================
+
             case KeySettingSkillType.WarriorShieldBlock:
+
+                EnsureWarriorSkills();
+
+
+                if (warriorShieldBlock != null)
+                {
+                    warriorShieldBlock
+                        .UseShieldBlock();
+                }
+                else
+                {
+                    Debug.LogWarning(
+                        "[키 설정] 로컬 WarriorShieldBlock2D를 " +
+                        "찾지 못했습니다.");
+                }
+
+                break;
+
+
+            // =================================================
+            // 이동속도 버프
+            // =================================================
+
+            case KeySettingSkillType.MoveSpeedBuff:
+
+                EnsureSpeedBuffController();
+
+
+                if (speedBuffController != null)
+                {
+                    speedBuffController
+                        .UseSpeedBuff();
+                }
+
+                break;
+
+
+            // =================================================
+            // 공격속도 버프
+            // =================================================
+
+            case KeySettingSkillType.AttackSpeedBuff:
+
+                EnsureSpeedBuffController();
+
+
+                if (speedBuffController != null)
+                {
+                    speedBuffController
+                        .UseAttackSpeedBuff();
+                }
+
                 break;
         }
     }
+
+
+    // =========================================================
+    // Reference Refresh
+    // =========================================================
 
     private void EnsurePlayerAttack()
     {
-        if (playerAttack == null)
-            playerAttack = FindLocalPlayerComponent<PlayerAttack2D>();
+        if (playerAttack != null)
+        {
+            return;
+        }
+
+
+        playerAttack =
+            FindLocalPlayerComponent<PlayerAttack2D>();
     }
+
 
     private void EnsureWarriorSkills()
     {
         if (warriorDownStrike == null)
-            warriorDownStrike = FindLocalPlayerComponent<WarriorDownStrike2D>();
+        {
+            warriorDownStrike =
+                FindLocalPlayerComponent<
+                    WarriorDownStrike2D>();
+        }
+
+
         if (warriorShieldBlock == null)
-            warriorShieldBlock = FindLocalPlayerComponent<WarriorShieldBlock2D>();
-        if (warriorShieldBlock == null && warriorDownStrike != null)
         {
-            // [Codex Warrior ShieldBlock] 프리팹 연결 전에도 워리어 스킬 테스트가 가능하도록 같은 플레이어에 보장합니다.
-            warriorShieldBlock = warriorDownStrike.gameObject.AddComponent<WarriorShieldBlock2D>();
+            warriorShieldBlock =
+                FindLocalPlayerComponent<
+                    WarriorShieldBlock2D>();
         }
     }
 
-    private T FindLocalPlayerComponent<T>() where T : Component
+
+    private void EnsureSpeedBuffController()
     {
-        T[] components = FindObjectsByType<T>(FindObjectsSortMode.None);
-        for (int i = 0; i < components.Length; i++)
+        if (speedBuffController != null)
         {
-            NetworkObject networkObject = components[i].GetComponent<NetworkObject>();
-            if (networkObject != null && networkObject.IsSpawned && networkObject.IsOwner)
-                return components[i];
+            return;
         }
 
-        return components.Length > 0 ? components[0] : null;
+
+        speedBuffController =
+            FindLocalPlayerComponent<
+                SpeedBuffController>();
     }
 
-    private bool TryConvertKeyCode(string keyName, out KeyCode keyCode)
+
+    // =========================================================
+    // 로컬 플레이어 찾기
+    // =========================================================
+
+    private T FindLocalPlayerComponent<T>()
+        where T : Component
     {
-        return TryConvertKeyCodeStatic(keyName, out keyCode);
-    }
+        T[] components =
+            FindObjectsByType<T>(
+                FindObjectsSortMode.None);
 
-    private static bool TryConvertKeyCodeStatic(string keyName, out KeyCode keyCode)
-    {
-        // 화면 표기와 Unity KeyCode 이름이 다른 키들을 먼저 변환합니다.
-        switch (keyName)
+
+        // =====================================================
+        // 네트워크 Spawn + Owner 우선
+        // =====================================================
+
+        for (int i = 0;
+             i < components.Length;
+             i++)
         {
-            case "`":
-                keyCode = KeyCode.BackQuote;
-                return true;
-            case "-":
-                keyCode = KeyCode.Minus;
-                return true;
-            case "=":
-                keyCode = KeyCode.Equals;
-                return true;
-            case "Ins":
-                keyCode = KeyCode.Insert;
-                return true;
-            case "Del":
-                keyCode = KeyCode.Delete;
-                return true;
-            case "PgUp":
-                keyCode = KeyCode.PageUp;
-                return true;
-            case "PgDn":
-                keyCode = KeyCode.PageDown;
-                return true;
-        }
+            T component =
+                components[i];
 
-        if (keyName.Length == 1 && char.IsDigit(keyName[0]))
-        {
-            return System.Enum.TryParse("Alpha" + keyName, out keyCode);
-        }
 
-        return System.Enum.TryParse(keyName, true, out keyCode);
-    }
-
-    private void LoadSavedBindings()
-    {
-        keyBindings.Clear();
-
-        int count = PlayerPrefs.GetInt(GetSavedBindingCountKey(), 0);
-        for (int i = 0; i < count; i++)
-        {
-            string keyName = PlayerPrefs.GetString(GetSavedBindingKey(i), "");
-            string skillName = PlayerPrefs.GetString(GetSavedBindingSkillKey(i), "");
-
-            if (!System.Enum.TryParse(keyName, out KeyCode keyCode) ||
-                !System.Enum.TryParse(skillName, out KeySettingSkillType skillType) ||
-                skillType == KeySettingSkillType.None)
+            if (component == null)
             {
                 continue;
             }
 
-            keyBindings[keyCode] = skillType;
-        }
-    }
 
-    private static void SaveBinding(KeyCode keyCode, KeySettingSkillType skillType)
-    {
-        Dictionary<KeyCode, KeySettingSkillType> savedBindings = LoadSavedBindingDictionary();
-        savedBindings[keyCode] = skillType;
-        SaveBindingDictionary(savedBindings);
-    }
+            NetworkObject networkObject =
+                component.GetComponent<NetworkObject>();
 
-    private static void RemoveSavedBinding(KeyCode keyCode)
-    {
-        Dictionary<KeyCode, KeySettingSkillType> savedBindings = LoadSavedBindingDictionary();
-        savedBindings.Remove(keyCode);
-        SaveBindingDictionary(savedBindings);
-    }
 
-    private static Dictionary<KeyCode, KeySettingSkillType> LoadSavedBindingDictionary()
-    {
-        Dictionary<KeyCode, KeySettingSkillType> savedBindings = new();
-        int count = PlayerPrefs.GetInt(GetSavedBindingCountKey(), 0);
-        for (int i = 0; i < count; i++)
-        {
-            string keyName = PlayerPrefs.GetString(GetSavedBindingKey(i), "");
-            string skillName = PlayerPrefs.GetString(GetSavedBindingSkillKey(i), "");
-
-            if (System.Enum.TryParse(keyName, out KeyCode keyCode) &&
-                System.Enum.TryParse(skillName, out KeySettingSkillType skillType) &&
-                skillType != KeySettingSkillType.None)
+            if (networkObject == null)
             {
-                savedBindings[keyCode] = skillType;
+                networkObject =
+                    component.GetComponentInParent<
+                        NetworkObject>();
+            }
+
+
+            if (networkObject != null &&
+                networkObject.IsSpawned &&
+                networkObject.IsOwner)
+            {
+                return component;
             }
         }
 
-        return savedBindings;
-    }
 
-    private static void SaveBindingDictionary(Dictionary<KeyCode, KeySettingSkillType> bindings)
-    {
-        int previousCount = PlayerPrefs.GetInt(GetSavedBindingCountKey(), 0);
-        for (int i = 0; i < previousCount; i++)
+        // =====================================================
+        // 스폰 전 fallback
+        // =====================================================
+
+        if (components.Length > 0)
         {
-            PlayerPrefs.DeleteKey(GetSavedBindingKey(i));
-            PlayerPrefs.DeleteKey(GetSavedBindingSkillKey(i));
+            return components[0];
         }
 
-        int index = 0;
-        foreach (KeyValuePair<KeyCode, KeySettingSkillType> binding in bindings)
+
+        return null;
+    }
+
+
+    // =========================================================
+    // KeyCode Convert
+    // =========================================================
+
+    private static bool TryConvertKeyCodeStatic(
+        string keyName,
+        out KeyCode keyCode)
+    {
+        keyCode =
+            KeyCode.None;
+
+
+        if (string.IsNullOrWhiteSpace(
+                keyName))
         {
-            PlayerPrefs.SetString(GetSavedBindingKey(index), binding.Key.ToString());
-            PlayerPrefs.SetString(GetSavedBindingSkillKey(index), binding.Value.ToString());
-            index++;
+            return false;
         }
 
-        PlayerPrefs.SetInt(GetSavedBindingCountKey(), index);
-        PlayerPrefs.Save();
+
+        switch (keyName)
+        {
+            case "`":
+
+                keyCode =
+                    KeyCode.BackQuote;
+
+                return true;
+
+
+            case "-":
+
+                keyCode =
+                    KeyCode.Minus;
+
+                return true;
+
+
+            case "=":
+
+                keyCode =
+                    KeyCode.Equals;
+
+                return true;
+
+
+            case "Ins":
+
+                keyCode =
+                    KeyCode.Insert;
+
+                return true;
+
+
+            case "Del":
+
+                keyCode =
+                    KeyCode.Delete;
+
+                return true;
+
+
+            case "PgUp":
+
+                keyCode =
+                    KeyCode.PageUp;
+
+                return true;
+
+
+            case "PgDn":
+
+                keyCode =
+                    KeyCode.PageDown;
+
+                return true;
+        }
+
+
+        // =====================================================
+        // 숫자키
+        // "1" -> Alpha1
+        // =====================================================
+
+        if (keyName.Length == 1 &&
+            char.IsDigit(keyName[0]))
+        {
+            return System.Enum.TryParse(
+                "Alpha" + keyName,
+                out keyCode);
+        }
+
+
+        // =====================================================
+        // Q, W, E, F1 등
+        // =====================================================
+
+        return System.Enum.TryParse(
+            keyName,
+            true,
+            out keyCode);
     }
 
-    private static string GetProfilePrefix()
-    {
-        return SavedBindingPrefix + bindingProfile + ".";
-    }
 
-    private static string GetSavedBindingCountKey()
-    {
-        return GetProfilePrefix() + "Count";
-    }
-
-    private static string GetSavedBindingKey(int index)
-    {
-        return $"{GetProfilePrefix()}Key{index}";
-    }
-
-    private static string GetSavedBindingSkillKey(int index)
-    {
-        return $"{GetProfilePrefix()}Skill{index}";
-    }
-
-    private static void ResolveProfileFromNetwork()
-    {
-        NetworkManager manager = NetworkManager.Singleton;
-        if (manager == null || !manager.IsListening)
-            return;
-
-        bindingProfile = manager.IsClient && !manager.IsServer
-            ? ClientWarriorProfile
-            : HostArcherProfile;
-    }
+    // =========================================================
+    // Destroy
+    // =========================================================
 
     private void OnDestroy()
     {
         if (Instance == this)
         {
-            Instance = null;
+            Instance =
+                null;
         }
     }
 }
