@@ -453,7 +453,73 @@ public class BossBattleResultManager : MonoBehaviour
                 return;
         }
     }
+    private void ApplyDefeatUILayoutOffset()
+    {
+        if (defeatResultObject == null)
+            return;
 
+        // 자식 전체에서 ClearTimeText 찾기
+        TextMeshProUGUI[] texts =
+            defeatResultObject.GetComponentsInChildren<TextMeshProUGUI>(true);
+
+        for (int i = 0; i < texts.Length; i++)
+        {
+            if (texts[i] == null)
+                continue;
+
+            if (texts[i].name.Contains("ClearTime"))
+            {
+                RectTransform rect =
+                    texts[i].GetComponent<RectTransform>();
+
+                if (rect != null)
+                {
+                    Vector2 pos =
+                        rect.anchoredPosition;
+
+                    pos.y += 25f;
+
+                    rect.anchoredPosition =
+                        pos;
+
+                    Debug.Log(
+                        $"[BossResult] Defeat ClearTime 이동 완료 / Y = {rect.anchoredPosition.y}"
+                    );
+                }
+            }
+        }
+
+        // 자식 전체에서 RestartButton 찾기
+        Button[] buttons =
+            defeatResultObject.GetComponentsInChildren<Button>(true);
+
+        for (int i = 0; i < buttons.Length; i++)
+        {
+            if (buttons[i] == null)
+                continue;
+
+            if (buttons[i].name.Contains("Restart"))
+            {
+                RectTransform rect =
+                    buttons[i].GetComponent<RectTransform>();
+
+                if (rect != null)
+                {
+                    Vector2 pos =
+                        rect.anchoredPosition;
+
+                    pos.y += 35f;
+
+                    rect.anchoredPosition =
+                        pos;
+
+                    Debug.Log(
+                        $"[BossResult] Defeat RestartButton 이동 완료 / Y = {rect.anchoredPosition.y}"
+                    );
+                }
+            }
+        }
+    }
     private bool CrossFadeStateIfExists(Animator animator, string stateName)
     {
         int stateHash = Animator.StringToHash(stateName);
@@ -708,10 +774,17 @@ public class BossBattleResultManager : MonoBehaviour
 
         if (victoryResultObject != null || defeatResultObject != null)
         {
+            if (!currentResultVictory)
+            {
+                ApplyDefeatUILayoutOffset();
+            }
+
             if (victoryResultObject != null)
                 victoryResultObject.SetActive(currentResultVictory);
+
             if (defeatResultObject != null)
                 defeatResultObject.SetActive(!currentResultVictory);
+
             return;
         }
 

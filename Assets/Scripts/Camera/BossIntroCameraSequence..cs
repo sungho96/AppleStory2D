@@ -16,29 +16,34 @@ public class BossIntroCameraSequence : MonoBehaviour
     [SerializeField] private float bossZoomSize = 3.2f;
     [SerializeField] private float moveToBossDuration = 1.6f;
 
-    // 보스를 보여주는 시간
-    [SerializeField] private float bossHoldDuration = 2f;
+    [SerializeField] private float bossHoldDuration = 3.2f;
 
     [Header("Boss Intro Animation")]
     [SerializeField] private Animator bossAnimator;
 
-    // CastU.anim 파일을 여기에 직접 넣습니다.
     [SerializeField] private AnimationClip bossCastClip;
 
     [Tooltip("CastU 클립 길이를 Boss Hold Duration에 맞춰 재생합니다.")]
     [SerializeField] private bool fitAnimationToHoldDuration = true;
 
-    // =========================================================
-    // ★ 보스 인트로 방향
-    // =========================================================
+    // =============================================================
+    // 보스 인트로 방향
+    // =============================================================
 
     [Header("Boss Facing")]
 
-    [Tooltip("인트로가 진행되는 동안 보스가 왼쪽을 바라보도록 강제합니다.")]
-    [SerializeField] private bool forceBossFaceLeftDuringIntro = true;
+    [Tooltip("인트로 진행 중에만 보스를 왼쪽으로 고정합니다.")]
+    [SerializeField]
+    private bool forceBossFaceLeftDuringIntro = true;
 
-    // 인트로 진행 중인지 확인
+    // 현재 인트로가 진행 중인지
     private bool introPlaying = false;
+
+    // ★ 인트로 시작 전 원래 보스 Scale
+    private Vector3 bossOriginalScale;
+
+    // ★ 원래 Scale을 정상적으로 저장했는지
+    private bool bossOriginalScaleSaved = false;
 
     [Header("Boss Camera Shake")]
     [SerializeField] private bool useCameraShake = true;
@@ -83,14 +88,14 @@ public class BossIntroCameraSequence : MonoBehaviour
 
     private IEnumerator Start()
     {
-        // 씬 초기 배치가 끝난 후
+        // 씬 초기 배치가 끝날 때까지 한 프레임 대기
         yield return null;
 
         gameplayCameraPosition = transform.position;
         gameplayCameraSize = targetCamera.orthographicSize;
 
         // =========================================================
-        // 보스 자동 탐색
+        // 0. 보스 자동 탐색
         // =========================================================
 
         if (bossTarget == null)
@@ -105,18 +110,34 @@ public class BossIntroCameraSequence : MonoBehaviour
         }
 
         // =========================================================
-        // ★ 인트로 시작
-        // ★ 보스를 왼쪽 방향으로 고정
+        // ★ 보스 원래 방향 저장
         // =========================================================
 
         if (bossTarget != null)
         {
+            bossOriginalScale =
+                bossTarget.localScale;
+
+            bossOriginalScaleSaved = true;
+
+            Debug.Log(
+                $"[BossIntroCamera] Boss Original Scale 저장 : {bossOriginalScale}"
+            );
+
+            // 인트로 시작
             introPlaying = true;
 
+            // 처음부터 왼쪽으로
             ForceBossFaceLeft();
 
             Debug.Log(
-                "[BossIntroCamera] Boss Intro 시작 - 보스 왼쪽 방향 고정"
+                "[BossIntroCamera] Intro Start - Boss Face Left"
+            );
+        }
+        else
+        {
+            Debug.LogWarning(
+                "[BossIntroCamera] 보스를 찾지 못했습니다."
             );
         }
 
@@ -156,7 +177,7 @@ public class BossIntroCameraSequence : MonoBehaviour
             PlayBossCastClip();
 
             // =====================================================
-            // 3. CastU 재생과 동시에 카메라 Shake
+            // 3. CastU + 카메라 Shake
             // =====================================================
 
             if (useCameraShake)
@@ -173,16 +194,10 @@ public class BossIntroCameraSequence : MonoBehaviour
             }
 
             // =====================================================
-            // 4. CastU 직접 재생 종료
+            // 4. CastU 종료
             // =====================================================
 
             StopBossCastClip();
-        }
-        else
-        {
-            Debug.LogWarning(
-                "[BossIntroCamera] 보스를 찾지 못했습니다."
-            );
         }
 
         // =========================================================
@@ -248,14 +263,14 @@ public class BossIntroCameraSequence : MonoBehaviour
             gameplayCameraSize;
 
         // =========================================================
-        // ★ 인트로 종료
-        // ★ 이제 보스 방향을 AI가 다시 제어할 수 있음
+        // ★★★ 중요
+        // 인트로 종료
         // =========================================================
 
-        introPlaying = false;
+        EndBossIntro();
 
         Debug.Log(
-            "[BossIntroCamera] Intro Complete - Boss Facing Control Released"
+            "[BossIntroCamera] Intro Complete"
         );
     }
 
@@ -274,7 +289,20 @@ public class BossIntroCameraSequence : MonoBehaviour
         Vector3 scale =
             bossTarget.localScale;
 
-        // X 스케일을 음수로 만들어 왼쪽을 바라보게 함
+        // =========================================================
+        // 왼쪽 방향
+        //
+        // 현재 캐릭터가 반대로 나온다면
+        //
+        // -Mathf.Abs(scale.x)
+        //
+        // 를
+        //
+        // Mathf.Abs(scale.x)
+        //
+        // 로 변경하면 됨
+        // =========================================================
+
         scale.x =
             -Mathf.Abs(scale.x);
 
@@ -283,8 +311,7 @@ public class BossIntroCameraSequence : MonoBehaviour
     }
 
     // =============================================================
-    // ★ AI가 방향을 바꾸더라도
-    // ★ 인트로 중에는 마지막에 다시 왼쪽으로 돌림
+    // ★ 인트로 동안만 방향 유지
     // =============================================================
 
     private void LateUpdate()
@@ -293,6 +320,40 @@ public class BossIntroCameraSequence : MonoBehaviour
             return;
 
         ForceBossFaceLeft();
+    }
+
+    // =============================================================
+    // ★★★ 보스 인트로 종료
+    // =============================================================
+
+    private void EndBossIntro()
+    {
+        // =========================================================
+        // 먼저 방향 강제를 끔
+        // =========================================================
+
+        introPlaying = false;
+
+        // =========================================================
+        // 인트로 시작 전에 저장했던 원래 Scale 복구
+        // =========================================================
+
+        if (
+            bossTarget != null &&
+            bossOriginalScaleSaved
+        )
+        {
+            bossTarget.localScale =
+                bossOriginalScale;
+
+            Debug.Log(
+                $"[BossIntroCamera] Boss Scale 원상복구 : {bossOriginalScale}"
+            );
+        }
+
+        Debug.Log(
+            "[BossIntroCamera] Boss Facing Control Released"
+        );
     }
 
     // =============================================================
@@ -319,10 +380,9 @@ public class BossIntroCameraSequence : MonoBehaviour
             return;
         }
 
-        // 혹시 이전 Graph가 남아있다면 제거
+        // 이전 Graph 제거
         StopBossCastClip();
 
-        // PlayableGraph 생성
         bossAnimationGraph =
             PlayableGraph.Create(
                 "BossIntroCastU"
@@ -334,7 +394,6 @@ public class BossIntroCameraSequence : MonoBehaviour
             DirectorUpdateMode.UnscaledGameTime
         );
 
-        // CastU AnimationClip을 직접 Playable로 만듦
         AnimationClipPlayable clipPlayable =
             AnimationClipPlayable.Create(
                 bossAnimationGraph,
@@ -342,7 +401,7 @@ public class BossIntroCameraSequence : MonoBehaviour
             );
 
         // =========================================================
-        // CastU 전체 길이를 bossHoldDuration에 맞춤
+        // CastU 길이를 Hold Duration에 맞춤
         // =========================================================
 
         if (
@@ -355,7 +414,9 @@ public class BossIntroCameraSequence : MonoBehaviour
                 bossCastClip.length /
                 bossHoldDuration;
 
-            clipPlayable.SetSpeed(speed);
+            clipPlayable.SetSpeed(
+                speed
+            );
 
             Debug.Log(
                 $"[BossIntroCamera] CastU 길이 {bossCastClip.length:F2}초 → {bossHoldDuration:F2}초에 맞춤 / Speed={speed:F2}"
@@ -363,11 +424,13 @@ public class BossIntroCameraSequence : MonoBehaviour
         }
         else
         {
-            clipPlayable.SetSpeed(1.0);
+            clipPlayable.SetSpeed(
+                1.0
+            );
         }
 
         // =========================================================
-        // Animator에 직접 출력
+        // Animator 출력
         // =========================================================
 
         AnimationPlayableOutput output =
@@ -423,10 +486,16 @@ public class BossIntroCameraSequence : MonoBehaviour
         float elapsed = 0f;
 
         float noiseSeedX =
-            Random.Range(0f, 1000f);
+            Random.Range(
+                0f,
+                1000f
+            );
 
         float noiseSeedY =
-            Random.Range(0f, 1000f);
+            Random.Range(
+                0f,
+                1000f
+            );
 
         while (elapsed < duration)
         {
@@ -450,17 +519,20 @@ public class BossIntroCameraSequence : MonoBehaviour
                 );
 
             x =
-                (x - 0.5f) * 2f;
+                (x - 0.5f) *
+                2f;
 
             y =
-                (y - 0.5f) * 2f;
+                (y - 0.5f) *
+                2f;
 
             Vector3 shakeOffset =
                 new Vector3(
                     x,
                     y,
                     0f
-                ) * shakeStrength;
+                ) *
+                shakeStrength;
 
             transform.position =
                 originalPosition +
@@ -469,7 +541,6 @@ public class BossIntroCameraSequence : MonoBehaviour
             yield return null;
         }
 
-        // 원위치
         transform.position =
             originalPosition;
     }
@@ -588,7 +659,8 @@ public class BossIntroCameraSequence : MonoBehaviour
                 );
 
             float smoothT =
-                t * t *
+                t *
+                t *
                 (3f - 2f * t);
 
             transform.position =
@@ -616,11 +688,25 @@ public class BossIntroCameraSequence : MonoBehaviour
     }
 
     // =============================================================
-    // 오브젝트 파괴 시 Graph 정리
+    // 파괴 시 정리
     // =============================================================
 
     private void OnDestroy()
     {
+        // 혹시 인트로 도중 Camera가 파괴되는 경우에도
+        // 보스 Scale을 원래대로 복구
+        if (
+            introPlaying &&
+            bossTarget != null &&
+            bossOriginalScaleSaved
+        )
+        {
+            bossTarget.localScale =
+                bossOriginalScale;
+        }
+
+        introPlaying = false;
+
         StopBossCastClip();
     }
 }
