@@ -26,6 +26,14 @@ public class GameEntryNetworkConnectionController : MonoBehaviour
     [SerializeField] private Sprite readyCompleteButtonSprite;
     [SerializeField] private GameObject goblinBossKeySettingPrefab;
 
+    [Header("Character Select Panel")]
+    [SerializeField] private GameObject characterSelectPanel;
+    [SerializeField] private Sprite characterSelectBackgroundSprite;
+    [SerializeField] private Sprite characterSelectTitleSprite;
+    [SerializeField] private Sprite archerCardSprite;
+    [SerializeField] private Sprite warriorCardSprite;
+    [SerializeField] private Sprite confirmButtonSprite;
+
     [Header("Ready Panel Skill Icon Overrides")]
     [SerializeField] private Sprite moveSpeedSkillIcon;
     [SerializeField] private Sprite attackSpeedSkillIcon;
@@ -51,6 +59,11 @@ public class GameEntryNetworkConnectionController : MonoBehaviour
     private const string GoblinBossKeySettingResourcePath = "UI/GoblinBoss_KeySettingUI";
     private const string WarriorDownStrikeIconPath = "Assets/Art/UI/KeySetting/Downstrike.png";
     private const string WarriorShieldBlockIconPath = "Assets/Art/UI/KeySetting/Shiled.png";
+    private const string CharacterSelectBackgroundPath = "Assets/Art/UI/CharacterSelect/CharacterSelect_Background.png";
+    private const string CharacterSelectTitlePath = "Assets/Art/UI/CharacterSelect/CharacterSelect_Title.png";
+    private const string ArcherCardPath = "Assets/Art/UI/CharacterSelect/ArcherCard.png";
+    private const string WarriorCardPath = "Assets/Art/UI/CharacterSelect/WarriorCard.png";
+    private const string ConfirmButtonPath = "Assets/Art/UI/CharacterSelect/ConfirmButton.png";
 
     private void Awake()
     {
@@ -65,6 +78,7 @@ public class GameEntryNetworkConnectionController : MonoBehaviour
 
         loadingOverlay = BuildLoadingOverlay();
         readyPanel = BuildReadyPanel();
+        characterSelectPanel = BuildCharacterSelectPanel();
     }
 
     private void OnValidate()
@@ -115,6 +129,9 @@ public class GameEntryNetworkConnectionController : MonoBehaviour
 
         if (readyPanel != null)
             readyPanel.SetActive(false);
+
+        if (characterSelectPanel != null)
+            characterSelectPanel.SetActive(false);
     }
 
     private void StartHost()
@@ -128,7 +145,7 @@ public class GameEntryNetworkConnectionController : MonoBehaviour
         waitingAsHost = true;
         waitingAsClient = false;
         readyPanelSequenceStarted = false;
-        KeyBindingManager.SetBindingProfile(KeyBindingManager.HostArcherProfile);
+        GameEntryCharacterSelectionStore.SetLocalSelectedCharacter(PlayerCharacterType.None);
         SetButtonsInteractable(false);
         loadingOverlay.Show("방을 만드는 중...");
 
@@ -156,7 +173,7 @@ public class GameEntryNetworkConnectionController : MonoBehaviour
         waitingAsHost = false;
         waitingAsClient = true;
         readyPanelSequenceStarted = false;
-        KeyBindingManager.SetBindingProfile(KeyBindingManager.ClientWarriorProfile);
+        GameEntryCharacterSelectionStore.SetLocalSelectedCharacter(PlayerCharacterType.None);
         SetButtonsInteractable(false);
         loadingOverlay.Show("접속하는 중...");
 
@@ -269,6 +286,20 @@ public class GameEntryNetworkConnectionController : MonoBehaviour
         if (connectionPanel != null)
             connectionPanel.SetActive(false);
 
+        if (characterSelectPanel == null)
+            characterSelectPanel = BuildCharacterSelectPanel();
+
+        if (characterSelectPanel != null)
+            characterSelectPanel.SetActive(true);
+
+        Debug.Log("[GameEntryNetwork] CharacterSelectPanel shown after both players connected.");
+    }
+
+    private void ShowReadyPanelAfterCharacterConfirmed()
+    {
+        if (characterSelectPanel != null)
+            characterSelectPanel.SetActive(false);
+
         if (readyPanel == null)
             readyPanel = BuildReadyPanel();
 
@@ -278,7 +309,7 @@ public class GameEntryNetworkConnectionController : MonoBehaviour
             readyPanel.SetActive(true);
         }
 
-        Debug.Log("[GameEntryNetwork] ReadyPanel shown after both players connected.");
+        Debug.Log("[GameEntryNetwork] ReadyPanel shown after character selection.");
     }
 
     private void FailConnection(string message)
@@ -388,6 +419,123 @@ public class GameEntryNetworkConnectionController : MonoBehaviour
         EnsureReadyPanelContents(panel, true);
         panel.SetActive(false);
         return panel;
+    }
+
+    private GameObject BuildCharacterSelectPanel()
+    {
+        LoadCharacterSelectSpritesInEditor();
+
+        Transform existing = transform.Find("CharacterSelectPanel");
+        if (existing != null)
+        {
+            EnsureCharacterSelectPanelContents(existing.gameObject);
+            existing.gameObject.SetActive(false);
+            return existing.gameObject;
+        }
+
+        GameObject panel = new GameObject("CharacterSelectPanel", typeof(RectTransform), typeof(CanvasGroup));
+        panel.layer = gameObject.layer;
+        panel.transform.SetParent(transform, false);
+        StretchToParent(panel.GetComponent<RectTransform>());
+        EnsureCharacterSelectPanelContents(panel);
+        panel.SetActive(false);
+        return panel;
+    }
+
+    private void EnsureCharacterSelectPanelContents(GameObject panel)
+    {
+        Image background = panel.transform.Find("Background")?.GetComponent<Image>();
+        if (background == null)
+        {
+            GameObject backgroundObject = CreateImage("Background", panel.transform, characterSelectBackgroundSprite, Color.white);
+            StretchToParent(backgroundObject.GetComponent<RectTransform>());
+            background = backgroundObject.GetComponent<Image>();
+        }
+        background.sprite = characterSelectBackgroundSprite;
+        background.color = Color.white;
+        background.raycastTarget = true;
+
+        if (panel.transform.Find("TitleImage") == null)
+        {
+            GameObject title = CreateImage("TitleImage", panel.transform, characterSelectTitleSprite, Color.white);
+            SetCentered(title.GetComponent<RectTransform>(), new Vector2(720f, 150f), new Vector2(0f, 325f));
+        }
+
+        Button archerButton = EnsureCharacterCardButton(panel.transform, "ArcherButton", "ArcherCardImage", archerCardSprite, new Vector2(-360f, -20f));
+        Button warriorButton = EnsureCharacterCardButton(panel.transform, "WarriorButton", "WarriorCardImage", warriorCardSprite, new Vector2(360f, -20f));
+
+        Button confirmButton = panel.transform.Find("ConfirmButton")?.GetComponent<Button>();
+        Image confirmImage = panel.transform.Find("ConfirmButton/ConfirmImage")?.GetComponent<Image>();
+        if (confirmButton == null)
+        {
+            GameObject buttonObject = new GameObject("ConfirmButton", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Button));
+            buttonObject.layer = gameObject.layer;
+            buttonObject.transform.SetParent(panel.transform, false);
+            SetCentered(buttonObject.GetComponent<RectTransform>(), new Vector2(310f, 120f), new Vector2(0f, -390f));
+            Image targetImage = buttonObject.GetComponent<Image>();
+            targetImage.color = Color.clear;
+            targetImage.raycastTarget = true;
+            confirmButton = buttonObject.GetComponent<Button>();
+
+            GameObject imageObject = CreateImage("ConfirmImage", buttonObject.transform, confirmButtonSprite, Color.white);
+            StretchToParent(imageObject.GetComponent<RectTransform>());
+            confirmImage = imageObject.GetComponent<Image>();
+        }
+        confirmImage.sprite = confirmButtonSprite;
+        confirmImage.raycastTarget = false;
+        confirmButton.targetGraphic = confirmImage;
+
+        TextMeshProUGUI statusText = panel.transform.Find("StatusText")?.GetComponent<TextMeshProUGUI>();
+        if (statusText == null)
+        {
+            statusText = CreateReadyText("StatusText", panel.transform, "캐릭터를 선택하세요.", 28f, new Vector2(0f, -305f));
+            statusText.color = new Color(1f, 0.92f, 0.62f, 1f);
+        }
+
+        GameEntryCharacterSelectPanelController controller = panel.GetComponent<GameEntryCharacterSelectPanelController>();
+        if (controller == null)
+            controller = panel.AddComponent<GameEntryCharacterSelectPanelController>();
+
+        controller.Confirmed -= ShowReadyPanelAfterCharacterConfirmed;
+        controller.Confirmed += ShowReadyPanelAfterCharacterConfirmed;
+        controller.Initialize(
+            archerButton,
+            archerButton.transform.Find("ArcherCardImage")?.GetComponent<Image>(),
+            warriorButton,
+            warriorButton.transform.Find("WarriorCardImage")?.GetComponent<Image>(),
+            confirmButton,
+            statusText);
+    }
+
+    private Button EnsureCharacterCardButton(Transform parent, string buttonName, string imageName, Sprite sprite, Vector2 position)
+    {
+        Button button = parent.Find(buttonName)?.GetComponent<Button>();
+        Image cardImage = parent.Find($"{buttonName}/{imageName}")?.GetComponent<Image>();
+
+        if (button == null)
+        {
+            GameObject buttonObject = new GameObject(buttonName, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Button));
+            buttonObject.layer = gameObject.layer;
+            buttonObject.transform.SetParent(parent, false);
+            SetCentered(buttonObject.GetComponent<RectTransform>(), new Vector2(455f, 590f), position);
+            Image targetImage = buttonObject.GetComponent<Image>();
+            targetImage.color = Color.clear;
+            targetImage.raycastTarget = true;
+            button = buttonObject.GetComponent<Button>();
+
+            GameObject cardObject = CreateImage(imageName, buttonObject.transform, sprite, Color.white);
+            StretchToParent(cardObject.GetComponent<RectTransform>());
+            cardImage = cardObject.GetComponent<Image>();
+        }
+
+        if (cardImage != null)
+        {
+            cardImage.sprite = sprite;
+            cardImage.raycastTarget = true;
+            button.targetGraphic = cardImage;
+        }
+
+        return button;
     }
 
     private void EnsureReadyPanelContents(GameObject panel, bool createdByBuilder)
@@ -541,9 +689,9 @@ public class GameEntryNetworkConnectionController : MonoBehaviour
         if (keySettingPreview == null)
             return;
 
-        if (IsLocalClientWarrior())
+        if (GameEntryCharacterSelectionStore.LocalSelectedCharacter == PlayerCharacterType.Warrior)
         {
-            KeyBindingManager.SetBindingProfile(KeyBindingManager.ClientWarriorProfile);
+            KeyBindingManager.SetBindingProfileForCharacter(PlayerCharacterType.Warrior);
             // [Codex Client Warrior ReadyPanel] 참가하기(Client)는 워리어라서 아처 공격 스킬 슬롯을 워리어 스킬로 교체합니다.
             ApplySkillSlotOverride(
                 keySettingPreview,
@@ -560,7 +708,7 @@ public class GameEntryNetworkConnectionController : MonoBehaviour
             return;
         }
 
-        KeyBindingManager.SetBindingProfile(KeyBindingManager.HostArcherProfile);
+        KeyBindingManager.SetBindingProfileForCharacter(PlayerCharacterType.Archer);
         ApplyReadySkillIconOverrides(keySettingPreview.gameObject);
     }
 
@@ -701,6 +849,17 @@ public class GameEntryNetworkConnectionController : MonoBehaviour
         goblinBossKeySettingPrefab ??= AssetDatabase.LoadAssetAtPath<GameObject>(GoblinBossKeySettingPrefabPath);
         warriorDownStrikeSkillIcon ??= LoadSpriteInEditor(WarriorDownStrikeIconPath);
         warriorShieldBlockSkillIcon ??= LoadSpriteInEditor(WarriorShieldBlockIconPath);
+#endif
+    }
+
+    private void LoadCharacterSelectSpritesInEditor()
+    {
+#if UNITY_EDITOR
+        characterSelectBackgroundSprite ??= LoadSpriteInEditor(CharacterSelectBackgroundPath);
+        characterSelectTitleSprite ??= LoadSpriteInEditor(CharacterSelectTitlePath);
+        archerCardSprite ??= LoadSpriteInEditor(ArcherCardPath);
+        warriorCardSprite ??= LoadSpriteInEditor(WarriorCardPath);
+        confirmButtonSprite ??= LoadSpriteInEditor(ConfirmButtonPath);
 #endif
     }
 

@@ -299,6 +299,22 @@ public class KeyBindingManager : MonoBehaviour
     }
 
 
+    public static void SetBindingProfileForCharacter(
+        PlayerCharacterType characterType)
+    {
+        switch (characterType)
+        {
+            case PlayerCharacterType.Warrior:
+                SetBindingProfile(ClientWarriorProfile);
+                break;
+
+            case PlayerCharacterType.Archer:
+                SetBindingProfile(HostArcherProfile);
+                break;
+        }
+    }
+
+
     private void LoadCurrentProfileBindings()
     {
         keyBindings.Clear();
@@ -654,6 +670,15 @@ public class KeyBindingManager : MonoBehaviour
 
     private static void ResolveProfileFromNetwork()
     {
+        if (GameEntryCharacterSelectionStore.LocalSelectedCharacter !=
+            PlayerCharacterType.None)
+        {
+            SetBindingProfileForCharacter(
+                GameEntryCharacterSelectionStore.LocalSelectedCharacter);
+
+            return;
+        }
+
         NetworkManager manager =
             NetworkManager.Singleton;
 

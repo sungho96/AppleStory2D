@@ -412,26 +412,36 @@ public class TemporaryBossPlayerPrefabSelector : MonoBehaviour
         }
 
 
-        bool isHost =
-            clientId == NetworkManager.ServerClientId;
+        if (!GameEntryCharacterSelectionStore.TryGetConfirmedSelection(
+                clientId,
+                out PlayerCharacterType selectedCharacter))
+        {
+            selectedCharacter =
+                GameEntryCharacterSelectionStore.GetFallbackCharacterForClient(
+                    clientId);
+
+            Debug.LogWarning(
+                $"[BossPlayerSelector] " +
+                $"clientId={clientId}의 선택 정보가 없어 기존 역할 기준 fallback을 사용합니다. " +
+                $"character={selectedCharacter}"
+            );
+        }
 
 
         NetworkObject selectedPrefab =
-            isHost
-                ? hostArcherPrefab
-                : clientWarriorPrefab;
+            selectedCharacter == PlayerCharacterType.Warrior
+                ? clientWarriorPrefab
+                : hostArcherPrefab;
 
 
         Vector3 spawnPosition =
-            isHost
-                ? hostArcherSpawnPosition
-                : clientWarriorSpawnPosition;
+            selectedCharacter == PlayerCharacterType.Warrior
+                ? clientWarriorSpawnPosition
+                : hostArcherSpawnPosition;
 
 
         string role =
-            isHost
-                ? "Archer"
-                : "Warrior";
+            selectedCharacter.ToString();
 
 
         if (selectedPrefab == null)
