@@ -12,6 +12,7 @@ public class BossBattleResultManager : MonoBehaviour
 {
     private const string ResultMessageName = "BossBattleResult";
     private const string RestartMessageName = "BossBattleRestart";
+    private const string RestartCommandMessageName = "BossBattleRestartCommand";
     private const string RestartTargetSceneName = "GameEntry";
     private static BossBattleResultManager instance;
 
@@ -59,6 +60,7 @@ public class BossBattleResultManager : MonoBehaviour
     private Camera mainCamera;
     private float originalCameraSize;
     private bool currentResultVictory;
+    private bool restartInProgress;
     private Transform currentResultFocusTarget;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
@@ -110,6 +112,7 @@ public class BossBattleResultManager : MonoBehaviour
         {
             NetworkManager.Singleton.CustomMessagingManager.UnregisterNamedMessageHandler(ResultMessageName);
             NetworkManager.Singleton.CustomMessagingManager.UnregisterNamedMessageHandler(RestartMessageName);
+            NetworkManager.Singleton.CustomMessagingManager.UnregisterNamedMessageHandler(RestartCommandMessageName);
         }
 
         messageRegistered = false;
@@ -192,6 +195,7 @@ public class BossBattleResultManager : MonoBehaviour
 
         NetworkManager.Singleton.CustomMessagingManager.RegisterNamedMessageHandler(ResultMessageName, ReceiveResultMessage);
         NetworkManager.Singleton.CustomMessagingManager.RegisterNamedMessageHandler(RestartMessageName, ReceiveRestartMessage);
+        NetworkManager.Singleton.CustomMessagingManager.RegisterNamedMessageHandler(RestartCommandMessageName, ReceiveRestartCommandMessage);
         messageRegistered = true;
     }
 
@@ -216,7 +220,12 @@ public class BossBattleResultManager : MonoBehaviour
         if (!IsNetworkActive() || !NetworkManager.Singleton.IsServer)
             return;
 
-        RestartSceneFromHost();
+        BeginHostFreshRestartToGameEntry();
+    }
+
+    private void ReceiveRestartCommandMessage(ulong senderClientId, FastBufferReader reader)
+    {
+        BeginFreshRestartToGameEntry();
     }
 
     private IEnumerator ResultRoutine(float elapsedTime)
@@ -840,26 +849,80 @@ public class BossBattleResultManager : MonoBehaviour
 
         if (!IsNetworkActive())
         {
-            // [Codex Result Restart] 결과창 Restart는 보스 재도전이 아니라 처음 Play 진입 화면으로 돌아갑니다.
-            SceneManager.LoadScene(RestartTargetSceneName);
+            BeginFreshRestartToGameEntry();
             return;
         }
 
         if (NetworkManager.Singleton.IsServer)
         {
-            RestartSceneFromHost();
+            BeginHostFreshRestartToGameEntry();
             return;
         }
 
         using FastBufferWriter writer = new FastBufferWriter(sizeof(byte), Allocator.Temp);
+        writer.WriteValueSafe((byte)0);
         NetworkManager.Singleton.CustomMessagingManager.SendNamedMessage(RestartMessageName, NetworkManager.ServerClientId, writer);
     }
 
-    private void RestartSceneFromHost()
+    private void SendFreshRestartCommandToClients()
+    {
+        if (!IsNetworkActive() || !NetworkManager.Singleton.IsServer)
+            return;
+
+        // [Codex Result Restart] 호스트가 모든 클라이언트에게 각자 네트워크 세션을 끊고 GameEntry를 새로 로드하라고 알립니다.
+        using FastBufferWriter writer = new FastBufferWriter(sizeof(byte), Allocator.Temp);
+        writer.WriteValueSafe((byte)0);
+        NetworkManager.Singleton.CustomMessagingManager.SendNamedMessageToAll(RestartCommandMessageName, writer);
+    }
+
+    private void BeginHostFreshRestartToGameEntry()
+    {
+        if (restartInProgress)
+            return;
+
+        restartInProgress = true;
+        StartCoroutine(HostFreshRestartToGameEntryRoutine());
+    }
+
+    private IEnumerator HostFreshRestartToGameEntryRoutine()
+    {
+        SendFreshRestartCommandToClients();
+        yield return null;
+        yield return StartCoroutine(FreshRestartToGameEntryRoutine());
+    }
+
+    private void BeginFreshRestartToGameEntry()
+    {
+        if (restartInProgress)
+            return;
+
+        restartInProgress = true;
+        StartCoroutine(FreshRestartToGameEntryRoutine());
+    }
+
+    private IEnumerator FreshRestartToGameEntryRoutine()
     {
         Time.timeScale = 1f;
-        // [Codex Result Restart] 네트워크 플레이도 호스트가 GameEntry로 씬 전환을 동기화합니다.
-        NetworkManager.Singleton.SceneManager.LoadScene(RestartTargetSceneName, LoadSceneMode.Single);
+        GameEntryCharacterSelectionStore.ResetSessionState();
+        KeyBindingManager.ClearAllSessionBindings();
+
+        NetworkManager manager = NetworkManager.Singleton;
+        if (manager != null)
+        {
+            // [Codex Result Fresh Restart] Play를 껐다 켠 것처럼 남은 Netcode 런타임 인스턴스를 종료 후 제거합니다.
+            if (manager.IsListening || manager.ShutdownInProgress)
+                manager.Shutdown();
+
+            while (manager != null && (manager.IsListening || manager.ShutdownInProgress))
+                yield return null;
+
+            if (manager != null)
+                Destroy(manager.gameObject);
+
+            yield return null;
+        }
+
+        SceneManager.LoadScene(RestartTargetSceneName, LoadSceneMode.Single);
     }
 
     private bool IsNetworkActive()
