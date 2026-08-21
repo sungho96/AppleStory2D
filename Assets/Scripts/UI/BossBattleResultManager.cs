@@ -12,6 +12,7 @@ public class BossBattleResultManager : MonoBehaviour
 {
     private const string ResultMessageName = "BossBattleResult";
     private const string RestartMessageName = "BossBattleRestart";
+    private const string RestartTargetSceneName = "GameEntry";
     private static BossBattleResultManager instance;
 
     [Header("Timing")]
@@ -458,7 +459,7 @@ public class BossBattleResultManager : MonoBehaviour
         if (defeatResultObject == null)
             return;
 
-        // �ڽ� ��ü���� ClearTimeText ã��
+        // �ڽ� ��ü���� ClearTimeText ã��
         TextMeshProUGUI[] texts =
             defeatResultObject.GetComponentsInChildren<TextMeshProUGUI>(true);
 
@@ -483,13 +484,13 @@ public class BossBattleResultManager : MonoBehaviour
                         pos;
 
                     Debug.Log(
-                        $"[BossResult] Defeat ClearTime �̵� �Ϸ� / Y = {rect.anchoredPosition.y}"
+                        $"[BossResult] Defeat ClearTime �̵� �Ϸ� / Y = {rect.anchoredPosition.y}"
                     );
                 }
             }
         }
 
-        // �ڽ� ��ü���� RestartButton ã��
+        // �ڽ� ��ü���� RestartButton ã��
         Button[] buttons =
             defeatResultObject.GetComponentsInChildren<Button>(true);
 
@@ -514,7 +515,7 @@ public class BossBattleResultManager : MonoBehaviour
                         pos;
 
                     Debug.Log(
-                        $"[BossResult] Defeat RestartButton �̵� �Ϸ� / Y = {rect.anchoredPosition.y}"
+                        $"[BossResult] Defeat RestartButton �̵� �Ϸ� / Y = {rect.anchoredPosition.y}"
                     );
                 }
             }
@@ -839,7 +840,8 @@ public class BossBattleResultManager : MonoBehaviour
 
         if (!IsNetworkActive())
         {
-            SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+            // [Codex Result Restart] 결과창 Restart는 보스 재도전이 아니라 처음 Play 진입 화면으로 돌아갑니다.
+            SceneManager.LoadScene(RestartTargetSceneName);
             return;
         }
 
@@ -856,7 +858,8 @@ public class BossBattleResultManager : MonoBehaviour
     private void RestartSceneFromHost()
     {
         Time.timeScale = 1f;
-        NetworkManager.Singleton.SceneManager.LoadScene(SceneManager.GetActiveScene().name, LoadSceneMode.Single);
+        // [Codex Result Restart] 네트워크 플레이도 호스트가 GameEntry로 씬 전환을 동기화합니다.
+        NetworkManager.Singleton.SceneManager.LoadScene(RestartTargetSceneName, LoadSceneMode.Single);
     }
 
     private bool IsNetworkActive()

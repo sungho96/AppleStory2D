@@ -1,4 +1,6 @@
 using System.Collections;
+using Assets.HeroEditor4D.Common.Scripts.CharacterScripts;
+using Assets.HeroEditor4D.Common.Scripts.Enums;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.Animations;
@@ -23,27 +25,19 @@ public class BossIntroCameraSequence : MonoBehaviour
 
     [SerializeField] private AnimationClip bossCastClip;
 
-    [Tooltip("CastU Å¬¸³ ±æÀÌ¸¦ Boss Hold Duration¿¡ ¸ÂÃç Àç»ıÇÕ´Ï´Ù.")]
+    [Tooltip("CastU í´ë¦½ 1íšŒë¥¼ Boss Hold Durationì— ë§ì¶° ì¬ìƒí•©ë‹ˆë‹¤.")]
     [SerializeField] private bool fitAnimationToHoldDuration = true;
 
-    // =============================================================
-    // º¸½º ÀÎÆ®·Î ¹æÇâ
-    // =============================================================
+    [Tooltip("ì¼œë©´ Boss Hold Duration ë™ì•ˆ Boss Cast Clipì„ ë°˜ë³µ ì¬ìƒí•©ë‹ˆë‹¤.")]
+    [SerializeField] private bool loopBossCastClipDuringHold = true;
 
+    // =============================================================
+    // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Æ®ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+    // =============================================================
     [Header("Boss Facing")]
 
-    [Tooltip("ÀÎÆ®·Î ÁøÇà Áß¿¡¸¸ º¸½º¸¦ ¿ŞÂÊÀ¸·Î °íÁ¤ÇÕ´Ï´Ù.")]
-    [SerializeField]
-    private bool forceBossFaceLeftDuringIntro = true;
-
-    // ÇöÀç ÀÎÆ®·Î°¡ ÁøÇà ÁßÀÎÁö
+    // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Æ®ï¿½Î°ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     private bool introPlaying = false;
-
-    // ¡Ú ÀÎÆ®·Î ½ÃÀÛ Àü ¿ø·¡ º¸½º Scale
-    private Vector3 bossOriginalScale;
-
-    // ¡Ú ¿ø·¡ ScaleÀ» Á¤»óÀûÀ¸·Î ÀúÀåÇß´ÂÁö
-    private bool bossOriginalScaleSaved = false;
 
     [Header("Boss Camera Shake")]
     [SerializeField] private bool useCameraShake = true;
@@ -68,10 +62,16 @@ public class BossIntroCameraSequence : MonoBehaviour
 
     private Vector3 gameplayCameraPosition;
     private float gameplayCameraSize;
+    private GoblinBossCombatController2D bossCombat;
+    private AnimationManager bossAnimationManager;
 
-    // CastU Á÷Á¢ Àç»ı¿ë
+    // CastU ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½
     private PlayableGraph bossAnimationGraph;
+    private AnimationClipPlayable bossClipPlayable;
     private bool bossAnimationGraphCreated;
+    private bool bossClipLooping;
+    private float bossClipLoopStartTime;
+    private float bossClipLoopLength;
 
     // =============================================================
     // Awake
@@ -82,20 +82,31 @@ public class BossIntroCameraSequence : MonoBehaviour
         targetCamera = GetComponent<Camera>();
     }
 
+    private void LateUpdate()
+    {
+        if (!bossClipLooping || !bossAnimationGraphCreated || !bossAnimationGraph.IsValid() || bossClipLoopLength <= 0f)
+            return;
+
+        // [Codex Boss Intro Clip Loop] Boss Hold Duration ë™ì•ˆ í´ë¦½ì„ ëŠ˜ë¦¬ì§€ ì•Šê³  ì›ë˜ ì†ë„ë¡œ ë°˜ë³µ ì¬ìƒí•©ë‹ˆë‹¤.
+        float elapsed = Time.unscaledTime - bossClipLoopStartTime;
+        bossClipPlayable.SetTime(elapsed % bossClipLoopLength);
+        bossAnimationGraph.Evaluate(Time.unscaledDeltaTime);
+    }
+
     // =============================================================
     // Start
     // =============================================================
 
     private IEnumerator Start()
     {
-        // ¾À ÃÊ±â ¹èÄ¡°¡ ³¡³¯ ¶§±îÁö ÇÑ ÇÁ·¹ÀÓ ´ë±â
+        // ï¿½ï¿½ ï¿½Ê±ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½
         yield return null;
 
         gameplayCameraPosition = transform.position;
         gameplayCameraSize = targetCamera.orthographicSize;
 
         // =========================================================
-        // 0. º¸½º ÀÚµ¿ Å½»ö
+        // 0. ï¿½ï¿½ï¿½ï¿½ ï¿½Úµï¿½ Å½ï¿½ï¿½
         // =========================================================
 
         if (bossTarget == null)
@@ -109,40 +120,37 @@ public class BossIntroCameraSequence : MonoBehaviour
             }
         }
 
+        if (bossTarget != null)
+        {
+            bossCombat = bossTarget.GetComponent<GoblinBossCombatController2D>();
+            bossAnimationManager = bossTarget.GetComponent<AnimationManager>();
+        }
+
         // =========================================================
-        // ¡Ú º¸½º ¿ø·¡ ¹æÇâ ÀúÀå
+        // ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         // =========================================================
 
         if (bossTarget != null)
         {
-            bossOriginalScale =
-                bossTarget.localScale;
+            if (bossCombat != null)
+                bossCombat.SetIntroLocked(true);
 
-            bossOriginalScaleSaved = true;
-
-            Debug.Log(
-                $"[BossIntroCamera] Boss Original Scale ÀúÀå : {bossOriginalScale}"
-            );
-
-            // ÀÎÆ®·Î ½ÃÀÛ
+            // ï¿½ï¿½Æ®ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
             introPlaying = true;
 
-            // Ã³À½ºÎÅÍ ¿ŞÂÊÀ¸·Î
-            ForceBossFaceLeft();
-
             Debug.Log(
-                "[BossIntroCamera] Intro Start - Boss Face Left"
+                "[BossIntroCamera] Intro Start"
             );
         }
         else
         {
             Debug.LogWarning(
-                "[BossIntroCamera] º¸½º¸¦ Ã£Áö ¸øÇß½À´Ï´Ù."
+                "[BossIntroCamera] ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Ã£ï¿½ï¿½ ï¿½ï¿½ï¿½ß½ï¿½ï¿½Ï´ï¿½."
             );
         }
 
         // =========================================================
-        // º¸½º Animator ÀÚµ¿ Å½»ö
+        // ï¿½ï¿½ï¿½ï¿½ Animator ï¿½Úµï¿½ Å½ï¿½ï¿½
         // =========================================================
 
         if (bossAnimator == null && bossTarget != null)
@@ -158,7 +166,7 @@ public class BossIntroCameraSequence : MonoBehaviour
         }
 
         // =========================================================
-        // 1. ÀüÃ¼ È­¸é ¡æ º¸½º
+        // 1. ï¿½ï¿½Ã¼ È­ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         // =========================================================
 
         if (bossTarget != null)
@@ -171,13 +179,13 @@ public class BossIntroCameraSequence : MonoBehaviour
             );
 
             // =====================================================
-            // 2. CastU Á÷Á¢ Àç»ı
+            // 2. CastU ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½
             // =====================================================
 
             PlayBossCastClip();
 
             // =====================================================
-            // 3. CastU + Ä«¸Ş¶ó Shake
+            // 3. CastU + Ä«ï¿½Ş¶ï¿½ Shake
             // =====================================================
 
             if (useCameraShake)
@@ -194,14 +202,14 @@ public class BossIntroCameraSequence : MonoBehaviour
             }
 
             // =====================================================
-            // 4. CastU Á¾·á
+            // 4. CastU ï¿½ï¿½ï¿½ï¿½
             // =====================================================
 
             StopBossCastClip();
         }
 
         // =========================================================
-        // 5. ·ÎÄÃ ÇÃ·¹ÀÌ¾î °Ë»ö
+        // 5. ï¿½ï¿½ï¿½ï¿½ ï¿½Ã·ï¿½ï¿½Ì¾ï¿½ ï¿½Ë»ï¿½
         // =========================================================
 
         Transform localPlayer = null;
@@ -223,7 +231,7 @@ public class BossIntroCameraSequence : MonoBehaviour
         }
 
         // =========================================================
-        // 6. º¸½º ¡æ ³» Ä³¸¯ÅÍ
+        // 6. ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ Ä³ï¿½ï¿½ï¿½ï¿½
         // =========================================================
 
         if (localPlayer != null)
@@ -242,12 +250,12 @@ public class BossIntroCameraSequence : MonoBehaviour
         else
         {
             Debug.LogWarning(
-                "[BossIntroCamera] ·ÎÄÃ ÇÃ·¹ÀÌ¾î¸¦ Ã£Áö ¸øÇß½À´Ï´Ù."
+                "[BossIntroCamera] ï¿½ï¿½ï¿½ï¿½ ï¿½Ã·ï¿½ï¿½Ì¾î¸¦ Ã£ï¿½ï¿½ ï¿½ï¿½ï¿½ß½ï¿½ï¿½Ï´ï¿½."
             );
         }
 
         // =========================================================
-        // 7. ³» Ä³¸¯ÅÍ ¡æ ÀüÃ¼ ÀüÅõ È­¸é
+        // 7. ï¿½ï¿½ Ä³ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½Ã¼ ï¿½ï¿½ï¿½ï¿½ È­ï¿½ï¿½
         // =========================================================
 
         yield return MoveCamera(
@@ -263,8 +271,8 @@ public class BossIntroCameraSequence : MonoBehaviour
             gameplayCameraSize;
 
         // =========================================================
-        // ¡Ú¡Ú¡Ú Áß¿ä
-        // ÀÎÆ®·Î Á¾·á
+        // ï¿½Ú¡Ú¡ï¿½ ï¿½ß¿ï¿½
+        // ï¿½ï¿½Æ®ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         // =========================================================
 
         EndBossIntro();
@@ -273,83 +281,20 @@ public class BossIntroCameraSequence : MonoBehaviour
             "[BossIntroCamera] Intro Complete"
         );
     }
-
     // =============================================================
-    // ¡Ú º¸½º ¿ŞÂÊ ¹æÇâ °­Á¦
-    // =============================================================
-
-    private void ForceBossFaceLeft()
-    {
-        if (!forceBossFaceLeftDuringIntro)
-            return;
-
-        if (bossTarget == null)
-            return;
-
-        Vector3 scale =
-            bossTarget.localScale;
-
-        // =========================================================
-        // ¿ŞÂÊ ¹æÇâ
-        //
-        // ÇöÀç Ä³¸¯ÅÍ°¡ ¹İ´ë·Î ³ª¿Â´Ù¸é
-        //
-        // -Mathf.Abs(scale.x)
-        //
-        // ¸¦
-        //
-        // Mathf.Abs(scale.x)
-        //
-        // ·Î º¯°æÇÏ¸é µÊ
-        // =========================================================
-
-        scale.x =
-            -Mathf.Abs(scale.x);
-
-        bossTarget.localScale =
-            scale;
-    }
-
-    // =============================================================
-    // ¡Ú ÀÎÆ®·Î µ¿¾È¸¸ ¹æÇâ À¯Áö
-    // =============================================================
-
-    private void LateUpdate()
-    {
-        if (!introPlaying)
-            return;
-
-        ForceBossFaceLeft();
-    }
-
-    // =============================================================
-    // ¡Ú¡Ú¡Ú º¸½º ÀÎÆ®·Î Á¾·á
+    // ï¿½Ú¡Ú¡ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Æ®ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     // =============================================================
 
     private void EndBossIntro()
     {
         // =========================================================
-        // ¸ÕÀú ¹æÇâ °­Á¦¸¦ ²û
+        // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½
         // =========================================================
 
         introPlaying = false;
 
-        // =========================================================
-        // ÀÎÆ®·Î ½ÃÀÛ Àü¿¡ ÀúÀåÇß´ø ¿ø·¡ Scale º¹±¸
-        // =========================================================
-
-        if (
-            bossTarget != null &&
-            bossOriginalScaleSaved
-        )
-        {
-            bossTarget.localScale =
-                bossOriginalScale;
-
-            Debug.Log(
-                $"[BossIntroCamera] Boss Scale ¿ø»óº¹±¸ : {bossOriginalScale}"
-            );
-        }
+        if (bossCombat != null)
+            bossCombat.SetIntroLocked(false);
 
         Debug.Log(
             "[BossIntroCamera] Boss Facing Control Released"
@@ -357,7 +302,7 @@ public class BossIntroCameraSequence : MonoBehaviour
     }
 
     // =============================================================
-    // CastU AnimationClip Á÷Á¢ Àç»ı
+    // CastU AnimationClip ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½
     // =============================================================
 
     private void PlayBossCastClip()
@@ -365,7 +310,7 @@ public class BossIntroCameraSequence : MonoBehaviour
         if (bossAnimator == null)
         {
             Debug.LogWarning(
-                "[BossIntroCamera] Boss Animator¸¦ Ã£Áö ¸øÇß½À´Ï´Ù."
+                "[BossIntroCamera] Boss Animatorï¿½ï¿½ Ã£ï¿½ï¿½ ï¿½ï¿½ï¿½ß½ï¿½ï¿½Ï´ï¿½."
             );
 
             return;
@@ -374,13 +319,14 @@ public class BossIntroCameraSequence : MonoBehaviour
         if (bossCastClip == null)
         {
             Debug.LogWarning(
-                "[BossIntroCamera] Boss Cast ClipÀÌ ºñ¾î ÀÖ½À´Ï´Ù. CastU.animÀ» Inspector¿¡ ³Ö¾îÁÖ¼¼¿ä."
+                "[BossIntroCamera] Boss Cast Clipï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½Ö½ï¿½ï¿½Ï´ï¿½. HeroEditor BossCast fallbackï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Õ´Ï´ï¿½."
             );
 
+            PlayBossCastFallback();
             return;
         }
 
-        // ÀÌÀü Graph Á¦°Å
+        // ï¿½ï¿½ï¿½ï¿½ Graph ï¿½ï¿½ï¿½ï¿½
         StopBossCastClip();
 
         bossAnimationGraph =
@@ -400,11 +346,25 @@ public class BossIntroCameraSequence : MonoBehaviour
                 bossCastClip
             );
 
+        bossClipPlayable = clipPlayable;
+        bossClipLooping = false;
+        bossClipLoopLength = bossCastClip.length;
+
         // =========================================================
-        // CastU ±æÀÌ¸¦ Hold Duration¿¡ ¸ÂÃã
+        // CastU ï¿½ï¿½ï¿½Ì¸ï¿½ Hold Durationï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         // =========================================================
 
         if (
+            loopBossCastClipDuringHold &&
+            bossCastClip.length > 0f
+        )
+        {
+            clipPlayable.SetSpeed(0.0);
+            clipPlayable.SetTime(0.0);
+            bossClipLooping = true;
+            bossClipLoopStartTime = Time.unscaledTime;
+        }
+        else if (
             fitAnimationToHoldDuration &&
             bossHoldDuration > 0f &&
             bossCastClip.length > 0f
@@ -419,7 +379,7 @@ public class BossIntroCameraSequence : MonoBehaviour
             );
 
             Debug.Log(
-                $"[BossIntroCamera] CastU ±æÀÌ {bossCastClip.length:F2}ÃÊ ¡æ {bossHoldDuration:F2}ÃÊ¿¡ ¸ÂÃã / Speed={speed:F2}"
+                $"[BossIntroCamera] CastU ï¿½ï¿½ï¿½ï¿½ {bossCastClip.length:F2}ï¿½ï¿½ ï¿½ï¿½ {bossHoldDuration:F2}ï¿½Ê¿ï¿½ ï¿½ï¿½ï¿½ï¿½ / Speed={speed:F2}"
             );
         }
         else
@@ -430,7 +390,7 @@ public class BossIntroCameraSequence : MonoBehaviour
         }
 
         // =========================================================
-        // Animator Ãâ·Â
+        // Animator ï¿½ï¿½ï¿½
         // =========================================================
 
         AnimationPlayableOutput output =
@@ -447,12 +407,25 @@ public class BossIntroCameraSequence : MonoBehaviour
         bossAnimationGraph.Play();
 
         Debug.Log(
-            $"[BossIntroCamera] AnimationClip Á÷Á¢ Àç»ı ½ÃÀÛ : {bossCastClip.name}"
+            $"[BossIntroCamera] AnimationClip ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ : {bossCastClip.name}"
         );
     }
 
+    private void PlayBossCastFallback()
+    {
+        if (bossAnimationManager == null && bossTarget != null)
+            bossAnimationManager = bossTarget.GetComponent<AnimationManager>();
+
+        if (bossAnimationManager == null)
+            return;
+
+        // [Codex Boss Intro Cast Fallback] Inspector í´ë¦½ì´ ì—†ì„ ë•Œë„ ê¸°ì¡´ HeroEditor Cast ë™ì‘ì„ í•œ ë²ˆ ì¬ìƒí•´ ì¸íŠ¸ë¡œê°€ ë¹„ì§€ ì•Šê²Œ í•©ë‹ˆë‹¤.
+        bossAnimationManager.SetState(CharacterState.Idle);
+        bossAnimationManager.BossCast();
+    }
+
     // =============================================================
-    // CastU Á÷Á¢ Àç»ı Á¾·á
+    // CastU ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     // =============================================================
 
     private void StopBossCastClip()
@@ -466,14 +439,16 @@ public class BossIntroCameraSequence : MonoBehaviour
         }
 
         bossAnimationGraphCreated = false;
+        bossClipLooping = false;
+        bossClipLoopLength = 0f;
 
         Debug.Log(
-            "[BossIntroCamera] CastU Á÷Á¢ Àç»ı Á¾·á"
+            "[BossIntroCamera] CastU ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½"
         );
     }
 
     // =============================================================
-    // Ä«¸Ş¶ó Shake
+    // Ä«ï¿½Ş¶ï¿½ Shake
     // =============================================================
 
     private IEnumerator ShakeCamera(
@@ -546,7 +521,7 @@ public class BossIntroCameraSequence : MonoBehaviour
     }
 
     // =============================================================
-    // ·ÎÄÃ ÇÃ·¹ÀÌ¾î °Ë»ö
+    // ï¿½ï¿½ï¿½ï¿½ ï¿½Ã·ï¿½ï¿½Ì¾ï¿½ ï¿½Ë»ï¿½
     // =============================================================
 
     private Transform FindLocalPlayer()
@@ -594,7 +569,7 @@ public class BossIntroCameraSequence : MonoBehaviour
     }
 
     // =============================================================
-    // Æ¯Á¤ ´ë»ó¿¡°Ô Ä«¸Ş¶ó ÀÌµ¿
+    // Æ¯ï¿½ï¿½ ï¿½ï¿½ó¿¡°ï¿½ Ä«ï¿½Ş¶ï¿½ ï¿½Ìµï¿½
     // =============================================================
 
     private IEnumerator MoveToTarget(
@@ -619,7 +594,7 @@ public class BossIntroCameraSequence : MonoBehaviour
     }
 
     // =============================================================
-    // Ä«¸Ş¶ó ÀÌµ¿
+    // Ä«ï¿½Ş¶ï¿½ ï¿½Ìµï¿½
     // =============================================================
 
     private IEnumerator MoveCamera(
@@ -688,24 +663,17 @@ public class BossIntroCameraSequence : MonoBehaviour
     }
 
     // =============================================================
-    // ÆÄ±« ½Ã Á¤¸®
+    // ï¿½Ä±ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     // =============================================================
 
     private void OnDestroy()
     {
-        // È¤½Ã ÀÎÆ®·Î µµÁß Camera°¡ ÆÄ±«µÇ´Â °æ¿ì¿¡µµ
-        // º¸½º ScaleÀ» ¿ø·¡´ë·Î º¹±¸
-        if (
-            introPlaying &&
-            bossTarget != null &&
-            bossOriginalScaleSaved
-        )
-        {
-            bossTarget.localScale =
-                bossOriginalScale;
-        }
-
+        // È¤ï¿½ï¿½ ï¿½ï¿½Æ®ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ Cameraï¿½ï¿½ ï¿½Ä±ï¿½ï¿½Ç´ï¿½ ï¿½ï¿½ì¿¡ï¿½ï¿½
+        // ï¿½ï¿½ï¿½ï¿½ Scaleï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         introPlaying = false;
+
+        if (bossCombat != null)
+            bossCombat.SetIntroLocked(false);
 
         StopBossCastClip();
     }

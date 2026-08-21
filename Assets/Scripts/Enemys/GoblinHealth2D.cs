@@ -32,6 +32,8 @@ public class GoblinHealth2D : MonoBehaviour
     private GoblinBossCombatController2D bossCombat;
     private bool isDead;                          // 중복 처치/중복 EXP 지급 방지
     private bool deathAnimationStarted;
+    private bool deathRootLocked;
+    private Vector3 deathRootPosition;
     // Codex recovery compatibility: GoblinBoss scripts need read-only HP/death state.
     public int CurrentHp => currentHp;
     public int MaxHp => maxHp;
@@ -67,6 +69,15 @@ public class GoblinHealth2D : MonoBehaviour
         // [Codex Boss HP Test] -1이면 최대 체력, 0 이상이면 인스펙터 값으로 시작해서 2페이즈 테스트를 쉽게 합니다.
         currentHp = startHpOverride >= 0 ? Mathf.Clamp(startHpOverride, 0, maxHp) : maxHp;
         SyncHpUI();
+    }
+
+    private void LateUpdate()
+    {
+        if (!deathRootLocked)
+            return;
+
+        // [Codex Boss Death Root Lock] Death 애니메이션/패턴 잔여 프레임이 루트를 아래로 밀어도 사망 순간 위치를 유지합니다.
+        transform.position = deathRootPosition;
     }
 
     public void TakeDamage(
@@ -153,19 +164,27 @@ public class GoblinHealth2D : MonoBehaviour
             bossCombat.enabled = false;
         }
 
-        Collider2D[] cols = GetComponentsInChildren<Collider2D>(true);
-        foreach (Collider2D col in cols)
-        {
-            if (col != null)
-                col.enabled = false;
-        }
-
         Rigidbody2D rb = GetComponent<Rigidbody2D>();
         if (rb != null)
         {
+            // [Codex Boss Death Physics Stop] 사망 시 콜라이더는 끄지 않고 물리 이동만 멈춰 BossArena_MainFloor를 통과하지 않게 합니다.
+            deathRootPosition = transform.position;
+            deathRootLocked = true;
             rb.linearVelocity = Vector2.zero;
-            rb.bodyType = RigidbodyType2D.Kinematic;
+            rb.angularVelocity = 0f;
+            rb.gravityScale = 0f;
+            rb.constraints = RigidbodyConstraints2D.FreezeAll;
+            rb.position = deathRootPosition;
         }
+        else
+        {
+            // [Codex Boss Death Root Lock] Rigidbody2D가 없어도 루트 Transform이 Death 중 내려가지 않게 현재 위치를 잠급니다.
+            deathRootPosition = transform.position;
+            deathRootLocked = true;
+        }
+
+        // [Codex Boss Death Collider Keep] 죽은 뒤 바닥을 통과하지 않도록 Collider2D는 끄지 않습니다.
+        // 공격/피격 중단은 isDead와 컨트롤러 비활성화로 처리합니다.
 
         // [Codex Boss Death Single Play] 사라지는 연출 없이 Death 애니메이션만 1회 실행한다.
         PlayDeathAnimation();

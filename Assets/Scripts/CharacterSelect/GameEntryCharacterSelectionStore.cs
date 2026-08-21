@@ -11,6 +11,12 @@ public static class GameEntryCharacterSelectionStore
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void ResetPlaySession()
     {
+        ResetSessionState();
+    }
+
+    public static void ResetSessionState()
+    {
+        // [Codex GameEntry Fresh Start] Restart로 GameEntry에 돌아올 때도 새 Play 시작처럼 캐릭터 선택 기록을 비웁니다.
         confirmedSelections.Clear();
         LocalSelectedCharacter = PlayerCharacterType.None;
     }

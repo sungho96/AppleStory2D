@@ -132,6 +132,41 @@ public class GameEntryNetworkConnectionController : MonoBehaviour
 
         if (characterSelectPanel != null)
             characterSelectPanel.SetActive(false);
+
+        ResetGameEntrySessionState();
+        ResetNetworkSessionForFreshEntry();
+    }
+
+    private void ResetGameEntrySessionState()
+    {
+        // [Codex GameEntry Fresh Start] 결과창 Restart 후 캐릭터/키 설정 세션 데이터를 첫 Play 진입처럼 비웁니다.
+        GameEntryCharacterSelectionStore.ResetSessionState();
+        KeyBindingManager.ClearAllSessionBindings();
+    }
+
+    private void ResetNetworkSessionForFreshEntry()
+    {
+        NetworkManager existingManager = NetworkManager.Singleton;
+        if (existingManager == null || (!existingManager.IsListening && !existingManager.ShutdownInProgress))
+            return;
+
+        // [Codex GameEntry Restart] 결과창에서 돌아온 뒤 남아 있는 Netcode 세션을 정리해야 다시 방 만들기가 가능합니다.
+        existingManager.Shutdown();
+        networkManager = existingManager;
+        waitingAsHost = false;
+        waitingAsClient = false;
+        readyPanelSequenceStarted = false;
+        GameEntryCharacterSelectionStore.SetLocalSelectedCharacter(PlayerCharacterType.None);
+        SetButtonsInteractable(false);
+        StartCoroutine(EnableButtonsAfterNetworkShutdown(existingManager));
+    }
+
+    private IEnumerator EnableButtonsAfterNetworkShutdown(NetworkManager shuttingDownManager)
+    {
+        while (shuttingDownManager != null && (shuttingDownManager.IsListening || shuttingDownManager.ShutdownInProgress))
+            yield return null;
+
+        SetButtonsInteractable(true);
     }
 
     private void StartHost()

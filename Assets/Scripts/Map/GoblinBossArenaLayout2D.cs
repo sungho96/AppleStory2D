@@ -12,7 +12,7 @@
 
         private void OnEnable()
         {
-            if (gameObject.scene.name != "GoblinBoss")
+            if (!IsGoblinBossScene(gameObject.scene.name))
                 return;
 
             // [보스 맵 1단계] 기존 3층을 메인 바닥으로 쓰고 RPG식 아래층 구조는 숨깁니다.
@@ -291,10 +291,16 @@
             for (int i = 0; i < objects.Length; i++)
             {
                 GameObject candidate = objects[i];
-                if (candidate.name == objectName && candidate.scene.IsValid() && candidate.scene.name == "GoblinBoss")
+                if (candidate.name == objectName && candidate.scene.IsValid() && IsGoblinBossScene(candidate.scene.name))
                     return candidate;
             }
 
             return null;
+        }
+
+        private static bool IsGoblinBossScene(string sceneName)
+        {
+            // [Codex Boss Network Scene] 일반/네트워크 보스 씬 모두 같은 발판 충돌 무시 설정을 사용합니다.
+            return sceneName == "GoblinBoss" || sceneName == "GoblinBoss_Network";
         }
     }

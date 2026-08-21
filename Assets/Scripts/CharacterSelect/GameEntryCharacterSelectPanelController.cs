@@ -67,10 +67,14 @@ public class GameEntryCharacterSelectPanelController : MonoBehaviour
         if (confirmButton != null)
             confirmButton.onClick.AddListener(ConfirmSelection);
 
+        // [Codex GameEntry Fresh Start] 재입장한 캐릭터 선택창은 이전 선택/확정 표시를 이어받지 않습니다.
+        selectedCharacter = PlayerCharacterType.None;
         waitingForServer = false;
         confirmed = false;
         confirmAnimationPlaying = false;
+        StopPanelAnimations();
         CaptureBasePositions();
+        SetStatus("캐릭터를 선택하세요.");
         RefreshVisualState();
     }
 
@@ -89,6 +93,27 @@ public class GameEntryCharacterSelectPanelController : MonoBehaviour
     private void OnDestroy()
     {
         UnregisterNetworkMessage();
+    }
+
+    private void StopPanelAnimations()
+    {
+        if (visualRoutine != null)
+        {
+            StopCoroutine(visualRoutine);
+            visualRoutine = null;
+        }
+
+        if (confirmPulseRoutine != null)
+        {
+            StopCoroutine(confirmPulseRoutine);
+            confirmPulseRoutine = null;
+        }
+
+        if (rejectShakeRoutine != null)
+        {
+            StopCoroutine(rejectShakeRoutine);
+            rejectShakeRoutine = null;
+        }
     }
 
     public void Initialize(Button archer, Image archerImage, Button warrior, Image warriorImage, Button confirm, TextMeshProUGUI status)

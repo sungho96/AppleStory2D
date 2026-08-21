@@ -1,0 +1,949 @@
+fileFormatVersion: 2
+guid: e6b237ae63d7f974dab3cd05add9a29b
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -4335287067751092064
+    second: Ground_Vine_0
+  - first:
+      213: 2214304024573734926
+    second: Ground_Vine_1
+  - first:
+      213: -5434508744075966520
+    second: Ground_Vine_2
+  - first:
+      213: -42966273933627360
+    second: Ground_Vine_3
+  - first:
+      213: 6144117337207400026
+    second: Ground_Vine_4
+  - first:
+      213: -8254080557081500933
+    second: Ground_Vine_5
+  - first:
+      213: 8363316553399631462
+    second: Ground_Vine_6
+  - first:
+      213: 2886230422924941870
+    second: Ground_Vine_7
+  - first:
+      213: -3242163716608075046
+    second: Ground_Vine_8
+  - first:
+      213: 7877544876773308566
+    second: Ground_Vine_9
+  - first:
+      213: 2212755023498712940
+    second: Ground_Vine_10
+  - first:
+      213: -6115480741877562047
+    second: Ground_Vine_11
+  - first:
+      213: -6858141904879923378
+    second: Ground_Vine_12
+  - first:
+      213: 107908025778996417
+    second: Ground_Vine_13
+  - first:
+      213: -3316367920748936492
+    second: Ground_Vine_14
+  - first:
+      213: 5622199561894434700
+    second: Ground_Vine_15
+  - first:
+      213: -3001775936844628375
+    second: Ground_Vine_16
+  - first:
+      213: -4809155367946366630
+    second: Ground_Vine_17
+  - first:
+      213: -2795285190005145049
+    second: Ground_Vine_18
+  - first:
+      213: 9116176740841755251
+    second: Ground_Vine_19
+  - first:
+      213: -1564650843139256800
+    second: Ground_Vine_20
+  - first:
+      213: 361659619118490924
+    second: Ground_Vine_21
+  - first:
+      213: 8401003523217176079
+    second: Ground_Vine_22
+  - first:
+      213: -2394659120894956022
+    second: Ground_Vine_23
+  - first:
+      213: 5835716393984233950
+    second: Ground_Vine_24
+  - first:
+      213: 9122044311630785979
+    second: Ground_Vine_25
+  - first:
+      213: -8799856930677939082
+    second: Ground_Vine_26
+  - first:
+      213: 7712878204208936071
+    second: Ground_Vine_27
+  - first:
+      213: -5427541890331923109
+    second: Ground_Vine_28
+  - first:
+      213: 7418232714445300435
+    second: Ground_Vine_29
+  - first:
+      213: 1146084092992229964
+    second: Ground_Vine_30
+  - first:
+      213: 4398128367005928964
+    second: Ground_Vine_31
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Ground_Vine_0
+      rect:
+        serializedVersion: 2
+        x: 28
+        y: 41
+        width: 1197
+        height: 765
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0a0f9579167f5d3c0800000000000000
+      internalID: -4335287067751092064
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Vine_1
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 787
+        width: 25
+        height: 59
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e007f6947c9cabe10800000000000000
+      internalID: 2214304024573734926
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Vine_2
+      rect:
+        serializedVersion: 2
+        x: 96
+        y: 907
+        width: 28
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8c7099c271fb494b0800000000000000
+      internalID: -5434508744075966520
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Vine_3
+      rect:
+        serializedVersion: 2
+        x: 100
+        y: 837
+        width: 241
+        height: 145
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0203dd8c66a576ff0800000000000000
+      internalID: -42966273933627360
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Vine_4
+      rect:
+        serializedVersion: 2
+        x: 366
+        y: 819
+        width: 182
+        height: 204
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a56e09e4a2a444550800000000000000
+      internalID: 6144117337207400026
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Vine_5
+      rect:
+        serializedVersion: 2
+        x: 506
+        y: 867
+        width: 14
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bf2e2bf177d937d80800000000000000
+      internalID: -8254080557081500933
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Vine_6
+      rect:
+        serializedVersion: 2
+        x: 520
+        y: 870
+        width: 12
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 66e77853818701470800000000000000
+      internalID: 8363316553399631462
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Vine_7
+      rect:
+        serializedVersion: 2
+        x: 534
+        y: 863
+        width: 54
+        height: 84
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e2add5a1743fd0820800000000000000
+      internalID: 2886230422924941870
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Vine_8
+      rect:
+        serializedVersion: 2
+        x: 599
+        y: 803
+        width: 109
+        height: 146
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ada5ae707458103d0800000000000000
+      internalID: -3242163716608075046
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Vine_9
+      rect:
+        serializedVersion: 2
+        x: 605
+        y: 819
+        width: 13
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 69875421459a25d60800000000000000
+      internalID: 7877544876773308566
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Vine_10
+      rect:
+        serializedVersion: 2
+        x: 681
+        y: 869
+        width: 10
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c671a9e58f845be10800000000000000
+      internalID: 2212755023498712940
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Vine_11
+      rect:
+        serializedVersion: 2
+        x: 683
+        y: 806
+        width: 11
+        height: 23
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 14545ad9aa2712ba0800000000000000
+      internalID: -6115480741877562047
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Vine_12
+      rect:
+        serializedVersion: 2
+        x: 689
+        y: 869
+        width: 9
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e4f4964064cf2d0a0800000000000000
+      internalID: -6858141904879923378
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Vine_13
+      rect:
+        serializedVersion: 2
+        x: 713
+        y: 897
+        width: 74
+        height: 72
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1c488f817cd5f7100800000000000000
+      internalID: 107908025778996417
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Vine_14
+      rect:
+        serializedVersion: 2
+        x: 713
+        y: 857
+        width: 10
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4d2424b62f4e9f1d0800000000000000
+      internalID: -3316367920748936492
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Vine_15
+      rect:
+        serializedVersion: 2
+        x: 727
+        y: 883
+        width: 14
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c87131fb6b0160e40800000000000000
+      internalID: 5622199561894434700
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Vine_16
+      rect:
+        serializedVersion: 2
+        x: 733
+        y: 857
+        width: 24
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 96e7f0580bc8756d0800000000000000
+      internalID: -3001775936844628375
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Vine_17
+      rect:
+        serializedVersion: 2
+        x: 794
+        y: 857
+        width: 39
+        height: 37
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a51d4ef3ca2724db0800000000000000
+      internalID: -4809155367946366630
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Vine_18
+      rect:
+        serializedVersion: 2
+        x: 802
+        y: 803
+        width: 333
+        height: 240
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 72245d30ee62539d0800000000000000
+      internalID: -2795285190005145049
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Vine_19
+      rect:
+        serializedVersion: 2
+        x: 997
+        y: 885
+        width: 7
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3721d8b327a238e70800000000000000
+      internalID: 9116176740841755251
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Vine_20
+      rect:
+        serializedVersion: 2
+        x: 1139
+        y: 765
+        width: 80
+        height: 148
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 02e4b29195e394ae0800000000000000
+      internalID: -1564650843139256800
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Vine_21
+      rect:
+        serializedVersion: 2
+        x: 1149
+        y: 803
+        width: 18
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c252927e18fd40500800000000000000
+      internalID: 361659619118490924
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Vine_22
+      rect:
+        serializedVersion: 2
+        x: 40
+        y: 554
+        width: 7
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f063a26a13c569470800000000000000
+      internalID: 8401003523217176079
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Vine_23
+      rect:
+        serializedVersion: 2
+        x: 1172
+        y: 548
+        width: 13
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a0e28ec873674ced0800000000000000
+      internalID: -2394659120894956022
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Vine_24
+      rect:
+        serializedVersion: 2
+        x: 1160
+        y: 475
+        width: 7
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ed19a513421acf050800000000000000
+      internalID: 5835716393984233950
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Vine_25
+      rect:
+        serializedVersion: 2
+        x: 1162
+        y: 467
+        width: 11
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bbd202488f2089e70800000000000000
+      internalID: 9122044311630785979
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Vine_26
+      rect:
+        serializedVersion: 2
+        x: 118
+        y: 407
+        width: 8
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 674aea4ceb0a0e580800000000000000
+      internalID: -8799856930677939082
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Vine_27
+      rect:
+        serializedVersion: 2
+        x: 125
+        y: 407
+        width: 7
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 784f9b5bcd5a90b60800000000000000
+      internalID: 7712878204208936071
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Vine_28
+      rect:
+        serializedVersion: 2
+        x: 826
+        y: 401
+        width: 9
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b5da637386f7da4b0800000000000000
+      internalID: -5427541890331923109
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Vine_29
+      rect:
+        serializedVersion: 2
+        x: 510
+        y: 343
+        width: 44
+        height: 40
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3d2a1bda95bd2f660800000000000000
+      internalID: 7418232714445300435
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Vine_30
+      rect:
+        serializedVersion: 2
+        x: 464
+        y: 303
+        width: 21
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c42178d0965b7ef00800000000000000
+      internalID: 1146084092992229964
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Vine_31
+      rect:
+        serializedVersion: 2
+        x: 534
+        y: 321
+        width: 12
+        height: 20
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 40e05ff827a490d30800000000000000
+      internalID: 4398128367005928964
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      Ground_Vine_0: -4335287067751092064
+      Ground_Vine_1: 2214304024573734926
+      Ground_Vine_10: 2212755023498712940
+      Ground_Vine_11: -6115480741877562047
+      Ground_Vine_12: -6858141904879923378
+      Ground_Vine_13: 107908025778996417
+      Ground_Vine_14: -3316367920748936492
+      Ground_Vine_15: 5622199561894434700
+      Ground_Vine_16: -3001775936844628375
+      Ground_Vine_17: -4809155367946366630
+      Ground_Vine_18: -2795285190005145049
+      Ground_Vine_19: 9116176740841755251
+      Ground_Vine_2: -5434508744075966520
+      Ground_Vine_20: -1564650843139256800
+      Ground_Vine_21: 361659619118490924
+      Ground_Vine_22: 8401003523217176079
+      Ground_Vine_23: -2394659120894956022
+      Ground_Vine_24: 5835716393984233950
+      Ground_Vine_25: 9122044311630785979
+      Ground_Vine_26: -8799856930677939082
+      Ground_Vine_27: 7712878204208936071
+      Ground_Vine_28: -5427541890331923109
+      Ground_Vine_29: 7418232714445300435
+      Ground_Vine_3: -42966273933627360
+      Ground_Vine_30: 1146084092992229964
+      Ground_Vine_31: 4398128367005928964
+      Ground_Vine_4: 6144117337207400026
+      Ground_Vine_5: -8254080557081500933
+      Ground_Vine_6: 8363316553399631462
+      Ground_Vine_7: 2886230422924941870
+      Ground_Vine_8: -3242163716608075046
+      Ground_Vine_9: 7877544876773308566
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

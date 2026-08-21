@@ -99,9 +99,24 @@ public class GoblinBossCombatController2D : MonoBehaviour
     private float healHitWobbleTimer;
     private GameObject healEffect;
     private SpriteRenderer healEffectRenderer;
+    private bool isIntroLocked;
 
-    public bool IsCasting => isCasting || isShieldBlocking || isGroggy || isHealCasting;
+    public bool IsCasting => isIntroLocked || isCasting || isShieldBlocking || isGroggy || isHealCasting;
     public float CurrentDamageMultiplier => isGroggy ? Mathf.Max(1f, shieldGroggyDamageMultiplier) : 1f;
+
+    public void SetIntroLocked(bool locked)
+    {
+        // [Codex Boss Intro Lock] 카메라 인트로 동안 보스 이동/공격 패턴만 잠시 멈추고 기존 패턴 구조는 그대로 둡니다.
+        isIntroLocked = locked;
+        if (!locked)
+            return;
+
+        moveDirection = 0f;
+        SetMoving(false);
+
+        if (rb != null)
+            rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
+    }
 
     /// <summary>
     /// 플레이어가 공격 범위에 들어왔을 때 일반공격 발동을 시도합니다.
@@ -109,7 +124,7 @@ public class GoblinBossCombatController2D : MonoBehaviour
     public void TryCloseCounterAttack(Transform attacker)
     {
         // [보스 근접 일반공격 추가] 거리와 Inspector 확률을 통과하면 보스가 직접 일반공격을 시작합니다.
-        if (attacker == null || isCasting || isShieldBlocking || isGroggy || (health != null && health.IsDead))
+        if (attacker == null || isIntroLocked || isCasting || isShieldBlocking || isGroggy || (health != null && health.IsDead))
             return;
 
         float horizontalDistance = Mathf.Abs(attacker.position.x - transform.position.x);
@@ -226,9 +241,22 @@ public class GoblinBossCombatController2D : MonoBehaviour
             normalController.enabled = false;
     }
 
+    private IEnumerator Start()
+    {
+        // [Codex Boss Start Facing] 씬 로드/네트워크 Spawn 직후 플레이어 위치가 잡힌 다음 기존 Left/Right 방식으로 시작 방향을 맞춥니다.
+        yield return null;
+        FaceNearestPlayer();
+    }
+
     private void Update()
     {
         FindPlayer();
+
+        if (isIntroLocked)
+        {
+            moveDirection = 0f;
+            return;
+        }
 
         if (health != null && health.IsDead)
         {
@@ -286,7 +314,7 @@ public class GoblinBossCombatController2D : MonoBehaviour
         if (rb == null)
             return;
 
-        float horizontalVelocity = (isCasting || isShieldBlocking || isGroggy || isHealCasting) ? 0f : moveDirection * approachSpeed;
+        float horizontalVelocity = (isIntroLocked || isCasting || isShieldBlocking || isGroggy || isHealCasting) ? 0f : moveDirection * approachSpeed;
         rb.linearVelocity = new Vector2(horizontalVelocity, rb.linearVelocity.y);
     }
 
@@ -1144,7 +1172,41 @@ public class GoblinBossCombatController2D : MonoBehaviour
 
         GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
         if (playerObject != null)
+        {
             player = playerObject.transform;
+            FacePlayer();
+        }
+    }
+
+    private void FaceNearestPlayer()
+    {
+        GameObject[] playerObjects = GameObject.FindGameObjectsWithTag("Player");
+        if (playerObjects == null || playerObjects.Length == 0)
+            return;
+
+        Transform nearestPlayer = null;
+        float nearestSqrDistance = float.PositiveInfinity;
+        Vector3 bossPosition = transform.position;
+
+        for (int i = 0; i < playerObjects.Length; i++)
+        {
+            if (playerObjects[i] == null)
+                continue;
+
+            Transform candidate = playerObjects[i].transform;
+            float sqrDistance = (candidate.position - bossPosition).sqrMagnitude;
+            if (sqrDistance >= nearestSqrDistance)
+                continue;
+
+            nearestSqrDistance = sqrDistance;
+            nearestPlayer = candidate;
+        }
+
+        if (nearestPlayer == null)
+            return;
+
+        player = nearestPlayer;
+        FacePlayer();
     }
 
     private static Sprite CreateCircleSprite(int size)

@@ -24,6 +24,11 @@ public class GameEntryReadyNetworkController : MonoBehaviour
 
     private void OnEnable()
     {
+        // [Codex GameEntry Fresh Start] Restart 후 Ready 패널은 이전 준비 상태와 전환 플래그를 이어받지 않습니다.
+        readyClients.Clear();
+        isLocalReady = false;
+        transitionStarted = false;
+
         if (readyButton != null)
             readyButton.onClick.AddListener(ToggleLocalReady);
 

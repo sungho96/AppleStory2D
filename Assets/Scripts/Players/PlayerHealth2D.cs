@@ -46,13 +46,21 @@ public class PlayerHealth2D : MonoBehaviour
     {
         if (hitReaction == null)
             hitReaction = GetComponent<PlayerHitReaction2D>();
-        if (hpBarUI == null)
+        if (hpBarUI == null && CanBindLocalLegacyHpBar())
             hpBarUI = Object.FindFirstObjectByType<PlayerHpBarUI>();
         if (playerStats == null)
             playerStats = GetComponent<PlayerStats>();
         if (warriorShieldBlock == null)
             warriorShieldBlock = GetComponent<WarriorShieldBlock2D>();
 
+    }
+
+    private bool CanBindLocalLegacyHpBar()
+    {
+        // [Codex Local HP HUD] NetworkObject가 있는 멀티플레이 캐릭터는 자기 소유자일 때만 기존 HPBarUI를 연결합니다.
+        Unity.Netcode.NetworkObject networkObject = GetComponent<Unity.Netcode.NetworkObject>();
+        Unity.Netcode.NetworkManager networkManager = Unity.Netcode.NetworkManager.Singleton;
+        return networkObject == null || networkManager == null || !networkManager.IsListening || networkObject.IsOwner;
     }
     void Start()
     {
@@ -97,6 +105,10 @@ public class PlayerHealth2D : MonoBehaviour
         if (currentHp < 0)
             currentHp = 0;
 
+        // [Codex Local HP HUD] HUDStatusUI가 보는 PlayerStats도 치명타 포함 모든 피해에서 먼저 갱신합니다.
+        if (playerStats != null)
+            playerStats.Damage(finalDamage);
+
         if (hpBarUI != null)
             hpBarUI.Refresh();
 
@@ -106,8 +118,6 @@ public class PlayerHealth2D : MonoBehaviour
             Die();
             return;
         }
-        playerStats.Damage(finalDamage);
-
         if (hitReaction == null)
         {
             Debug.LogWarning("hitReaction �� null �̶� �˹� ȣ�� �Ұ�");
@@ -120,6 +130,10 @@ public class PlayerHealth2D : MonoBehaviour
     private void Die()
     {
         isDead = true;
+        // [Codex Warrior Death Shield Hide] 사망 중 방패막기 직접 재생이 남아 방패만 보이지 않도록 즉시 중단합니다.
+        if (warriorShieldBlock != null)
+            warriorShieldBlock.enabled = false;
+
         PlayDeathAnimation();
         StartCoroutine(CoFadeOutAfterDeath());
         Debug.Log("�÷��̾� ���");
@@ -235,6 +249,8 @@ public class PlayerHealth2D : MonoBehaviour
             Color color = renderers[i].color;
             color.a = 0f;
             renderers[i].color = color;
+            // [Codex Death Render Hide] HeroEditor 장비 렌더러가 색을 다시 갱신해도 사망 후에는 화면에 남지 않게 끕니다.
+            renderers[i].enabled = false;
         }
     }
     private void TrySetStringMember(object target, string memberName, string value)

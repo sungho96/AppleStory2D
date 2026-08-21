@@ -1,0 +1,663 @@
+fileFormatVersion: 2
+guid: b23e2f423249fcb41a3950f09d3d9f4b
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -7535017586644407295
+    second: Deco_FlowerRock_A_0
+  - first:
+      213: -3560612287627476529
+    second: Deco_FlowerRock_A_1
+  - first:
+      213: -8320385716368201842
+    second: Deco_FlowerRock_A_2
+  - first:
+      213: 5801441291039219189
+    second: Deco_FlowerRock_A_3
+  - first:
+      213: 4295034756163976045
+    second: Deco_FlowerRock_A_4
+  - first:
+      213: 9142520814733448780
+    second: Deco_FlowerRock_A_5
+  - first:
+      213: 4230670228354048144
+    second: Deco_FlowerRock_A_6
+  - first:
+      213: -2950476708956233772
+    second: Deco_FlowerRock_A_7
+  - first:
+      213: 3502604816701626464
+    second: Deco_FlowerRock_A_8
+  - first:
+      213: 6067871698560763559
+    second: Deco_FlowerRock_A_9
+  - first:
+      213: 2483433537821910898
+    second: Deco_FlowerRock_A_10
+  - first:
+      213: -7318818519583647644
+    second: Deco_FlowerRock_A_11
+  - first:
+      213: -3379139258798863127
+    second: Deco_FlowerRock_A_12
+  - first:
+      213: 2967423227771095340
+    second: Deco_FlowerRock_A_13
+  - first:
+      213: -391479017096517953
+    second: Deco_FlowerRock_A_14
+  - first:
+      213: -4416193167377978976
+    second: Deco_FlowerRock_A_15
+  - first:
+      213: 2887222888633325753
+    second: Deco_FlowerRock_A_16
+  - first:
+      213: 4582476596584024999
+    second: Deco_FlowerRock_A_17
+  - first:
+      213: -6569698981528136932
+    second: Deco_FlowerRock_A_18
+  - first:
+      213: -9194230538080164676
+    second: Deco_FlowerRock_A_19
+  - first:
+      213: -3994074445219484735
+    second: Deco_FlowerRock_A_20
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Deco_FlowerRock_A_0
+      rect:
+        serializedVersion: 2
+        x: 16
+        y: 41
+        width: 1193
+        height: 1111
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 10c2dbb5d6d3e6790800000000000000
+      internalID: -7535017586644407295
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Deco_FlowerRock_A_1
+      rect:
+        serializedVersion: 2
+        x: 667
+        y: 962
+        width: 104
+        height: 241
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fc1c2154df9269ec0800000000000000
+      internalID: -3560612287627476529
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Deco_FlowerRock_A_2
+      rect:
+        serializedVersion: 2
+        x: 207
+        y: 316
+        width: 37
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e87a3a5364d088c80800000000000000
+      internalID: -8320385716368201842
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Deco_FlowerRock_A_3
+      rect:
+        serializedVersion: 2
+        x: 255
+        y: 321
+        width: 17
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5fd1da9ed1cd28050800000000000000
+      internalID: 5801441291039219189
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Deco_FlowerRock_A_4
+      rect:
+        serializedVersion: 2
+        x: 882
+        y: 317
+        width: 33
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d6b3c1bca570b9b30800000000000000
+      internalID: 4295034756163976045
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Deco_FlowerRock_A_5
+      rect:
+        serializedVersion: 2
+        x: 971
+        y: 339
+        width: 9
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c465dc9ed32c0ee70800000000000000
+      internalID: 9142520814733448780
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Deco_FlowerRock_A_6
+      rect:
+        serializedVersion: 2
+        x: 151
+        y: 306
+        width: 31
+        height: 20
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0902dda582c56ba30800000000000000
+      internalID: 4230670228354048144
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Deco_FlowerRock_A_7
+      rect:
+        serializedVersion: 2
+        x: 300
+        y: 325
+        width: 11
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4df9994c01dcd07d0800000000000000
+      internalID: -2950476708956233772
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Deco_FlowerRock_A_8
+      rect:
+        serializedVersion: 2
+        x: 876
+        y: 312
+        width: 7
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0689210f580cb9030800000000000000
+      internalID: 3502604816701626464
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Deco_FlowerRock_A_9
+      rect:
+        serializedVersion: 2
+        x: 965
+        y: 312
+        width: 7
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7a64c5f2929653450800000000000000
+      internalID: 6067871698560763559
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Deco_FlowerRock_A_10
+      rect:
+        serializedVersion: 2
+        x: 231
+        y: 302
+        width: 21
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 277aa2515ade67220800000000000000
+      internalID: 2483433537821910898
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Deco_FlowerRock_A_11
+      rect:
+        serializedVersion: 2
+        x: 313
+        y: 311
+        width: 10
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4689aac45555e6a90800000000000000
+      internalID: -7318818519583647644
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Deco_FlowerRock_A_12
+      rect:
+        serializedVersion: 2
+        x: 458
+        y: 304
+        width: 7
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9ec87b06fb2ea11d0800000000000000
+      internalID: -3379139258798863127
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Deco_FlowerRock_A_13
+      rect:
+        serializedVersion: 2
+        x: 137
+        y: 296
+        width: 7
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c290a8d14b76e2920800000000000000
+      internalID: 2967423227771095340
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Deco_FlowerRock_A_14
+      rect:
+        serializedVersion: 2
+        x: 319
+        y: 304
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fb661f878ef219af0800000000000000
+      internalID: -391479017096517953
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Deco_FlowerRock_A_15
+      rect:
+        serializedVersion: 2
+        x: 464
+        y: 304
+        width: 7
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0a9ade656b786b2c0800000000000000
+      internalID: -4416193167377978976
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Deco_FlowerRock_A_16
+      rect:
+        serializedVersion: 2
+        x: 281
+        y: 280
+        width: 7
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9b8dd588be9711820800000000000000
+      internalID: 2887222888633325753
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Deco_FlowerRock_A_17
+      rect:
+        serializedVersion: 2
+        x: 321
+        y: 280
+        width: 18
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7ab8ee28f2a389f30800000000000000
+      internalID: 4582476596584024999
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Deco_FlowerRock_A_18
+      rect:
+        serializedVersion: 2
+        x: 579
+        y: 280
+        width: 7
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c1315c4859db3d4a0800000000000000
+      internalID: -6569698981528136932
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Deco_FlowerRock_A_19
+      rect:
+        serializedVersion: 2
+        x: 816
+        y: 284
+        width: 9
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cb4eeaae908876080800000000000000
+      internalID: -9194230538080164676
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Deco_FlowerRock_A_20
+      rect:
+        serializedVersion: 2
+        x: 603
+        y: 259
+        width: 13
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1cb2a3e14723298c0800000000000000
+      internalID: -3994074445219484735
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      Deco_FlowerRock_A_0: -7535017586644407295
+      Deco_FlowerRock_A_1: -3560612287627476529
+      Deco_FlowerRock_A_10: 2483433537821910898
+      Deco_FlowerRock_A_11: -7318818519583647644
+      Deco_FlowerRock_A_12: -3379139258798863127
+      Deco_FlowerRock_A_13: 2967423227771095340
+      Deco_FlowerRock_A_14: -391479017096517953
+      Deco_FlowerRock_A_15: -4416193167377978976
+      Deco_FlowerRock_A_16: 2887222888633325753
+      Deco_FlowerRock_A_17: 4582476596584024999
+      Deco_FlowerRock_A_18: -6569698981528136932
+      Deco_FlowerRock_A_19: -9194230538080164676
+      Deco_FlowerRock_A_2: -8320385716368201842
+      Deco_FlowerRock_A_20: -3994074445219484735
+      Deco_FlowerRock_A_3: 5801441291039219189
+      Deco_FlowerRock_A_4: 4295034756163976045
+      Deco_FlowerRock_A_5: 9142520814733448780
+      Deco_FlowerRock_A_6: 4230670228354048144
+      Deco_FlowerRock_A_7: -2950476708956233772
+      Deco_FlowerRock_A_8: 3502604816701626464
+      Deco_FlowerRock_A_9: 6067871698560763559
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

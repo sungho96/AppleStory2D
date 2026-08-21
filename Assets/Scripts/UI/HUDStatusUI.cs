@@ -4,11 +4,14 @@ using TMPro;
 
 public class HUDStatusUI : MonoBehaviour
 {
+    [Header("HUD Owner")]
+    [SerializeField] private PlayerCharacterType hudCharacterType = PlayerCharacterType.None;
+
     [Header("Target")]
     [SerializeField] private PlayerStats playerStats;
 
     [Header("Smooth")]
-    [SerializeField] private float fillSmoothSpeed = 8f; // °ªÀÌ Å¬¼ö·Ï »¡¸® µû¶ó°¨
+    [SerializeField] private float fillSmoothSpeed = 8f; // ï¿½ï¿½ï¿½ï¿½ Å¬ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 
     [Header("HP")]
     [SerializeField] private Image hpFill;
@@ -25,18 +28,35 @@ public class HUDStatusUI : MonoBehaviour
     [Header("Level")]
     [SerializeField] private TextMeshProUGUI levelText;
 
-    // ===== ¸ñÇ¥°ª(target) =====
+    // ===== ï¿½ï¿½Ç¥ï¿½ï¿½(target) =====
     private float hpTarget;
     private float mpTarget;
     private float expTarget;
+
+    public PlayerCharacterType HudCharacterType => hudCharacterType;
+
+    public void Bind(PlayerStats targetStats)
+    {
+        // [Codex Local HP HUD] NetworkPlayerOwnerê°€ IsOwnerì¸ ë¡œì»¬ ìºë¦­í„°ì˜ ìŠ¤íƒ¯ë§Œ HUDì— ì—°ê²°í•©ë‹ˆë‹¤.
+        if (playerStats != null)
+            playerStats.OnStatChanged -= RefreshTargets;
+
+        playerStats = targetStats;
+
+        if (isActiveAndEnabled && playerStats != null)
+            playerStats.OnStatChanged += RefreshTargets;
+
+        RefreshTargets();
+        ForceApply();
+    }
 
     private void OnEnable()
     {
         if (playerStats != null)
             playerStats.OnStatChanged += RefreshTargets;
 
-        RefreshTargets();  // ¸ñÇ¥°ª °è»ê + ÅØ½ºÆ® °»½Å
-        ForceApply();      // ½ÃÀÛÇÒ ¶© Áï½Ã ¸ÂÃß±â(¾µµ¥¾ø´Â ¾Ö´Ï¸ŞÀÌ¼Ç ¹æÁö)
+        RefreshTargets();  // ï¿½ï¿½Ç¥ï¿½ï¿½ ï¿½ï¿½ï¿½ + ï¿½Ø½ï¿½Æ® ï¿½ï¿½ï¿½ï¿½
+        ForceApply();      // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ß±ï¿½(ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ö´Ï¸ï¿½ï¿½Ì¼ï¿½ ï¿½ï¿½ï¿½ï¿½)
     }
 
     private void OnDisable()
@@ -46,8 +66,8 @@ public class HUDStatusUI : MonoBehaviour
     }
     private void Update()
     {
-        // fillAmount¸¦ ¸ñÇ¥°ªÀ¸·Î ºÎµå·´°Ô ÀÌµ¿
-        float dt = Time.unscaledDeltaTime; // UI´Â º¸Åë unscaled ÃßÃµ(½½·Î¿ì/ÀÏ½ÃÁ¤Áö¿¡µµ ÀÚ¿¬½º·¯¿ò)
+        // fillAmountï¿½ï¿½ ï¿½ï¿½Ç¥ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Îµå·´ï¿½ï¿½ ï¿½Ìµï¿½
+        float dt = Time.unscaledDeltaTime; // UIï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ unscaled ï¿½ï¿½Ãµ(ï¿½ï¿½ï¿½Î¿ï¿½/ï¿½Ï½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ú¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½)
 
         if (hpFill != null)
             hpFill.fillAmount = Mathf.Lerp(hpFill.fillAmount, hpTarget, 1f - Mathf.Exp(-fillSmoothSpeed * dt));
@@ -60,7 +80,7 @@ public class HUDStatusUI : MonoBehaviour
     }
 
     /// <summary>
-    /// ½ºÅÈÀÌ ¹Ù²ğ ¶§ È£Ãâ: "¸ñÇ¥°ª"¸¸ °»½ÅÇÕ´Ï´Ù.
+    /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ù²ï¿½ ï¿½ï¿½ È£ï¿½ï¿½: "ï¿½ï¿½Ç¥ï¿½ï¿½"ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Õ´Ï´ï¿½.
     /// </summary>
     private void RefreshTargets()
     {
@@ -70,7 +90,7 @@ public class HUDStatusUI : MonoBehaviour
         mpTarget = SafeRatio(playerStats.MP, playerStats.MaxMP);
         expTarget = SafeRatio(playerStats.EXP, playerStats.NeedEXP);
 
-        // ÅØ½ºÆ®´Â º¸Åë Áï½Ã °»½Å(¸ŞÀÌÇÃµµ ¼ıÀÚ´Â Áï½Ã ¹Ù²î´Â Æí)
+        // ï¿½Ø½ï¿½Æ®ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½(ï¿½ï¿½ï¿½ï¿½ï¿½Ãµï¿½ ï¿½ï¿½ï¿½Ú´ï¿½ ï¿½ï¿½ï¿½ ï¿½Ù²ï¿½ï¿½ ï¿½ï¿½)
         if (hpText != null) hpText.text = $"{playerStats.HP}/{playerStats.MaxHP}";
         if (mpText != null) mpText.text = $"{playerStats.MP}/{playerStats.MaxMP}";
         if (expText != null) expText.text = $"{playerStats.EXP}/{playerStats.NeedEXP}";
@@ -78,7 +98,7 @@ public class HUDStatusUI : MonoBehaviour
     }
 
     /// <summary>
-    /// ÃÖÃÊ ·Îµå½Ã fillÀ» Áï½Ã ¸ñÇ¥°ªÀ¸·Î ¸ÂÃä´Ï´Ù(½ÃÀÛÇÒ ¶§ ¾µµ¥¾øÀÌ ¾Ö´Ï¸ŞÀÌ¼Ç ¾È ÇÏ°Ô).
+    /// ï¿½ï¿½ï¿½ï¿½ ï¿½Îµï¿½ï¿½ fillï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½Ç¥ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Ï´ï¿½(ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ö´Ï¸ï¿½ï¿½Ì¼ï¿½ ï¿½ï¿½ ï¿½Ï°ï¿½).
     /// </summary>
     private void ForceApply()
     {

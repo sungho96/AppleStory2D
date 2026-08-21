@@ -651,6 +651,9 @@ public class KeyBindingManager : MonoBehaviour
     {
         hostArcherBindings.Clear();
         clientWarriorBindings.Clear();
+        // [Codex GameEntry Fresh Start] Restart 후에는 새 Play 시작과 같은 기본 프로필에서 다시 시작합니다.
+        bindingProfile =
+            HostArcherProfile;
 
 
         if (Instance != null)

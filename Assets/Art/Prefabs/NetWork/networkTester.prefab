@@ -17039,9 +17039,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ShowTopMostFoldoutHeaderGroup: 1
+  characterType: 0
   playerController: {fileID: 7224375001734147463}
   playerAttack: {fileID: 3197061422020926529}
   warriorAttack: {fileID: 0}
+  playerStats: {fileID: 0}
 --- !u!114 &6124801938465720142
 MonoBehaviour:
   m_ObjectHideFlags: 0

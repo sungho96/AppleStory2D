@@ -1,0 +1,1703 @@
+fileFormatVersion: 2
+guid: 1a2504996e215964dac5a91287a46089
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -4037030606670581602
+    second: Ground_Center_B_0
+  - first:
+      213: -8501967759805095701
+    second: Ground_Center_B_1
+  - first:
+      213: -690704301883755466
+    second: Ground_Center_B_2
+  - first:
+      213: -1150891396441064644
+    second: Ground_Center_B_3
+  - first:
+      213: -3449381039417042326
+    second: Ground_Center_B_4
+  - first:
+      213: 5450917219234903990
+    second: Ground_Center_B_5
+  - first:
+      213: -3104208084390935602
+    second: Ground_Center_B_6
+  - first:
+      213: -1500515095418793494
+    second: Ground_Center_B_7
+  - first:
+      213: 8548423954301921908
+    second: Ground_Center_B_8
+  - first:
+      213: 8701512960870347953
+    second: Ground_Center_B_9
+  - first:
+      213: 5548465766740288085
+    second: Ground_Center_B_10
+  - first:
+      213: -2378878819023955458
+    second: Ground_Center_B_11
+  - first:
+      213: 3106181002295137523
+    second: Ground_Center_B_12
+  - first:
+      213: -307958489558880140
+    second: Ground_Center_B_13
+  - first:
+      213: 4275364577991772511
+    second: Ground_Center_B_14
+  - first:
+      213: 2886029671965534387
+    second: Ground_Center_B_15
+  - first:
+      213: 3427806340327395489
+    second: Ground_Center_B_16
+  - first:
+      213: -1172510302860721253
+    second: Ground_Center_B_17
+  - first:
+      213: -3376903817098287296
+    second: Ground_Center_B_18
+  - first:
+      213: -751811275453123816
+    second: Ground_Center_B_19
+  - first:
+      213: 155343875623461047
+    second: Ground_Center_B_20
+  - first:
+      213: -1383630329750741564
+    second: Ground_Center_B_21
+  - first:
+      213: 4961044094775813658
+    second: Ground_Center_B_22
+  - first:
+      213: -9055105421165310218
+    second: Ground_Center_B_23
+  - first:
+      213: -9109063044078186678
+    second: Ground_Center_B_24
+  - first:
+      213: -1398193799195304371
+    second: Ground_Center_B_25
+  - first:
+      213: -7084024799440097239
+    second: Ground_Center_B_26
+  - first:
+      213: -5900490614799236275
+    second: Ground_Center_B_27
+  - first:
+      213: -6501118721564838428
+    second: Ground_Center_B_28
+  - first:
+      213: -1859284747099465720
+    second: Ground_Center_B_29
+  - first:
+      213: 3530279801081034232
+    second: Ground_Center_B_30
+  - first:
+      213: -8542266669298017348
+    second: Ground_Center_B_31
+  - first:
+      213: -2457780811648216948
+    second: Ground_Center_B_32
+  - first:
+      213: -2762906449287779215
+    second: Ground_Center_B_33
+  - first:
+      213: -1648656843392256199
+    second: Ground_Center_B_34
+  - first:
+      213: 1094887750941331651
+    second: Ground_Center_B_35
+  - first:
+      213: -8320476699520972475
+    second: Ground_Center_B_36
+  - first:
+      213: 3641695535012880697
+    second: Ground_Center_B_37
+  - first:
+      213: 766538440015851311
+    second: Ground_Center_B_38
+  - first:
+      213: -3775136177746206519
+    second: Ground_Center_B_39
+  - first:
+      213: -2529245161474254906
+    second: Ground_Center_B_40
+  - first:
+      213: 6853367904320047605
+    second: Ground_Center_B_41
+  - first:
+      213: 4981315542364061213
+    second: Ground_Center_B_42
+  - first:
+      213: 5934503824242869042
+    second: Ground_Center_B_43
+  - first:
+      213: 8746914520735134961
+    second: Ground_Center_B_44
+  - first:
+      213: 2945040306651021389
+    second: Ground_Center_B_45
+  - first:
+      213: -7986633385638942920
+    second: Ground_Center_B_46
+  - first:
+      213: -1436353641965457087
+    second: Ground_Center_B_47
+  - first:
+      213: -3059593612253388837
+    second: Ground_Center_B_48
+  - first:
+      213: -5746407092582185313
+    second: Ground_Center_B_49
+  - first:
+      213: 3401058324351048248
+    second: Ground_Center_B_50
+  - first:
+      213: 1156226552368258667
+    second: Ground_Center_B_51
+  - first:
+      213: 7505575911145446550
+    second: Ground_Center_B_52
+  - first:
+      213: -6181042138508746967
+    second: Ground_Center_B_53
+  - first:
+      213: 8255502853089316615
+    second: Ground_Center_B_54
+  - first:
+      213: -5272395020220442838
+    second: Ground_Center_B_55
+  - first:
+      213: -339390984074256392
+    second: Ground_Center_B_56
+  - first:
+      213: -2103831771175168311
+    second: Ground_Center_B_57
+  - first:
+      213: -8104753659023427116
+    second: Ground_Center_B_58
+  - first:
+      213: 7807924768086437303
+    second: Ground_Center_B_59
+  - first:
+      213: 5546880526883629233
+    second: Ground_Center_B_60
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Ground_Center_B_0
+      rect:
+        serializedVersion: 2
+        x: 40
+        y: 841
+        width: 164
+        height: 84
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e9035066d0699f7c0800000000000000
+      internalID: -4037030606670581602
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Center_B_1
+      rect:
+        serializedVersion: 2
+        x: 207
+        y: 817
+        width: 335
+        height: 381
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: be06ef82e51f20a80800000000000000
+      internalID: -8501967759805095701
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Center_B_2
+      rect:
+        serializedVersion: 2
+        x: 593
+        y: 899
+        width: 220
+        height: 303
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6347261d8102a66f0800000000000000
+      internalID: -690704301883755466
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Center_B_3
+      rect:
+        serializedVersion: 2
+        x: 725
+        y: 901
+        width: 8
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c3bb3146f563700f0800000000000000
+      internalID: -1150891396441064644
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Center_B_4
+      rect:
+        serializedVersion: 2
+        x: 786
+        y: 899
+        width: 13
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a6a549268365120d0800000000000000
+      internalID: -3449381039417042326
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Center_B_5
+      rect:
+        serializedVersion: 2
+        x: 790
+        y: 803
+        width: 121
+        height: 125
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6b77e88a45c85ab40800000000000000
+      internalID: 5450917219234903990
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Center_B_6
+      rect:
+        serializedVersion: 2
+        x: 965
+        y: 763
+        width: 270
+        height: 280
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ec38bfca133abe4d0800000000000000
+      internalID: -3104208084390935602
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Center_B_7
+      rect:
+        serializedVersion: 2
+        x: 149
+        y: 875
+        width: 13
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ae1937588791d2be0800000000000000
+      internalID: -1500515095418793494
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Center_B_8
+      rect:
+        serializedVersion: 2
+        x: 534
+        y: 853
+        width: 20
+        height: 33
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 47a2b918b4a12a670800000000000000
+      internalID: 8548423954301921908
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Center_B_9
+      rect:
+        serializedVersion: 2
+        x: 671
+        y: 853
+        width: 25
+        height: 37
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1b472217febf1c870800000000000000
+      internalID: 8701512960870347953
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Center_B_10
+      rect:
+        serializedVersion: 2
+        x: 723
+        y: 884
+        width: 7
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 55268f2c73c100d40800000000000000
+      internalID: 5548465766740288085
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Center_B_11
+      rect:
+        serializedVersion: 2
+        x: 729
+        y: 875
+        width: 14
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ef9506461568cfed0800000000000000
+      internalID: -2378878819023955458
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Center_B_12
+      rect:
+        serializedVersion: 2
+        x: 504
+        y: 869
+        width: 11
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3f45ed11a2f5b1b20800000000000000
+      internalID: 3106181002295137523
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Center_B_13
+      rect:
+        serializedVersion: 2
+        x: 553
+        y: 841
+        width: 17
+        height: 39
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 470f648a269e9bbf0800000000000000
+      internalID: -307958489558880140
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Center_B_14
+      rect:
+        serializedVersion: 2
+        x: 575
+        y: 819
+        width: 45
+        height: 63
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f59cc7c8e65255b30800000000000000
+      internalID: 4275364577991772511
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Center_B_15
+      rect:
+        serializedVersion: 2
+        x: 627
+        y: 835
+        width: 31
+        height: 37
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3b82eb022bc3d0820800000000000000
+      internalID: 2886029671965534387
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Center_B_16
+      rect:
+        serializedVersion: 2
+        x: 657
+        y: 804
+        width: 37
+        height: 66
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1a0db0a84b3029f20800000000000000
+      internalID: 3427806340327395489
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Center_B_17
+      rect:
+        serializedVersion: 2
+        x: 713
+        y: 857
+        width: 14
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b93408e77186abfe0800000000000000
+      internalID: -1172510302860721253
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Center_B_18
+      rect:
+        serializedVersion: 2
+        x: 729
+        y: 859
+        width: 16
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0472235bed3d221d0800000000000000
+      internalID: -3376903817098287296
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Center_B_19
+      rect:
+        serializedVersion: 2
+        x: 742
+        y: 859
+        width: 9
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 813bb74d0a70195f0800000000000000
+      internalID: -751811275453123816
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Center_B_20
+      rect:
+        serializedVersion: 2
+        x: 1149
+        y: 851
+        width: 20
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7b0a19c8e64e72200800000000000000
+      internalID: 155343875623461047
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Center_B_21
+      rect:
+        serializedVersion: 2
+        x: 649
+        y: 827
+        width: 11
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4cd10cebb8b5ccce0800000000000000
+      internalID: -1383630329750741564
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Center_B_22
+      rect:
+        serializedVersion: 2
+        x: 854
+        y: 835
+        width: 15
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a166928c15b29d440800000000000000
+      internalID: 4961044094775813658
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Center_B_23
+      rect:
+        serializedVersion: 2
+        x: 1109
+        y: 825
+        width: 7
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6fe4abf689dc55280800000000000000
+      internalID: -9055105421165310218
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Center_B_24
+      rect:
+        serializedVersion: 2
+        x: 1125
+        y: 835
+        width: 8
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a4fc41d5c6b169180800000000000000
+      internalID: -9109063044078186678
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Center_B_25
+      rect:
+        serializedVersion: 2
+        x: 46
+        y: 787
+        width: 11
+        height: 37
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d4e5fc7c52e989ce0800000000000000
+      internalID: -1398193799195304371
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Center_B_26
+      rect:
+        serializedVersion: 2
+        x: 1127
+        y: 823
+        width: 10
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 920b0594afc70bd90800000000000000
+      internalID: -7084024799440097239
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Center_B_27
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 759
+        width: 47
+        height: 45
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d438d584c0f3d1ea0800000000000000
+      internalID: -5900490614799236275
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Center_B_28
+      rect:
+        serializedVersion: 2
+        x: 63
+        y: 41
+        width: 1178
+        height: 765
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4e57c7697f267c5a0800000000000000
+      internalID: -6501118721564838428
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Center_B_29
+      rect:
+        serializedVersion: 2
+        x: 536
+        y: 801
+        width: 14
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 80895d89f5e7236e0800000000000000
+      internalID: -1859284747099465720
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Center_B_30
+      rect:
+        serializedVersion: 2
+        x: 1149
+        y: 803
+        width: 18
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8f5fb2d56c21ef030800000000000000
+      internalID: 3530279801081034232
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Center_B_31
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 473
+        width: 65
+        height: 182
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cbb15df19b5c37980800000000000000
+      internalID: -8542266669298017348
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Center_B_32
+      rect:
+        serializedVersion: 2
+        x: 1172
+        y: 547
+        width: 9
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c80dfe9af5534edd0800000000000000
+      internalID: -2457780811648216948
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Center_B_33
+      rect:
+        serializedVersion: 2
+        x: 1244
+        y: 537
+        width: 10
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 17ce09e093f28a9d0800000000000000
+      internalID: -2762906449287779215
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Center_B_34
+      rect:
+        serializedVersion: 2
+        x: 1238
+        y: 537
+        width: 8
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 937761df55bce19e0800000000000000
+      internalID: -1648656843392256199
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Center_B_35
+      rect:
+        serializedVersion: 2
+        x: 1143
+        y: 497
+        width: 18
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3c0d8c7cb92d13f00800000000000000
+      internalID: 1094887750941331651
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Center_B_36
+      rect:
+        serializedVersion: 2
+        x: 1167
+        y: 505
+        width: 6
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 549432b868ab78c80800000000000000
+      internalID: -8320476699520972475
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Center_B_37
+      rect:
+        serializedVersion: 2
+        x: 1172
+        y: 496
+        width: 17
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 931a1986bc6e98230800000000000000
+      internalID: 3641695535012880697
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Center_B_38
+      rect:
+        serializedVersion: 2
+        x: 1141
+        y: 463
+        width: 40
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f2fa3df56aa43aa00800000000000000
+      internalID: 766538440015851311
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Center_B_39
+      rect:
+        serializedVersion: 2
+        x: 127
+        y: 413
+        width: 9
+        height: 23
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9c026bad5a50c9bc0800000000000000
+      internalID: -3775136177746206519
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Center_B_40
+      rect:
+        serializedVersion: 2
+        x: 135
+        y: 422
+        width: 9
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6c793781de056ecd0800000000000000
+      internalID: -2529245161474254906
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Center_B_41
+      rect:
+        serializedVersion: 2
+        x: 1027
+        y: 433
+        width: 17
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5f94f0c5ccd0c1f50800000000000000
+      internalID: 6853367904320047605
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Center_B_42
+      rect:
+        serializedVersion: 2
+        x: 149
+        y: 407
+        width: 15
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d1efdb8f710312540800000000000000
+      internalID: 4981315542364061213
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Center_B_43
+      rect:
+        serializedVersion: 2
+        x: 1099
+        y: 401
+        width: 9
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 233813a29c79b5250800000000000000
+      internalID: 5934503824242869042
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Center_B_44
+      rect:
+        serializedVersion: 2
+        x: 361
+        y: 369
+        width: 8
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1f4bf19d968436970800000000000000
+      internalID: 8746914520735134961
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Center_B_45
+      rect:
+        serializedVersion: 2
+        x: 488
+        y: 367
+        width: 7
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d40442f2e82eed820800000000000000
+      internalID: 2945040306651021389
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Center_B_46
+      rect:
+        serializedVersion: 2
+        x: 699
+        y: 365
+        width: 9
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 83727b13047c92190800000000000000
+      internalID: -7986633385638942920
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Center_B_47
+      rect:
+        serializedVersion: 2
+        x: 908
+        y: 359
+        width: 15
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1417fc609fb011ce0800000000000000
+      internalID: -1436353641965457087
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Center_B_48
+      rect:
+        serializedVersion: 2
+        x: 922
+        y: 355
+        width: 12
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bdf1590f1d32a85d0800000000000000
+      internalID: -3059593612253388837
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Center_B_49
+      rect:
+        serializedVersion: 2
+        x: 999
+        y: 369
+        width: 13
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f968adfe139a040b0800000000000000
+      internalID: -5746407092582185313
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Center_B_50
+      rect:
+        serializedVersion: 2
+        x: 392
+        y: 347
+        width: 19
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 83a5453c68cf23f20800000000000000
+      internalID: 3401058324351048248
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Center_B_51
+      rect:
+        serializedVersion: 2
+        x: 500
+        y: 337
+        width: 21
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b6ed8c56cedbb0010800000000000000
+      internalID: 1156226552368258667
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Center_B_52
+      rect:
+        serializedVersion: 2
+        x: 520
+        y: 340
+        width: 6
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 69c9d826689292860800000000000000
+      internalID: 7505575911145446550
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Center_B_53
+      rect:
+        serializedVersion: 2
+        x: 524
+        y: 347
+        width: 8
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 92f17707ce6883aa0800000000000000
+      internalID: -6181042138508746967
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Center_B_54
+      rect:
+        serializedVersion: 2
+        x: 528
+        y: 351
+        width: 6
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 70fcc98fa10719270800000000000000
+      internalID: 8255502853089316615
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Center_B_55
+      rect:
+        serializedVersion: 2
+        x: 997
+        y: 355
+        width: 7
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a27d838d9a0b4d6b0800000000000000
+      internalID: -5272395020220442838
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Center_B_56
+      rect:
+        serializedVersion: 2
+        x: 1005
+        y: 355
+        width: 7
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8ff984ab2bd3a4bf0800000000000000
+      internalID: -339390984074256392
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Center_B_57
+      rect:
+        serializedVersion: 2
+        x: 374
+        y: 324
+        width: 8
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9c65ce39620bdc2e0800000000000000
+      internalID: -2103831771175168311
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Center_B_58
+      rect:
+        serializedVersion: 2
+        x: 464
+        y: 304
+        width: 9
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4d97cd9ec71268f80800000000000000
+      internalID: -8104753659023427116
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Center_B_59
+      rect:
+        serializedVersion: 2
+        x: 713
+        y: 306
+        width: 12
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7bd24ca55325b5c60800000000000000
+      internalID: 7807924768086437303
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ground_Center_B_60
+      rect:
+        serializedVersion: 2
+        x: 96
+        y: 71
+        width: 12
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1b82e68537a7afc40800000000000000
+      internalID: 5546880526883629233
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      Ground_Center_B_0: -4037030606670581602
+      Ground_Center_B_1: -8501967759805095701
+      Ground_Center_B_10: 5548465766740288085
+      Ground_Center_B_11: -2378878819023955458
+      Ground_Center_B_12: 3106181002295137523
+      Ground_Center_B_13: -307958489558880140
+      Ground_Center_B_14: 4275364577991772511
+      Ground_Center_B_15: 2886029671965534387
+      Ground_Center_B_16: 3427806340327395489
+      Ground_Center_B_17: -1172510302860721253
+      Ground_Center_B_18: -3376903817098287296
+      Ground_Center_B_19: -751811275453123816
+      Ground_Center_B_2: -690704301883755466
+      Ground_Center_B_20: 155343875623461047
+      Ground_Center_B_21: -1383630329750741564
+      Ground_Center_B_22: 4961044094775813658
+      Ground_Center_B_23: -9055105421165310218
+      Ground_Center_B_24: -9109063044078186678
+      Ground_Center_B_25: -1398193799195304371
+      Ground_Center_B_26: -7084024799440097239
+      Ground_Center_B_27: -5900490614799236275
+      Ground_Center_B_28: -6501118721564838428
+      Ground_Center_B_29: -1859284747099465720
+      Ground_Center_B_3: -1150891396441064644
+      Ground_Center_B_30: 3530279801081034232
+      Ground_Center_B_31: -8542266669298017348
+      Ground_Center_B_32: -2457780811648216948
+      Ground_Center_B_33: -2762906449287779215
+      Ground_Center_B_34: -1648656843392256199
+      Ground_Center_B_35: 1094887750941331651
+      Ground_Center_B_36: -8320476699520972475
+      Ground_Center_B_37: 3641695535012880697
+      Ground_Center_B_38: 766538440015851311
+      Ground_Center_B_39: -3775136177746206519
+      Ground_Center_B_4: -3449381039417042326
+      Ground_Center_B_40: -2529245161474254906
+      Ground_Center_B_41: 6853367904320047605
+      Ground_Center_B_42: 4981315542364061213
+      Ground_Center_B_43: 5934503824242869042
+      Ground_Center_B_44: 8746914520735134961
+      Ground_Center_B_45: 2945040306651021389
+      Ground_Center_B_46: -7986633385638942920
+      Ground_Center_B_47: -1436353641965457087
+      Ground_Center_B_48: -3059593612253388837
+      Ground_Center_B_49: -5746407092582185313
+      Ground_Center_B_5: 5450917219234903990
+      Ground_Center_B_50: 3401058324351048248
+      Ground_Center_B_51: 1156226552368258667
+      Ground_Center_B_52: 7505575911145446550
+      Ground_Center_B_53: -6181042138508746967
+      Ground_Center_B_54: 8255502853089316615
+      Ground_Center_B_55: -5272395020220442838
+      Ground_Center_B_56: -339390984074256392
+      Ground_Center_B_57: -2103831771175168311
+      Ground_Center_B_58: -8104753659023427116
+      Ground_Center_B_59: 7807924768086437303
+      Ground_Center_B_6: -3104208084390935602
+      Ground_Center_B_60: 5546880526883629233
+      Ground_Center_B_7: -1500515095418793494
+      Ground_Center_B_8: 8548423954301921908
+      Ground_Center_B_9: 8701512960870347953
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
