@@ -714,55 +714,47 @@ public class SkillPanelScrollController : MonoBehaviour
 
     private bool IsLocalWarriorPlayer()
     {
+        if (GameEntryCharacterSelectionStore.LocalSelectedCharacter !=
+            PlayerCharacterType.None)
+        {
+            // [Codex Character Skill Sync] 캐릭터 선택창에서 고른 직업을 스킬창 표시 기준으로 우선 사용합니다.
+            return GameEntryCharacterSelectionStore.LocalSelectedCharacter ==
+                   PlayerCharacterType.Warrior;
+        }
+
+
+        /*
+         * 보스씬에서는 선택창 오브젝트가 사라진 뒤에도
+         * 내 PlayerObject의 실제 컴포넌트로 직업을 다시 판정합니다.
+         */
+
         NetworkManager manager =
             NetworkManager.Singleton;
 
 
-        /*
-         * 현재 게임 규칙:
-         *
-         * Host   = Archer
-         * Client = Warrior
-         *
-         * 따라서 WarriorDownStrike2D 같은 컴포넌트 존재 여부로
-         * 직업을 판단하지 않습니다.
-         *
-         * 네트워크 역할만 봅니다.
-         */
-
-
         if (manager != null &&
-            manager.IsListening)
+            manager.LocalClient != null &&
+            manager.LocalClient.PlayerObject != null)
         {
-            // 순수 Client만 Warrior
-            if (manager.IsClient &&
-                !manager.IsServer)
+            NetworkObject localPlayer =
+                manager.LocalClient.PlayerObject;
+
+            // [Codex Character Skill Sync] Host가 Warrior를 골라도 로컬 Warrior 컴포넌트를 보고 워리어 스킬을 표시합니다.
+            if (localPlayer.GetComponentInChildren<WarriorAttack2D>(true) != null ||
+                localPlayer.GetComponentInChildren<WarriorDownStrike2D>(true) != null ||
+                localPlayer.GetComponentInChildren<WarriorShieldBlock2D>(true) != null)
             {
                 return true;
             }
 
-
-            // Host / Server는 Archer
-            if (manager.IsServer)
+            if (localPlayer.GetComponentInChildren<PlayerAttack2D>(true) != null)
             {
                 return false;
             }
         }
 
 
-        /*
-         * 네트워크가 아직 Listening 전인 경우.
-         *
-         * GameEntry에서는 KeyBindingManager에서 이미
-         * HostArcher / ClientWarrior 프로필을 지정하는 구조입니다.
-         *
-         * 하지만 여기에서는 NetworkManager 연결 전에는
-         * 안전하게 Archer를 기본값으로 사용합니다.
-         *
-         * 실제 ReadyPanel은 네트워크 접속 후 열리므로
-         * 정상 플로우에서는 위 IsListening 분기를 타야 합니다.
-         */
-
+        // 아직 선택/스폰 정보가 없을 때만 기본값으로 Archer를 사용합니다.
         return false;
     }
 

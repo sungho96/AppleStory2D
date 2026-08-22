@@ -673,6 +673,19 @@ public class KeyBindingManager : MonoBehaviour
 
     private static void ResolveProfileFromNetwork()
     {
+        PlayerCharacterType localCharacter =
+            ResolveLocalCharacterType();
+
+        // [Codex Character Skill Sync] Host/Client 역할이 아니라 실제 선택한 캐릭터 기준으로 키 프로필을 고릅니다.
+        if (localCharacter !=
+            PlayerCharacterType.None)
+        {
+            SetBindingProfileForCharacter(
+                localCharacter);
+
+            return;
+        }
+
         if (GameEntryCharacterSelectionStore.LocalSelectedCharacter !=
             PlayerCharacterType.None)
         {
@@ -715,6 +728,44 @@ public class KeyBindingManager : MonoBehaviour
             bindingProfile =
                 HostArcherProfile;
         }
+    }
+
+
+    private static PlayerCharacterType ResolveLocalCharacterType()
+    {
+        if (GameEntryCharacterSelectionStore.LocalSelectedCharacter !=
+            PlayerCharacterType.None)
+        {
+            return GameEntryCharacterSelectionStore.LocalSelectedCharacter;
+        }
+
+        NetworkManager manager =
+            NetworkManager.Singleton;
+
+        if (manager == null ||
+            manager.LocalClient == null ||
+            manager.LocalClient.PlayerObject == null)
+        {
+            return PlayerCharacterType.None;
+        }
+
+        NetworkObject localPlayer =
+            manager.LocalClient.PlayerObject;
+
+        // [Codex Character Skill Sync] 보스씬에서는 스폰된 내 PlayerObject의 컴포넌트로 선택 캐릭터를 다시 확인합니다.
+        if (localPlayer.GetComponentInChildren<WarriorAttack2D>(true) != null ||
+            localPlayer.GetComponentInChildren<WarriorDownStrike2D>(true) != null ||
+            localPlayer.GetComponentInChildren<WarriorShieldBlock2D>(true) != null)
+        {
+            return PlayerCharacterType.Warrior;
+        }
+
+        if (localPlayer.GetComponentInChildren<PlayerAttack2D>(true) != null)
+        {
+            return PlayerCharacterType.Archer;
+        }
+
+        return PlayerCharacterType.None;
     }
 
 
