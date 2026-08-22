@@ -7,7 +7,7 @@ public class KeyDropSlot : MonoBehaviour,
     IPointerEnterHandler,
     IPointerExitHandler
 {
-    private const float AssignedIconSize = 62f;
+    private const float AssignedIconSize = 66f;
 
     [SerializeField] private string keyName = "Q";
     [SerializeField] private Image assignedSkillIcon;
@@ -161,8 +161,13 @@ public class KeyDropSlot : MonoBehaviour,
                 continue;
             }
 
+            // [Codex Skill Select Category Limit]
+            // 같은 카테고리의 기존 선택은 화면에서도 바로 자동 해제합니다.
             if (slot.assignedSkillType ==
-                draggedSkill.SkillType)
+                    draggedSkill.SkillType ||
+                KeyBindingManager.IsSameSkillCategory(
+                    slot.assignedSkillType,
+                    draggedSkill.SkillType))
             {
                 slot.ClearAssignedSkill();
             }
@@ -171,11 +176,16 @@ public class KeyDropSlot : MonoBehaviour,
         assignedSkillType =
             draggedSkill.SkillType;
 
+        ClearAssignedIconSprite();
+
         assignedSkillIcon.sprite =
-            draggedSkill.SkillIcon;
+            CreateAssignedIconSprite(
+                draggedSkill.SkillIcon);
 
         assignedSkillIcon.preserveAspect =
-            true;
+            false;
+        assignedSkillIcon.type =
+            Image.Type.Simple;
 
         assignedSkillIcon.gameObject
             .SetActive(true);
@@ -300,11 +310,16 @@ public class KeyDropSlot : MonoBehaviour,
                 continue;
             }
 
+            ClearAssignedIconSprite();
+
             assignedSkillIcon.sprite =
-                skill.SkillIcon;
+                CreateAssignedIconSprite(
+                    skill.SkillIcon);
 
             assignedSkillIcon.preserveAspect =
-                true;
+                false;
+            assignedSkillIcon.type =
+                Image.Type.Simple;
 
             assignedSkillIcon.gameObject
                 .SetActive(true);
@@ -351,11 +366,51 @@ public class KeyDropSlot : MonoBehaviour,
             return;
         }
 
-        assignedSkillIcon.sprite =
-            null;
+        ClearAssignedIconSprite();
 
         assignedSkillIcon.gameObject
             .SetActive(false);
+    }
+
+    private Sprite CreateAssignedIconSprite(
+        Sprite sourceSprite)
+    {
+        if (sourceSprite == null)
+        {
+            return null;
+        }
+
+        // [Codex Assigned Icon Copy]
+        // 키보드 슬롯 아이콘은 스킬 패널 원본 Image와 독립된 런타임 Sprite로 표시합니다.
+        Sprite copiedSprite =
+            Instantiate(sourceSprite);
+
+        copiedSprite.name =
+            sourceSprite.name + "_KeySlotCopy";
+
+        return copiedSprite;
+    }
+
+    private void ClearAssignedIconSprite()
+    {
+        if (assignedSkillIcon == null ||
+            assignedSkillIcon.sprite == null)
+        {
+            return;
+        }
+
+        Sprite previousSprite =
+            assignedSkillIcon.sprite;
+
+        assignedSkillIcon.sprite =
+            null;
+
+        if (previousSprite.name.EndsWith(
+                "_KeySlotCopy",
+                System.StringComparison.Ordinal))
+        {
+            Destroy(previousSprite);
+        }
     }
 
 
@@ -439,7 +494,9 @@ public class KeyDropSlot : MonoBehaviour,
             false;
 
         assignedSkillIcon.preserveAspect =
-            true;
+            false;
+        assignedSkillIcon.type =
+            Image.Type.Simple;
 
         assignedSkillIcon.sprite =
             null;
@@ -482,6 +539,8 @@ public class KeyDropSlot : MonoBehaviour,
             Vector2.one * AssignedIconSize;
 
         assignedSkillIcon.preserveAspect =
-            true;
+            false;
+        assignedSkillIcon.type =
+            Image.Type.Simple;
     }
 }

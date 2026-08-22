@@ -6897,6 +6897,8 @@ MonoBehaviour:
   animator: {fileID: 1545179870754946024}
   playerController: {fileID: 830100000000000002}
   playerHealth: {fileID: 830100000000000007}
+  playerLadder: {fileID: 0}
+  playerRigidbody: {fileID: 0}
   fallbackKey: 0
   damage: 35
   cooldown: 1.4
@@ -6905,6 +6907,8 @@ MonoBehaviour:
   enemyMask:
     serializedVersion: 2
     m_Bits: 8
+  hopVelocity: 7.5
+  slamVelocity: -13
   downStrikeClip: {fileID: 7400000, guid: 4b60454a97290ed42b647d8ca31b85e8, type: 2}
   directClipSpeed: 1
   downStrikeStateName: downstrike

@@ -59,6 +59,7 @@ public class GameEntryNetworkConnectionController : MonoBehaviour
     private const string GoblinBossKeySettingResourcePath = "UI/GoblinBoss_KeySettingUI";
     private const string WarriorDownStrikeIconPath = "Assets/Art/UI/KeySetting/Downstrike.png";
     private const string WarriorShieldBlockIconPath = "Assets/Art/UI/KeySetting/Shiled.png";
+    private const string NotoSansKRSemiBoldSdfPath = "Assets/Fonts/static/NotoSansKR-SemiBold SDF.asset";
     private const string CharacterSelectBackgroundPath = "Assets/Art/UI/CharacterSelect/CharacterSelect_Background.png";
     private const string CharacterSelectTitlePath = "Assets/Art/UI/CharacterSelect/CharacterSelect_Title.png";
     private const string ArcherCardPath = "Assets/Art/UI/CharacterSelect/ArcherCard.png";
@@ -613,9 +614,12 @@ public class GameEntryNetworkConnectionController : MonoBehaviour
         TextMeshProUGUI readyStatus = panel.transform.Find("ReadyStatus")?.GetComponent<TextMeshProUGUI>();
         if (readyStatus == null)
         {
-            readyStatus = CreateReadyText("ReadyStatus", panel.transform, "준비 완료 버튼을 눌러주세요", 25f, new Vector2(0f, -315f));
+            readyStatus = CreateReadyText("ReadyStatus", panel.transform, "", 25f, new Vector2(0f, -315f));
             readyStatus.color = new Color(1f, 0.92f, 0.62f, 1f);
         }
+
+        TextMeshProUGUI skillSelectionStatus =
+            EnsureSkillSelectionStatusText(panel.transform, keySettingRoot.transform);
 
         Button readyButton = panel.transform.Find("ReadyCompleteButton")?.GetComponent<Button>();
         if (readyButton == null)
@@ -624,7 +628,81 @@ public class GameEntryNetworkConnectionController : MonoBehaviour
         GameEntryReadyNetworkController readyController = panel.GetComponent<GameEntryReadyNetworkController>();
         if (readyController == null)
             readyController = panel.AddComponent<GameEntryReadyNetworkController>();
-        readyController.Initialize(readyButton, readyStatus);
+        readyController.Initialize(readyButton, readyStatus, skillSelectionStatus);
+    }
+
+    private TextMeshProUGUI EnsureSkillSelectionStatusText(
+        Transform panelRoot,
+        Transform keySettingRoot)
+    {
+        Transform keyboardPanel =
+            FindChildRecursive(keySettingRoot, "KeyboardPanel");
+
+        Transform parent =
+            keyboardPanel != null ? keyboardPanel : keySettingRoot;
+
+        TextMeshProUGUI skillSelectionStatus =
+            FindChildRecursive(parent, "SkillSelectionStatus")?.GetComponent<TextMeshProUGUI>();
+
+        bool createdStatusText = false;
+
+        if (skillSelectionStatus == null)
+        {
+            skillSelectionStatus =
+                panelRoot.Find("SkillSelectionStatus")?.GetComponent<TextMeshProUGUI>();
+        }
+
+        if (skillSelectionStatus == null)
+        {
+            // [Codex Skill Select Required Count] 키보드 아래에서 실제 선택 완료 수를 보여줍니다.
+            GameObject textObject = new GameObject(
+                "SkillSelectionStatus",
+                typeof(RectTransform),
+                typeof(CanvasRenderer),
+                typeof(TextMeshProUGUI));
+
+            textObject.layer = gameObject.layer;
+            textObject.transform.SetParent(parent, false);
+
+            skillSelectionStatus =
+                textObject.GetComponent<TextMeshProUGUI>();
+
+            createdStatusText =
+                true;
+        }
+        else if (skillSelectionStatus.transform.parent != parent)
+        {
+            skillSelectionStatus.transform.SetParent(parent, false);
+            createdStatusText =
+                true;
+        }
+
+        if (createdStatusText)
+        {
+            // [Codex Scene Editable UI] 새로 만든 경우에만 기본 배치를 잡고, 이후 씬 수정값은 덮어쓰지 않습니다.
+            RectTransform textRect =
+                skillSelectionStatus.GetComponent<RectTransform>();
+
+            SetCentered(
+                textRect,
+                new Vector2(520f, 42f),
+                new Vector2(0f, -275f));
+
+            skillSelectionStatus.text =
+                "버프 스킬 0/1   공격스킬 0/1";
+            skillSelectionStatus.font =
+                statusFont;
+            skillSelectionStatus.fontSize =
+                21f;
+            skillSelectionStatus.alignment =
+                TextAlignmentOptions.Center;
+            skillSelectionStatus.raycastTarget =
+                false;
+            skillSelectionStatus.color =
+                new Color(1f, 0.92f, 0.62f, 1f);
+        }
+
+        return skillSelectionStatus;
     }
 
     private TextMeshProUGUI CreateReadyText(string objectName, Transform parent, string text, float fontSize, Vector2 position)
@@ -878,6 +956,8 @@ public class GameEntryNetworkConnectionController : MonoBehaviour
     private void LoadReadySpritesInEditor()
     {
 #if UNITY_EDITOR
+        // [Codex Skill Select Font] Ready/Skill Select 안내 글씨는 NotoSansKR-SemiBold SDF를 우선 사용합니다.
+        statusFont ??= AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(NotoSansKRSemiBoldSdfPath);
         readyPanelFrameSprite ??= LoadSpriteInEditor(ReadyPanelFramePath);
         skillKeySetupTitleSprite ??= LoadSpriteInEditor(SkillKeySetupTitlePath);
         readyCompleteButtonSprite ??= LoadSpriteInEditor(ReadyCompleteButtonPath);

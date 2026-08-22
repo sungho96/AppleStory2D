@@ -16,6 +16,7 @@ public class SpeedBuffController : MonoBehaviour
     [Header("Player")]
     [SerializeField] private PlayerMovement2D playerMovement;
     [SerializeField] private PlayerAttack2D playerAttack;
+    [SerializeField] private WarriorAttack2D warriorAttack;
 
     [Header("Move Speed Buff UI")]
     [SerializeField] private GameObject speedBuffIcon;
@@ -48,6 +49,9 @@ public class SpeedBuffController : MonoBehaviour
 
     private void Awake()
     {
+        // [Codex 캐릭터 선택 대응] 선택 후 스폰된 플레이어 프리팹 안에서 필요한 참조를 자동으로 보정합니다.
+        ResolveMissingPlayerRefs();
+
         if (speedBuffIcon !=null)
         {
             speedBuffIcon.SetActive(false);
@@ -63,19 +67,78 @@ public class SpeedBuffController : MonoBehaviour
         if (moveSpeedVisualFeedback == null)
             moveSpeedVisualFeedback = gameObject.AddComponent<SpeedBuffVisualFeedback>();
 
-        moveSpeedVisualFeedback.Initialize(
-            playerMovement != null ? playerMovement.transform : null,
-            speedBuffIcon);
-
         // [공격속도 버프 연출 추가] 공속 아이콘과 플레이어 스프라이트를 연출 대상에 연결합니다.
         if (attackSpeedVisualFeedback == null)
             attackSpeedVisualFeedback = GetComponent<AttackSpeedBuffVisualFeedback>();
         if (attackSpeedVisualFeedback == null)
             attackSpeedVisualFeedback = gameObject.AddComponent<AttackSpeedBuffVisualFeedback>();
 
-        attackSpeedVisualFeedback.Initialize(
-            playerAttack != null ? playerAttack.transform : null,
-            attackSpeedBuffIcon);
+        InitializeVisualFeedback();
+    }
+
+    public void BindPlayerTargets(
+        PlayerMovement2D movement,
+        PlayerAttack2D attack,
+        WarriorAttack2D warriorAttackTarget)
+    {
+        // [Codex 캐릭터 선택 대응] 씬의 HUD 버프 컨트롤러가 선택 후 스폰된 로컬 플레이어를 대상으로 쓰게 합니다.
+        if (movement != null)
+            playerMovement = movement;
+
+        if (attack != null)
+            playerAttack = attack;
+
+        if (warriorAttackTarget != null)
+            warriorAttack = warriorAttackTarget;
+
+        if (animationManager == null)
+        {
+            Transform target =
+                playerMovement != null ? playerMovement.transform :
+                playerAttack != null ? playerAttack.transform :
+                warriorAttack != null ? warriorAttack.transform :
+                null;
+
+            if (target != null)
+                animationManager = target.GetComponentInChildren<AnimationManager>(true);
+        }
+
+        ResolveMissingPlayerRefs();
+        InitializeVisualFeedback();
+    }
+
+    private void ResolveMissingPlayerRefs()
+    {
+        if (playerMovement == null)
+            playerMovement = GetComponent<PlayerMovement2D>();
+
+        if (playerAttack == null)
+            playerAttack = GetComponent<PlayerAttack2D>();
+
+        if (warriorAttack == null)
+            warriorAttack = GetComponent<WarriorAttack2D>();
+
+        if (animationManager == null)
+            animationManager = GetComponentInChildren<AnimationManager>(true);
+    }
+
+    private void InitializeVisualFeedback()
+    {
+        if (moveSpeedVisualFeedback != null)
+        {
+            moveSpeedVisualFeedback.Initialize(
+                playerMovement != null ? playerMovement.transform : null,
+                speedBuffIcon);
+        }
+
+        if (attackSpeedVisualFeedback != null)
+        {
+            attackSpeedVisualFeedback.Initialize(
+                playerAttack != null ? playerAttack.transform :
+                warriorAttack != null ? warriorAttack.transform :
+                null,
+                attackSpeedBuffIcon);
+        }
     }
 
     /// <summary>
@@ -106,9 +169,9 @@ public class SpeedBuffController : MonoBehaviour
     /// </summary>
     public void UseAttackSpeedBuff()
     {
-        if(playerAttack == null)
+        if(playerAttack == null && warriorAttack == null)
         {
-            Debug.LogWarning("PlayerAttack2D가 연결되지 않았습니다.");
+            Debug.LogWarning("공격속도 버프 대상 공격 스크립트가 연결되지 않았습니다.");
             return;
         }
 
@@ -185,8 +248,12 @@ public class SpeedBuffController : MonoBehaviour
 
         animationManager?.PlayAttackSpeedBuff();
 
-        // [공격속도 버프 오류 수정] 이동속도가 아니라 실제 공격 대기시간 배율에 적용합니다.
-        playerAttack.SetAttackSpeedMultiplier(attackSpeedMultiplier);
+        // [공격속도 버프 캐릭터 선택 대응] 아처/워리어 중 현재 로컬 캐릭터의 공격 스크립트에만 적용합니다.
+        if (playerAttack != null)
+            playerAttack.SetAttackSpeedMultiplier(attackSpeedMultiplier);
+
+        if (warriorAttack != null)
+            warriorAttack.SetAttackSpeedMultiplier(attackSpeedMultiplier);
 
         // [공격속도 버프 연출 추가] 발동 플래시와 상단 아이콘 모션을 시작합니다.
         attackSpeedVisualFeedback?.PlayStart();
@@ -212,7 +279,11 @@ public class SpeedBuffController : MonoBehaviour
 
             yield return null;
         }
-        playerAttack.ResetAttackSpeedMultiplier();
+        if (playerAttack != null)
+            playerAttack.ResetAttackSpeedMultiplier();
+
+        if (warriorAttack != null)
+            warriorAttack.ResetAttackSpeedMultiplier();
 
         attackSpeedVisualFeedback?.PlayEnd();
 
@@ -242,6 +313,11 @@ public class SpeedBuffController : MonoBehaviour
         if (playerAttack != null)
         {
             playerAttack.ResetAttackSpeedMultiplier();
+        }
+
+        if (warriorAttack != null)
+        {
+            warriorAttack.ResetAttackSpeedMultiplier();
         }
     }
 }

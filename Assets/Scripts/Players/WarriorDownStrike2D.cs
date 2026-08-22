@@ -10,6 +10,8 @@ public class WarriorDownStrike2D : MonoBehaviour
     [SerializeField] private Animator animator;
     [SerializeField] private PlayerController2D playerController;
     [SerializeField] private PlayerHealth2D playerHealth;
+    [SerializeField] private PlayerLadder2D playerLadder;
+    [SerializeField] private Rigidbody2D playerRigidbody;
 
     [Header("Skill")]
     [SerializeField] private KeyCode fallbackKey = KeyCode.None;
@@ -18,6 +20,10 @@ public class WarriorDownStrike2D : MonoBehaviour
     [SerializeField] private Vector2 hitBoxSize = new Vector2(1.55f, 1f);
     [SerializeField] private Vector2 hitBoxOffset = new Vector2(0.85f, 0.05f);
     [SerializeField] private LayerMask enemyMask;
+
+    [Header("Down Strike Motion")]
+    [SerializeField] private float hopVelocity = 7.5f;
+    [SerializeField] private float slamVelocity = -13f;
 
     [Header("Animator Blend")]
     [SerializeField] private AnimationClip downStrikeClip;
@@ -43,6 +49,10 @@ public class WarriorDownStrike2D : MonoBehaviour
             playerController = GetComponent<PlayerController2D>();
         if (playerHealth == null)
             playerHealth = GetComponent<PlayerHealth2D>();
+        if (playerLadder == null)
+            playerLadder = GetComponent<PlayerLadder2D>();
+        if (playerRigidbody == null)
+            playerRigidbody = GetComponent<Rigidbody2D>();
     }
 
     private void Update()
@@ -68,16 +78,45 @@ public class WarriorDownStrike2D : MonoBehaviour
     {
         isUsingSkill = true;
 
+        StartDownStrikeHop();
         PlayDownStrike();
 
         // [Codex Warrior DownStrike 1st] 새로 만든 downstrike 상태를 처음부터 끝까지 한 번 재생하고, 중간 타이밍에만 판정을 넣습니다.
         yield return WaitForDownStrikeHitTiming();
 
+        ForceDownStrikeFall();
         ApplyDownStrikeHit();
         yield return WaitForDownStrikeAnimationEnd();
 
         nextUseTime = Time.time + cooldown;
         isUsingSkill = false;
+    }
+
+    private void StartDownStrikeHop()
+    {
+        if (playerRigidbody == null)
+            return;
+
+        if (playerLadder != null && playerLadder.IsClimbing)
+            return;
+
+        if (playerLadder != null && !playerLadder.IsGrounded)
+            return;
+
+        // [Codex Warrior DownStrike Hop] 땅에서 바로 내려찍지 않고, 스킬 시작 순간 살짝 떠오르게 합니다.
+        playerRigidbody.linearVelocity = new Vector2(playerRigidbody.linearVelocity.x, hopVelocity);
+    }
+
+    private void ForceDownStrikeFall()
+    {
+        if (playerRigidbody == null)
+            return;
+
+        if (playerLadder != null && playerLadder.IsClimbing)
+            return;
+
+        // [Codex Warrior DownStrike Hop] 타격 타이밍에는 아래 방향 속도를 줘서 내려찍는 느낌을 만듭니다.
+        playerRigidbody.linearVelocity = new Vector2(playerRigidbody.linearVelocity.x, slamVelocity);
     }
 
     private void PlayDownStrike()

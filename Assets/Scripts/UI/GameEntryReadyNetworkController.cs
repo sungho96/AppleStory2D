@@ -13,6 +13,7 @@ public class GameEntryReadyNetworkController : MonoBehaviour
 
     [SerializeField] private Button readyButton;
     [SerializeField] private TextMeshProUGUI readyStatusText;
+    [SerializeField] private TextMeshProUGUI skillSelectionStatusText;
     [SerializeField] private float fadeOutDuration = 0.75f;
     [SerializeField] private string bossNetworkSceneName = "GoblinBoss_Network";
 
@@ -21,6 +22,11 @@ public class GameEntryReadyNetworkController : MonoBehaviour
     private bool isLocalReady;
     private bool messageRegistered;
     private bool transitionStarted;
+
+    private void Update()
+    {
+        RefreshSkillSelectionStatus();
+    }
 
     private void OnEnable()
     {
@@ -44,15 +50,37 @@ public class GameEntryReadyNetworkController : MonoBehaviour
         UnregisterNetworkMessage();
     }
 
-    public void Initialize(Button button, TextMeshProUGUI statusText)
+    public void Initialize(
+        Button button,
+        TextMeshProUGUI statusText,
+        TextMeshProUGUI selectionStatusText = null)
     {
         readyButton = button;
         readyStatusText = statusText;
+        skillSelectionStatusText = selectionStatusText;
         RefreshStatus();
+        RefreshSkillSelectionStatus();
     }
 
     private void ToggleLocalReady()
     {
+        if (!isLocalReady &&
+            !KeyBindingManager.HasRequiredSkillSelection())
+        {
+            // [Codex Ready Skill Requirement] Active와 Buff가 각각 1개일 때만 다음 단계로 진행합니다.
+            RefreshSkillSelectionStatus();
+
+            if (readyStatusText != null)
+            {
+                readyStatusText.text =
+                    "버프 스킬 1개와 공격 스킬 1개를 모두 키에 배치해야 준비할 수 있습니다.";
+                readyStatusText.color =
+                    new Color(1f, 0.55f, 0.42f, 1f);
+            }
+
+            return;
+        }
+
         isLocalReady = !isLocalReady;
         RegisterNetworkMessage();
 
@@ -170,10 +198,28 @@ public class GameEntryReadyNetworkController : MonoBehaviour
         string countText = readyCount >= 0 && totalCount > 0
             ? $" ({readyCount}/{totalCount})"
             : "";
-        readyStatusText.text = isLocalReady ? $"내 준비 완료 - 상대를 기다리는 중{countText}" : $"준비 완료 버튼을 눌러주세요{countText}";
+        readyStatusText.text = isLocalReady ? $"내 준비 완료 - 상대를 기다리는 중{countText}" : "";
         readyStatusText.color = isLocalReady
-            ? new Color(0.78f, 0.92f, 1f, 1f)
+            ? new Color32(65, 75, 173, 255)
             : new Color(1f, 0.92f, 0.62f, 1f);
+    }
+
+    private void RefreshSkillSelectionStatus()
+    {
+        if (skillSelectionStatusText == null)
+        {
+            return;
+        }
+
+        int buffCount =
+            KeyBindingManager.GetSelectedBuffSkillCount();
+
+        int activeCount =
+            KeyBindingManager.GetSelectedActiveSkillCount();
+
+        skillSelectionStatusText.text =
+            $"버프 스킬 {buffCount}/1   공격스킬 {activeCount}/1";
+
     }
 
     private void BeginBossSceneTransition()

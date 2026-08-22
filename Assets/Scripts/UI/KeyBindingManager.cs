@@ -13,6 +13,13 @@ public enum KeySettingSkillType
     WarriorShieldBlock
 }
 
+public enum KeySettingSkillCategory
+{
+    None,
+    Buff,
+    Active
+}
+
 public class KeyBindingManager : MonoBehaviour
 {
     public static KeyBindingManager Instance { get; private set; }
@@ -374,7 +381,8 @@ public class KeyBindingManager : MonoBehaviour
 
 
         // =====================================================
-        // 같은 스킬이 다른 키에 있으면 제거
+        // [Codex Skill Select Category Limit]
+        // 같은 카테고리는 1개만 남기고 기존 선택을 자동 해제합니다.
         // =====================================================
 
         List<KeyCode> duplicateKeys =
@@ -385,8 +393,9 @@ public class KeyBindingManager : MonoBehaviour
             KeyValuePair<KeyCode, KeySettingSkillType> pair
             in profileBindings)
         {
-            if (pair.Value ==
-                    skillType &&
+            if ((pair.Value ==
+                    skillType ||
+                 IsSameSkillCategory(pair.Value, skillType)) &&
                 pair.Key !=
                     keyCode)
             {
@@ -492,7 +501,7 @@ public class KeyBindingManager : MonoBehaviour
                 GetCurrentProfileBindings();
 
 
-        // 같은 스킬의 기존 키 제거
+        // [Codex Skill Select Category Limit] 같은 스킬 또는 같은 카테고리의 기존 키 제거
         List<KeyCode> duplicateKeys =
             new List<KeyCode>();
 
@@ -501,8 +510,9 @@ public class KeyBindingManager : MonoBehaviour
             KeyValuePair<KeyCode, KeySettingSkillType> pair
             in profileBindings)
         {
-            if (pair.Value ==
-                    skillType &&
+            if ((pair.Value ==
+                    skillType ||
+                 IsSameSkillCategory(pair.Value, skillType)) &&
                 pair.Key !=
                     keyCode)
             {
@@ -611,6 +621,89 @@ public class KeyBindingManager : MonoBehaviour
 
         return skillType !=
                KeySettingSkillType.None;
+    }
+
+
+    // =========================================================
+    // [Codex Skill Select Required Count]
+    // Skill Select는 Buff 1개, Active 1개만 유효한 완료 상태입니다.
+    // =========================================================
+
+    public static bool HasRequiredSkillSelection()
+    {
+        return GetSelectedBuffSkillCount() == 1 &&
+               GetSelectedActiveSkillCount() == 1;
+    }
+
+    public static int GetSelectedBuffSkillCount()
+    {
+        return GetSelectedSkillCount(
+            KeySettingSkillCategory.Buff);
+    }
+
+    public static int GetSelectedActiveSkillCount()
+    {
+        return GetSelectedSkillCount(
+            KeySettingSkillCategory.Active);
+    }
+
+    public static KeySettingSkillCategory GetSkillCategory(
+        KeySettingSkillType skillType)
+    {
+        switch (skillType)
+        {
+            case KeySettingSkillType.MoveSpeedBuff:
+            case KeySettingSkillType.AttackSpeedBuff:
+                return KeySettingSkillCategory.Buff;
+
+            case KeySettingSkillType.PowerShot:
+            case KeySettingSkillType.RapidVolley:
+            case KeySettingSkillType.WarriorDownStrike:
+            case KeySettingSkillType.WarriorShieldBlock:
+                return KeySettingSkillCategory.Active;
+
+            default:
+                return KeySettingSkillCategory.None;
+        }
+    }
+
+    public static bool IsSameSkillCategory(
+        KeySettingSkillType left,
+        KeySettingSkillType right)
+    {
+        KeySettingSkillCategory leftCategory =
+            GetSkillCategory(left);
+
+        return leftCategory != KeySettingSkillCategory.None &&
+               leftCategory == GetSkillCategory(right);
+    }
+
+    private static int GetSelectedSkillCount(
+        KeySettingSkillCategory category)
+    {
+        if (category == KeySettingSkillCategory.None)
+        {
+            return 0;
+        }
+
+        Dictionary<KeyCode, KeySettingSkillType>
+            profileBindings =
+                GetCurrentProfileBindings();
+
+        int count = 0;
+
+        foreach (
+            KeyValuePair<KeyCode, KeySettingSkillType> pair
+            in profileBindings)
+        {
+            if (GetSkillCategory(pair.Value) ==
+                category)
+            {
+                count++;
+            }
+        }
+
+        return count;
     }
 
 
@@ -897,7 +990,7 @@ public class KeyBindingManager : MonoBehaviour
 
     private void EnsurePlayerAttack()
     {
-        if (playerAttack != null)
+        if (IsLocalPlayerComponent(playerAttack))
         {
             return;
         }
@@ -910,7 +1003,7 @@ public class KeyBindingManager : MonoBehaviour
 
     private void EnsureWarriorSkills()
     {
-        if (warriorDownStrike == null)
+        if (!IsLocalPlayerComponent(warriorDownStrike))
         {
             warriorDownStrike =
                 FindLocalPlayerComponent<
@@ -918,7 +1011,7 @@ public class KeyBindingManager : MonoBehaviour
         }
 
 
-        if (warriorShieldBlock == null)
+        if (!IsLocalPlayerComponent(warriorShieldBlock))
         {
             warriorShieldBlock =
                 FindLocalPlayerComponent<
@@ -929,8 +1022,25 @@ public class KeyBindingManager : MonoBehaviour
 
     private void EnsureSpeedBuffController()
     {
-        if (speedBuffController != null)
+        PlayerMovement2D localMovement =
+            FindLocalPlayerComponent<
+                PlayerMovement2D>();
+
+        PlayerAttack2D localAttack =
+            FindLocalPlayerComponent<
+                PlayerAttack2D>();
+
+        WarriorAttack2D localWarriorAttack =
+            FindLocalPlayerComponent<
+                WarriorAttack2D>();
+
+        if (IsLocalPlayerComponent(speedBuffController))
         {
+            speedBuffController.BindPlayerTargets(
+                localMovement,
+                localAttack,
+                localWarriorAttack);
+
             return;
         }
 
@@ -938,6 +1048,32 @@ public class KeyBindingManager : MonoBehaviour
         speedBuffController =
             FindLocalPlayerComponent<
                 SpeedBuffController>();
+
+        if (speedBuffController != null)
+        {
+            speedBuffController.BindPlayerTargets(
+                localMovement,
+                localAttack,
+                localWarriorAttack);
+
+            return;
+        }
+
+        if (speedBuffController == null)
+        {
+            if (localMovement != null)
+            {
+                // [Codex 캐릭터 선택 대응] 워리어처럼 프리팹에 버프 컨트롤러가 없는 캐릭터도 로컬 플레이어에만 런타임 연결합니다.
+                speedBuffController =
+                    localMovement.gameObject
+                        .AddComponent<SpeedBuffController>();
+
+                speedBuffController.BindPlayerTargets(
+                    localMovement,
+                    localAttack,
+                    localWarriorAttack);
+            }
+        }
     }
 
 
@@ -993,16 +1129,69 @@ public class KeyBindingManager : MonoBehaviour
 
 
         // =====================================================
-        // 스폰 전 fallback
+        // 스폰 전 / 단일 테스트 씬 fallback
         // =====================================================
 
-        if (components.Length > 0)
+        for (int i = 0;
+             i < components.Length;
+             i++)
         {
-            return components[0];
+            T component =
+                components[i];
+
+            if (component == null)
+            {
+                continue;
+            }
+
+            NetworkObject networkObject =
+                component.GetComponent<NetworkObject>();
+
+            if (networkObject == null)
+            {
+                networkObject =
+                    component.GetComponentInParent<
+                        NetworkObject>();
+            }
+
+            // [Codex 공속 버프 대상 수정] 네트워크 보스씬에서 소유자가 아닌 아처/워리어를 fallback으로 잡지 않습니다.
+            if (networkObject == null)
+            {
+                return component;
+            }
         }
 
 
         return null;
+    }
+
+    private bool IsLocalPlayerComponent<T>(
+        T component)
+        where T : Component
+    {
+        if (component == null)
+        {
+            return false;
+        }
+
+        NetworkObject networkObject =
+            component.GetComponent<NetworkObject>();
+
+        if (networkObject == null)
+        {
+            networkObject =
+                component.GetComponentInParent<
+                    NetworkObject>();
+        }
+
+        if (networkObject == null)
+        {
+            // [Codex 캐릭터 선택 대응] 네트워크 오브젝트가 없는 단일 테스트 씬 참조는 기존처럼 허용합니다.
+            return true;
+        }
+
+        return networkObject.IsSpawned &&
+               networkObject.IsOwner;
     }
 
 
