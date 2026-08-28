@@ -623,7 +623,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &826608040706591025
 Transform:
   m_ObjectHideFlags: 0
@@ -6336,17 +6336,20 @@ GameObject:
   - component: {fileID: 830100000000000004}
   - component: {fileID: 830100000000000005}
   - component: {fileID: 830100000000000006}
+  - component: {fileID: 830100000000000015}
   - component: {fileID: 830100000000000007}
   - component: {fileID: 830100000000000008}
   - component: {fileID: 830100000000000009}
   - component: {fileID: 830100000000000013}
   - component: {fileID: 830100000000000014}
   - component: {fileID: 830100000000000020}
-  - component: {fileID: 830100000000000015}
+  - component: {fileID: 830100000000000021}
+  - component: {fileID: 830100000000000022}
   - component: {fileID: 830100000000000016}
   - component: {fileID: 830100000000000017}
   - component: {fileID: 830100000000000018}
   - component: {fileID: 830100000000000019}
+  - component: {fileID: 830100000000000023}
   m_Layer: 6
   m_Name: warrior
   m_TagString: Player
@@ -6794,6 +6797,32 @@ MonoBehaviour:
   hitCooldown: 1
   enemyLayerName: Enemy
   cameraShake: {fileID: 0}
+--- !u!114 &830100000000000015
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5223124047157880945}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  GlobalObjectIdHash: 3604313631
+  InScenePlacedSourceGlobalObjectIdHash: 279233985
+  DeferredDespawnTick: 0
+  Ownership: 1
+  AlwaysReplicateAsRoot: 0
+  SynchronizeTransform: 1
+  <InScenePlaced>k__BackingField: 0
+  ActiveSceneSynchronization: 0
+  SceneMigrationSynchronization: 0
+  SpawnWithObservers: 1
+  DontDestroyWithOwner: 0
+  AutoObjectParentSync: 1
+  SyncOwnerTransformWhenParented: 1
+  AllowOwnerToParent: 0
 --- !u!114 &830100000000000007
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6806,6 +6835,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f4ad7dbf5f42b17499830164341f3619, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ShowTopMostFoldoutHeaderGroup: 1
   maxHp: 100
   currentHp: 0
   hitReaction: {fileID: 830100000000000006}
@@ -6899,17 +6929,23 @@ MonoBehaviour:
   playerHealth: {fileID: 830100000000000007}
   playerLadder: {fileID: 0}
   playerRigidbody: {fileID: 0}
+  playerDirection: {fileID: 0}
+  downStrikeVisualFeedback: {fileID: 830100000000000021}
   fallbackKey: 0
   damage: 35
   cooldown: 1.4
-  hitBoxSize: {x: 1.55, y: 1}
-  hitBoxOffset: {x: 0.85, y: 0.05}
+  hitBoxSize: {x: 2.07, y: 0.63}
+  hitBoxOffset: {x: 0.85, y: 0.3}
   enemyMask:
     serializedVersion: 2
     m_Bits: 8
-  hopVelocity: 7.5
+  hopVelocity: 8.5
   slamVelocity: -13
+  maxLandingVfxWaitDuration: 1.2
+  slashVfxDelay: 0.08
   downStrikeClip: {fileID: 7400000, guid: 4b60454a97290ed42b647d8ca31b85e8, type: 2}
+  rightDownStrikeClip: {fileID: 7400000, guid: 4b60454a97290ed42b647d8ca31b85e8, type: 2}
+  leftDownStrikeClip: {fileID: 7400000, guid: 8edbd9509fa98b54d8559ea321c2bd46, type: 2}
   directClipSpeed: 1
   downStrikeStateName: downstrike
   downStrikeTriggerName: 
@@ -6931,6 +6967,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   animator: {fileID: 1545179870754946024}
   playerHealth: {fileID: 830100000000000007}
+  shieldBlockVisualFeedback: {fileID: 830100000000000022}
   fallbackKey: 0
   duration: 1.2
   cooldown: 3
@@ -6939,7 +6976,7 @@ MonoBehaviour:
   directClipSpeed: 1
   shieldBlockStateName: ShieldBlock
   fadeDuration: 0.05
---- !u!114 &830100000000000015
+--- !u!114 &830100000000000021
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -6948,23 +6985,48 @@ MonoBehaviour:
   m_GameObject: {fileID: 5223124047157880945}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
+  m_Script: {fileID: 11500000, guid: cb1e2a050848c2b4784eb2eb3b5d79f0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  GlobalObjectIdHash: 3604313631
-  InScenePlacedSourceGlobalObjectIdHash: 279233985
-  DeferredDespawnTick: 0
-  Ownership: 1
-  AlwaysReplicateAsRoot: 0
-  SynchronizeTransform: 1
-  <InScenePlaced>k__BackingField: 0
-  ActiveSceneSynchronization: 0
-  SceneMigrationSynchronization: 0
-  SpawnWithObservers: 1
-  DontDestroyWithOwner: 0
-  AutoObjectParentSync: 1
-  SyncOwnerTransformWhenParented: 1
-  AllowOwnerToParent: 0
+  playerController: {fileID: 830100000000000002}
+  downStrikeSlashVfxPoint: {fileID: 0}
+  downStrikeGroundVfxPoint: {fileID: 0}
+  slashSprite: {fileID: 8686837162572060980, guid: c813d71d375127c49a3cdffcd9f12547, type: 3}
+  slashPrefab: {fileID: 0}
+  slashOffset: {x: 0.72, y: 0.72}
+  slashScale: {x: 0.3, y: 0.3, z: 1}
+  slashDuration: 0.16
+  flipSlashByDirection: 1
+  dustSprite: {fileID: -5349610865110842797, guid: 907bbdab9846c5840879f5fc4c301711, type: 3}
+  dustPrefab: {fileID: 0}
+  dustOffset: {x: 0.08, y: 0.12}
+  dustScale: {x: 0.3, y: 0.3, z: 1}
+  dustDuration: 0.45
+  flipDustByDirection: 0
+  slashSortingOrderOffset: 6
+  dustSortingOrderOffset: -1
+--- !u!114 &830100000000000022
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5223124047157880945}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2e83e275c54455d469e74ea7da11da37, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playerController: {fileID: 830100000000000002}
+  shieldBlockVfxPoint: {fileID: 0}
+  barrierSprite: {fileID: 144309121480247424, guid: a1bb3ef630cd23b42a4ed825a00ae10d, type: 3}
+  barrierPrefab: {fileID: 0}
+  barrierOffset: {x: 0.34, y: 1.79}
+  barrierScale: {x: 0.3, y: 0.3, z: 1}
+  fadeInDuration: 0.12
+  fadeOutDuration: 0.1
+  flipBarrierByDirection: 1
+  sortingOrderOffset: 8
 --- !u!114 &830100000000000016
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6983,6 +7045,8 @@ MonoBehaviour:
   playerAttack: {fileID: 0}
   warriorAttack: {fileID: 830100000000000009}
   playerStats: {fileID: 830100000000000008}
+  enableDelayDebugLog: 0
+  delayDebugInterval: 1
 --- !u!114 &830100000000000017
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7198,6 +7262,33 @@ MonoBehaviour:
   playerDirection: {fileID: 830100000000000003}
   playerLadder: {fileID: 830100000000000005}
   animationManager: {fileID: 6463703607488329098}
+--- !u!114 &830100000000000023
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5223124047157880945}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 78f4ff8d94cb4dc49a9c5527d92229e4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  captureModeEnabled: 1
+  enableAutoApproach: 1
+  approachStopDistance: 2
+  approachMoveSpeed: 2.5
+  enableAutoBasicAttack: 1
+  basicAttackInterval: 1
+  shieldReactionDelay: 0.7
+  shieldHoldDuration: 2
+  goblinBoss: {fileID: 0}
+  playerController: {fileID: 830100000000000002}
+  warriorAttack: {fileID: 830100000000000009}
+  shieldBlock: {fileID: 830100000000000020}
+  networkObject: {fileID: 830100000000000015}
+  networkPlayerOwner: {fileID: 830100000000000016}
+  sameXDeadZone: 0.05
 --- !u!1 &5432784113503853095
 GameObject:
   m_ObjectHideFlags: 0
@@ -8212,7 +8303,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &5285348894364522422
 Transform:
   m_ObjectHideFlags: 0

@@ -1,9 +1,10 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
+using Unity.Netcode;
 using UnityEngine;
 
-public class PlayerHealth2D : MonoBehaviour
+public class PlayerHealth2D : NetworkBehaviour
 {
     /// <summary>
     /// �÷��̾� ü�� ���� ���� ó��.
@@ -29,6 +30,10 @@ public class PlayerHealth2D : MonoBehaviour
     [SerializeField] private float deathFreezeCrossFadeBuffer = 0.08f;
 
     private bool isDead;
+    private readonly NetworkVariable<int> syncedHp = new(
+        100,
+        NetworkVariableReadPermission.Everyone,
+        NetworkVariableWritePermission.Server);
 
     /// <summary>
     /// ���� HP ��ȯ.
@@ -62,9 +67,30 @@ public class PlayerHealth2D : MonoBehaviour
         Unity.Netcode.NetworkManager networkManager = Unity.Netcode.NetworkManager.Singleton;
         return networkObject == null || networkManager == null || !networkManager.IsListening || networkObject.IsOwner;
     }
+    public override void OnNetworkSpawn()
+    {
+        syncedHp.OnValueChanged += OnNetworkHpChanged;
+
+        if (IsServer)
+            syncedHp.Value = currentHp > 0 ? currentHp : maxHp;
+
+        ApplyNetworkHp(syncedHp.Value);
+    }
+
+    public override void OnNetworkDespawn()
+    {
+        syncedHp.OnValueChanged -= OnNetworkHpChanged;
+    }
+
     void Start()
     {
-        currentHp = maxHp;
+        if (!IsSpawned || IsServer)
+            currentHp = maxHp;
+        else
+            ApplyNetworkHp(syncedHp.Value);
+
+        if (IsSpawned && IsServer)
+            syncedHp.Value = currentHp;
 
         if (hpBarUI != null)
             hpBarUI.Refresh();
@@ -79,6 +105,9 @@ public class PlayerHealth2D : MonoBehaviour
     public void TakeDamage(int damage, Vector2 knockbackForce)
     {
         Debug.Log($"TakeDamage ���� / damage={damage}, force={knockbackForce}");
+
+        if (IsSpawned && !IsServer)
+            return;
 
         if (isDead)
         {
@@ -105,9 +134,17 @@ public class PlayerHealth2D : MonoBehaviour
         if (currentHp < 0)
             currentHp = 0;
 
-        // [Codex Local HP HUD] HUDStatusUI가 보는 PlayerStats도 치명타 포함 모든 피해에서 먼저 갱신합니다.
-        if (playerStats != null)
+        if (IsSpawned && IsServer)
+        {
+            syncedHp.Value = currentHp;
+            if (playerStats != null)
+                playerStats.SetHpFromNetwork(currentHp);
+        }
+        else if (playerStats != null)
+        {
+            // [Codex Local HP HUD] 오프라인 테스트에서는 기존처럼 로컬 PlayerStats만 차감합니다.
             playerStats.Damage(finalDamage);
+        }
 
         if (hpBarUI != null)
             hpBarUI.Refresh();
@@ -125,6 +162,38 @@ public class PlayerHealth2D : MonoBehaviour
         }
         Debug.Log($"HP after damage = {currentHp}/{maxHp}");
         hitReaction.ApplyKnockback(knockbackForce);
+        if (IsSpawned && IsServer)
+            ApplyHitReactionClientRpc(knockbackForce);
+    }
+
+    private void OnNetworkHpChanged(int previousValue, int newValue)
+    {
+        ApplyNetworkHp(newValue);
+    }
+
+    private void ApplyNetworkHp(int hp)
+    {
+        // [Codex Network HP Sync] 서버에서 바뀐 HP를 클라이언트 캐릭터와 HUD에도 반영합니다.
+        currentHp = Mathf.Clamp(hp, 0, maxHp);
+        if (playerStats != null)
+            playerStats.SetHpFromNetwork(currentHp);
+        if (hpBarUI != null)
+            hpBarUI.Refresh();
+
+        if (currentHp <= 0 && !isDead)
+            Die();
+    }
+
+    [ClientRpc]
+    private void ApplyHitReactionClientRpc(Vector2 knockbackForce)
+    {
+        if (IsServer || isDead)
+            return;
+
+        if (hitReaction == null)
+            hitReaction = GetComponent<PlayerHitReaction2D>();
+
+        hitReaction?.ApplyKnockback(knockbackForce);
     }
 
     private void Die()

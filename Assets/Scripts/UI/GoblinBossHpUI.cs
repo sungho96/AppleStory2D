@@ -1,4 +1,5 @@
 using TMPro;
+using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -57,7 +58,41 @@ public class GoblinBossHpUI : MonoBehaviour
 
         GameObject bossObject = GameObject.Find(bossObjectName);
         if (bossObject != null)
+        {
             bossHealth = bossObject.GetComponent<GoblinHealth2D>();
+            if (bossHealth != null)
+                return;
+        }
+
+        GoblinHealth2D[] bosses =
+            FindObjectsByType<GoblinHealth2D>(
+                FindObjectsInactive.Exclude,
+                FindObjectsSortMode.None);
+
+        for (int i = 0; i < bosses.Length; i++)
+        {
+            if (bosses[i] == null)
+                continue;
+
+            NetworkObject networkObject =
+                bosses[i].GetComponent<NetworkObject>();
+
+            // [Codex Boss Network UI] 씬 보스가 꺼지고 서버 Spawn 보스만 남는 네트워크 전투에서는 Spawn된 보스를 HP UI 대상으로 다시 연결합니다.
+            if (networkObject != null && networkObject.IsSpawned)
+            {
+                bossHealth = bosses[i];
+                return;
+            }
+        }
+
+        for (int i = 0; i < bosses.Length; i++)
+        {
+            if (bosses[i] == null)
+                continue;
+
+            bossHealth = bosses[i];
+            return;
+        }
     }
 
     private void CreateBossHpUI()

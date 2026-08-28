@@ -1,11 +1,12 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Netcode;
 using UnityEngine;
 
 /// <summary>
 /// 보스가 바라보는 방향으로 지면 얼음 가시를 순차 생성합니다.
 /// </summary>
-public class GoblinBossIceWaveAttack2D : MonoBehaviour
+public class GoblinBossIceWaveAttack2D : NetworkBehaviour
 {
     [Header("Attack Timing")]
     [SerializeField] private float firstAttackDelay = 5.5f;
@@ -36,6 +37,9 @@ public class GoblinBossIceWaveAttack2D : MonoBehaviour
     [SerializeField] private float slowMultiplier = 0.75f;
     [SerializeField] private float slowDuration = 2f;
 
+    [Header("Network Skill Debug")]
+    [SerializeField] private bool enableSkillVfxDebugLog = true;
+
     private Transform player;
     private GoblinHealth2D bossHealth;
     private GoblinBossCombatController2D bossCombat;
@@ -54,6 +58,9 @@ public class GoblinBossIceWaveAttack2D : MonoBehaviour
 
     private IEnumerator Start()
     {
+        if (IsNetworkClientOnly())
+            yield break;
+
         yield return new WaitForSeconds(firstAttackDelay);
 
         while (bossHealth == null || !bossHealth.IsDead)
@@ -78,8 +85,17 @@ public class GoblinBossIceWaveAttack2D : MonoBehaviour
 
         List<GameObject> warnings = new List<GameObject>(points.Count);
 
+        LogSkillVfxDebug(
+            "IceWaveStart",
+            $"direction={direction:F1} secondPhase={isSecondPhase} pointCount={points.Count}");
+
         for (int i = 0; i < points.Count; i++)
             warnings.Add(CreateWarning(points[i], i));
+
+        LogSkillVfxDebug("IceWarningsCreated", $"count={warnings.Count}");
+
+        if (IsServer && IsSpawned)
+            PlayIceWaveVisualClientRpc(points.ToArray(), direction, isSecondPhase);
 
         // [얼음 파도 추가] 메테오와 같은 시전 자세를 사용하되 푸른 바닥 경고로 공격 종류를 구분합니다.
         if (bossCombat != null)
@@ -117,6 +133,8 @@ public class GoblinBossIceWaveAttack2D : MonoBehaviour
 
     private IEnumerator SpawnWave(List<Vector2> points, float direction, List<GameObject> warnings)
     {
+        LogSkillVfxDebug("IceSpikeWaveStart", $"count={points.Count} hasWarnings={warnings != null}");
+
         for (int i = 0; i < points.Count; i++)
         {
             if (warnings != null && warnings[i] != null)
@@ -125,6 +143,101 @@ public class GoblinBossIceWaveAttack2D : MonoBehaviour
             StartCoroutine(ShowSpike(points[i], direction));
             yield return new WaitForSeconds(spikeInterval);
         }
+    }
+
+    [ClientRpc]
+    private void PlayIceWaveVisualClientRpc(Vector2[] points, float direction, bool isSecondPhase)
+    {
+        if (IsServer)
+            return;
+
+        // [Codex Boss Skill Sync] 서버가 계산한 아이스웨이브 위치를 클라이언트에서 판정 없이 이펙트만 재생합니다.
+        StartCoroutine(CoPlayIceWaveVisualOnly(points, direction, isSecondPhase));
+    }
+
+    private IEnumerator CoPlayIceWaveVisualOnly(Vector2[] points, float direction, bool isSecondPhase)
+    {
+        List<GameObject> warnings = new List<GameObject>(points.Length);
+        for (int i = 0; i < points.Length; i++)
+            warnings.Add(CreateWarning(points[i], i));
+
+        LogSkillVfxDebug("IceClientReplayStart", $"count={points.Length} secondPhase={isSecondPhase}");
+
+        float timer = 0f;
+        while (timer < warningDuration)
+        {
+            timer += Time.deltaTime;
+            float pulse = 1f + Mathf.Sin(timer * 16f) * 0.1f;
+            for (int i = 0; i < warnings.Count; i++)
+            {
+                if (warnings[i] != null)
+                    warnings[i].transform.localScale = new Vector3(1.25f * pulse, 0.18f * pulse, 1f);
+            }
+            yield return null;
+        }
+
+        yield return SpawnWaveVisualOnly(points, direction, warnings);
+
+        if (isSecondPhase)
+        {
+            yield return new WaitForSeconds(Mathf.Max(0f, secondPhaseRepeatDelay));
+            yield return SpawnWaveVisualOnly(points, direction, null);
+        }
+    }
+
+    private IEnumerator SpawnWaveVisualOnly(Vector2[] points, float direction, List<GameObject> warnings)
+    {
+        LogSkillVfxDebug("IceClientReplaySpikeWaveStart", $"count={points.Length} hasWarnings={warnings != null}");
+
+        for (int i = 0; i < points.Length; i++)
+        {
+            if (warnings != null && warnings[i] != null)
+                Destroy(warnings[i]);
+
+            StartCoroutine(ShowSpikeVisualOnly(points[i], direction));
+            yield return new WaitForSeconds(spikeInterval);
+        }
+    }
+
+    private IEnumerator ShowSpikeVisualOnly(Vector2 point, float direction)
+    {
+        GameObject spike = new GameObject("BossIce_Spike");
+        spike.transform.position = new Vector3(point.x, point.y + spikeGroundOffset, 0f);
+        spike.transform.localScale = new Vector3(spikeScale * direction, 0.01f, 1f);
+        LogSkillVfxDebug("IceClientReplaySpikeCreated", $"pos={point} direction={direction:F1}");
+
+        SpriteRenderer renderer = spike.AddComponent<SpriteRenderer>();
+        renderer.sprite = iceSpikeSprite;
+        renderer.sortingOrder = 30;
+
+        const float riseDuration = 0.12f;
+        float timer = 0f;
+        while (timer < riseDuration)
+        {
+            timer += Time.deltaTime;
+            float ratio = Mathf.Clamp01(timer / riseDuration);
+            float eased = 1f - (1f - ratio) * (1f - ratio);
+            spike.transform.localScale = new Vector3(spikeScale * direction, spikeScale * eased, 1f);
+            yield return null;
+        }
+
+        StartCoroutine(ShowEruptionEffect(point));
+        yield return new WaitForSeconds(spikeHoldDuration);
+
+        timer = 0f;
+        const float disappearDuration = 0.2f;
+        while (timer < disappearDuration)
+        {
+            timer += Time.deltaTime;
+            float ratio = Mathf.Clamp01(timer / disappearDuration);
+            spike.transform.localScale = new Vector3(spikeScale * direction, spikeScale * (1f - ratio), 1f);
+            Color color = renderer.color;
+            color.a = 1f - ratio;
+            renderer.color = color;
+            yield return null;
+        }
+
+        Destroy(spike);
     }
 
     private List<Vector2> CreateWavePoints()
@@ -214,6 +327,7 @@ public class GoblinBossIceWaveAttack2D : MonoBehaviour
         renderer.sprite = warningSprite;
         renderer.color = new Color(0.2f, 0.86f, 1f, Mathf.Lerp(0.75f, 0.42f, index / Mathf.Max(1f, spikeCount - 1f)));
         renderer.sortingOrder = 25;
+        LogSkillVfxDebug("IceWarningCreated", $"index={index} pos={point}");
         return warning;
     }
 
@@ -223,6 +337,7 @@ public class GoblinBossIceWaveAttack2D : MonoBehaviour
         // [가시 높이 보정] 이미지 하단 투명 여백만큼 내려 실제 그림의 밑면을 Ground에 붙입니다.
         spike.transform.position = new Vector3(point.x, point.y + spikeGroundOffset, 0f);
         spike.transform.localScale = new Vector3(spikeScale * direction, 0.01f, 1f);
+        LogSkillVfxDebug("IceSpikeCreated", $"pos={point} direction={direction:F1}");
 
         SpriteRenderer renderer = spike.AddComponent<SpriteRenderer>();
         renderer.sprite = iceSpikeSprite;
@@ -408,6 +523,9 @@ public class GoblinBossIceWaveAttack2D : MonoBehaviour
 
             float direction = playerHealth.transform.position.x >= point.x ? 1f : -1f;
             int hpBeforeDamage = playerHealth.CurrentHp;
+            LogSkillVfxDebug(
+                "IceDamageApplied",
+                $"target={playerHealth.name} point={point} hpBefore={hpBeforeDamage} damage={damage}");
             playerHealth.TakeDamage(damage, new Vector2(direction * knockbackX, knockbackY));
 
             // [얼음 둔화 적용] 무적 상태로 피해가 무시된 경우에는 둔화도 걸리지 않습니다.
@@ -420,6 +538,24 @@ public class GoblinBossIceWaveAttack2D : MonoBehaviour
             }
             break;
         }
+    }
+
+    private void LogSkillVfxDebug(string eventName, string detail)
+    {
+        if (!enableSkillVfxDebugLog)
+            return;
+
+        NetworkManager manager = NetworkManager.Singleton;
+        bool hasNetwork = manager != null && manager.IsListening;
+        string role = hasNetwork
+            ? (manager.IsServer ? "HostOrServer" : "Client")
+            : "Offline";
+        double serverTime = hasNetwork ? manager.ServerTime.Time : Time.timeAsDouble;
+
+        // [Codex Boss Skill VFX Debug] 보스 스킬 이펙트가 어느 피어에서 언제 생성되는지 비교하기 위한 Console 로그입니다.
+        Debug.Log(
+            $"[BossSkillVfxDebug][IceWave][{eventName}] role={role} " +
+            $"time={Time.time:F4}s serverTime={serverTime:F4}s bossPos={transform.position} {detail}");
     }
 
     private IEnumerator WaitForOtherAttack()
@@ -461,5 +597,12 @@ public class GoblinBossIceWaveAttack2D : MonoBehaviour
         texture.SetPixels(pixels);
         texture.Apply();
         return Sprite.Create(texture, new Rect(0f, 0f, size, size), new Vector2(0.5f, 0.5f), size);
+    }
+
+    private static bool IsNetworkClientOnly()
+    {
+        return NetworkManager.Singleton != null &&
+            NetworkManager.Singleton.IsListening &&
+            !NetworkManager.Singleton.IsServer;
     }
 }

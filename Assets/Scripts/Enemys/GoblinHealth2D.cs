@@ -1,10 +1,11 @@
 ﻿using System.Collections;
 using Assets.HeroEditor4D.Common.Scripts.CharacterScripts;
 using Assets.HeroEditor4D.Common.Scripts.Enums;
+using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class GoblinHealth2D : MonoBehaviour
+public class GoblinHealth2D : NetworkBehaviour
 {
     [Header("HP")]
     [SerializeField] private int maxHp = 100;     // 고블린의 최대 체력
@@ -34,6 +35,11 @@ public class GoblinHealth2D : MonoBehaviour
     private bool deathAnimationStarted;
     private bool deathRootLocked;
     private Vector3 deathRootPosition;
+    private bool hasInitializedHp;
+    private readonly NetworkVariable<int> syncedHp = new(
+        100,
+        NetworkVariableReadPermission.Everyone,
+        NetworkVariableWritePermission.Server);
     // Codex recovery compatibility: GoblinBoss scripts need read-only HP/death state.
     public int CurrentHp => currentHp;
     public int MaxHp => maxHp;
@@ -62,12 +68,33 @@ public class GoblinHealth2D : MonoBehaviour
         }
 
         if (hpSlider == null) hpSlider = GetComponentInChildren<Slider>(true);
+
+        InitializeHpIfNeeded();
+    }
+
+    public override void OnNetworkSpawn()
+    {
+        syncedHp.OnValueChanged += OnSyncedHpChanged;
+
+        InitializeHpIfNeeded();
+
+        if (IsServer)
+            syncedHp.Value = currentHp;
+
+        ApplySyncedHp(syncedHp.Value);
+    }
+
+    public override void OnNetworkDespawn()
+    {
+        syncedHp.OnValueChanged -= OnSyncedHpChanged;
     }
 
     void Start()
     {
         // [Codex Boss HP Test] -1이면 최대 체력, 0 이상이면 인스펙터 값으로 시작해서 2페이즈 테스트를 쉽게 합니다.
-        currentHp = startHpOverride >= 0 ? Mathf.Clamp(startHpOverride, 0, maxHp) : maxHp;
+        InitializeHpIfNeeded();
+        if (IsSpawned && IsServer)
+            syncedHp.Value = currentHp;
         SyncHpUI();
     }
 
@@ -94,10 +121,26 @@ public class GoblinHealth2D : MonoBehaviour
         bool applyHitReaction,
         float powerShotChargeRatio)
     {
+        if (IsNetworkClientOnly())
+        {
+            // [Codex Boss Network Hit] 클라이언트의 근접/스킬 피격 판정은 서버 HP만 줄이도록 RPC로 위임합니다.
+            RequestTakeDamageServerRpc(damage, hitDir, applyHitReaction, powerShotChargeRatio);
+            return;
+        }
+
+        ApplyDamageOnAuthority(damage, hitDir, applyHitReaction, powerShotChargeRatio);
+    }
+
+    private void ApplyDamageOnAuthority(
+        int damage,
+        float hitDir,
+        bool applyHitReaction,
+        float powerShotChargeRatio)
+    {
         if (isDead) return;
 
-        // [Codex Boss Shield Break] ShieldBlockU 중에는 50% 이상 차징 파워샷만 방어 파괴 판정으로 받습니다.
-        if (bossCombat != null && bossCombat.TryHandleShieldDamage(powerShotChargeRatio, hitDir))
+        // [Codex Boss Shield Break Damage] ShieldBlockU 중에는 공격 종류와 관계없이 들어온 데미지를 쉴드 파괴량으로 누적합니다.
+        if (bossCombat != null && bossCombat.TryHandleShieldDamage(damage, hitDir))
             return;
 
         // [Codex Boss Shield Groggy] 방어 파괴 후 Dance 그로기 동안 받는 피해를 강화합니다.
@@ -106,6 +149,10 @@ public class GoblinHealth2D : MonoBehaviour
             : damage;
 
         currentHp -= finalDamage;
+        currentHp = Mathf.Clamp(currentHp, 0, maxHp);
+
+        if (IsSpawned && IsServer)
+            syncedHp.Value = currentHp;
 
         SyncHpUI();
 
@@ -136,13 +183,36 @@ public class GoblinHealth2D : MonoBehaviour
         // [Codex Boss Heal Cast] 살아있는 피격에서만 회복 캐스팅 피드백을 갱신한다.
         bossCombat?.NotifyHealCastHit();
 
-        StartCoroutine(CoHitColor());
+        PlayHitFeedback();
 
-        if (applyHitReaction && goblinController != null)
-        {
-            goblinController.PlayHitStun();
-            goblinController.PlayKnockback(hitDir);
-        }
+        if (IsSpawned && IsServer)
+            PlayHitFeedbackClientRpc();
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void RequestTakeDamageServerRpc(
+        int damage,
+        float hitDir,
+        bool applyHitReaction,
+        float powerShotChargeRatio)
+    {
+        // [Codex Boss Network Hit] 모든 클라이언트 공격은 최종적으로 서버에서만 HP를 계산합니다.
+        ApplyDamageOnAuthority(damage, hitDir, applyHitReaction, powerShotChargeRatio);
+    }
+
+    [ClientRpc]
+    private void PlayHitFeedbackClientRpc()
+    {
+        if (IsServer || isDead)
+            return;
+
+        PlayHitFeedback();
+    }
+
+    private void PlayHitFeedback()
+    {
+        // [Codex Boss Hit Effect Only] 보스 피격 시 위치 넉백 없이 색상 이펙트만 재생합니다.
+        StartCoroutine(CoHitColor());
     }
 
     /// <summary>
@@ -259,6 +329,33 @@ public class GoblinHealth2D : MonoBehaviour
         hpSlider.value = ratio;
     }
 
+    private void InitializeHpIfNeeded()
+    {
+        if (hasInitializedHp)
+            return;
+
+        currentHp = startHpOverride >= 0 ? Mathf.Clamp(startHpOverride, 0, maxHp) : maxHp;
+        hasInitializedHp = true;
+    }
+
+    private void OnSyncedHpChanged(int previousValue, int newValue)
+    {
+        ApplySyncedHp(newValue);
+    }
+
+    private void ApplySyncedHp(int hp)
+    {
+        // [Codex Boss Network HP] 서버 HP 변경을 모든 클라이언트의 보스 UI와 페이즈 판정에 반영합니다.
+        currentHp = Mathf.Clamp(hp, 0, maxHp);
+        SyncHpUI();
+
+        if (currentHp <= 0 && !isDead)
+        {
+            isDead = true;
+            StartCoroutine(CoDie());
+        }
+    }
+
     public void HealBossHp(int amount)
     {
         // [Codex Boss Heal Cast] 보스 회복 패턴 전용 HP 회복입니다. 최대 HP를 넘지 않도록 제한합니다.
@@ -266,6 +363,8 @@ public class GoblinHealth2D : MonoBehaviour
             return;
 
         currentHp = Mathf.Min(maxHp, currentHp + amount);
+        if (IsSpawned && IsServer)
+            syncedHp.Value = currentHp;
         SyncHpUI();
     }
     /// <summary>
@@ -288,5 +387,13 @@ public class GoblinHealth2D : MonoBehaviour
             if (renderers[i] != null)
                 renderers[i].color = originalColors[i];
         }
+    }
+
+    private bool IsNetworkClientOnly()
+    {
+        return NetworkManager.Singleton != null &&
+            NetworkManager.Singleton.IsListening &&
+            IsSpawned &&
+            !IsServer;
     }
 }

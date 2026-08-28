@@ -1,5 +1,6 @@
 using Assets.HeroEditor4D.Common.Scripts.CharacterScripts;
 using Assets.HeroEditor4D.Common.Scripts.Enums;
+using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
@@ -13,6 +14,8 @@ using UnityEngine;
 /// </summary>
 public class PlayerController2D : MonoBehaviour
 {
+    private static readonly List<PlayerController2D> activePlayers = new List<PlayerController2D>();
+
     [Header("Player")]
     [SerializeField] private AnimationManager animationManager;
 
@@ -31,9 +34,12 @@ public class PlayerController2D : MonoBehaviour
     private PlayerQuickStep2D quickStep;
     private WarriorDownStrike2D warriorDownStrike;
     private WarriorShieldBlock2D warriorShieldBlock;
+    private PlayerOneWayPlatformCollision2D oneWayPlatformCollision;
 
     private float moveInput;
     private float verticalInput;
+    private bool hasCaptureMoveInput;
+    private float captureMoveInput;
     private bool isHorizontalFacingLocked;
     private float lockedHorizontalFacing = 1f;
 
@@ -53,10 +59,14 @@ public class PlayerController2D : MonoBehaviour
         quickStep = GetComponent<PlayerQuickStep2D>();
         warriorDownStrike = GetComponent<WarriorDownStrike2D>();
         warriorShieldBlock = GetComponent<WarriorShieldBlock2D>();
+        oneWayPlatformCollision = GetComponent<PlayerOneWayPlatformCollision2D>();
 
         // [퀵 스텝 추가] 씬 참조를 늘리지 않고 플레이어에 필요한 스텝 컴포넌트를 한 번만 보장합니다.
         if (quickStep == null)
             quickStep = gameObject.AddComponent<PlayerQuickStep2D>();
+        // [Codex OneWay Platform Fix] 플레이어 몸통 Collider가 발판 옆면에 걸리지 않도록 조건부 충돌 필터를 보장합니다.
+        if (oneWayPlatformCollision == null)
+            oneWayPlatformCollision = gameObject.AddComponent<PlayerOneWayPlatformCollision2D>();
 
         if (animationManager == null)
             animationManager = GetComponent<AnimationManager>();
@@ -75,6 +85,49 @@ public class PlayerController2D : MonoBehaviour
 
         if (quickStep != null)
             quickStep.Initialize(rb, playerCol, quickStepSound);
+
+        RegisterPlayerCollisionIgnore();
+    }
+
+    private void OnDestroy()
+    {
+        activePlayers.Remove(this);
+    }
+
+    private void RegisterPlayerCollisionIgnore()
+    {
+        // [Codex 플레이어 충돌 제거] 아처/워리어 같은 플레이어끼리는 서로 밀리지 않도록 Collider2D 충돌만 무시합니다.
+        Collider2D[] myColliders = GetComponentsInChildren<Collider2D>(true);
+
+        for (int i = activePlayers.Count - 1; i >= 0; i--)
+        {
+            PlayerController2D otherPlayer = activePlayers[i];
+
+            if (otherPlayer == null)
+            {
+                activePlayers.RemoveAt(i);
+                continue;
+            }
+
+            Collider2D[] otherColliders = otherPlayer.GetComponentsInChildren<Collider2D>(true);
+
+            foreach (Collider2D myCollider in myColliders)
+            {
+                if (myCollider == null)
+                    continue;
+
+                foreach (Collider2D otherCollider in otherColliders)
+                {
+                    if (otherCollider == null)
+                        continue;
+
+                    Physics2D.IgnoreCollision(myCollider, otherCollider, true);
+                }
+            }
+        }
+
+        if (!activePlayers.Contains(this))
+            activePlayers.Add(this);
     }
 
     /// <summary>
@@ -147,7 +200,7 @@ public class PlayerController2D : MonoBehaviour
         if (movement != null)
         {
             bool blockMove = hitReaction != null && hitReaction.IsKnockback;
-            movement.HandleNormalMove(moveInput, blockMove);
+            movement.HandleNormalMove(GetEffectiveMoveInput(), blockMove);
         }
     }
 
@@ -186,7 +239,7 @@ public class PlayerController2D : MonoBehaviour
         if (isHorizontalFacingLocked)
             return;
 
-        direction.SetFacingByHorizontalInput(moveInput);
+        direction.SetFacingByHorizontalInput(GetEffectiveMoveInput());
     }
 
     private void HandleQuickStepInput()
@@ -295,7 +348,7 @@ public class PlayerController2D : MonoBehaviour
         animationManager.SetJump(false, facingLeft);
 
         // 착지 후 Idle / Run
-        if (Mathf.Abs(moveInput) > 0.01f)
+        if (Mathf.Abs(GetEffectiveMoveInput()) > 0.01f)
             animationManager.SetState(CharacterState.Run);
         else
             animationManager.SetState(CharacterState.Idle);
@@ -325,6 +378,31 @@ public class PlayerController2D : MonoBehaviour
         direction?.SetFacingByHorizontalInput(lockedHorizontalFacing);
     }
 
+    public void FaceHorizontalDirectionForCapture(float facingDirection)
+    {
+        // [Codex CaptureShieldBot] 촬영용 자동 방어가 기존 방향 전환/동기화 흐름을 그대로 사용해 보스 쪽을 바라보게 합니다.
+        direction?.SetFacingByHorizontalInput(facingDirection);
+    }
+
+    public void SetCaptureMoveInput(float horizontalInput, float requestedMoveSpeed)
+    {
+        // [Codex CaptureShieldBot] 촬영용 자동 접근은 기존 PlayerMovement2D 이동 경로에 입력값만 전달합니다.
+        hasCaptureMoveInput = true;
+        float currentMoveSpeed = movement != null ? movement.CurrentMoveSpeed : 0f;
+        float speedRatio = currentMoveSpeed > 0.01f
+            ? Mathf.Clamp01(Mathf.Abs(requestedMoveSpeed) / currentMoveSpeed)
+            : 1f;
+        captureMoveInput = Mathf.Sign(horizontalInput) * speedRatio;
+    }
+
+    public void ClearCaptureMoveInput()
+    {
+        // [Codex CaptureShieldBot] 촬영 기능이 꺼지거나 방어가 시작되면 자동 이동 입력을 즉시 제거합니다.
+        hasCaptureMoveInput = false;
+        captureMoveInput = 0f;
+        movement?.HandleNormalMove(0f, false);
+    }
+
     public void UnlockHorizontalFacing()
     {
         if (!isHorizontalFacingLocked)
@@ -333,7 +411,12 @@ public class PlayerController2D : MonoBehaviour
         isHorizontalFacingLocked = false;
 
         // [래피드 볼리 방향 해제] 종료 순간 누르고 있는 방향을 바로 반영합니다.
-        direction?.SetFacingByHorizontalInput(moveInput);
+        direction?.SetFacingByHorizontalInput(GetEffectiveMoveInput());
+    }
+
+    private float GetEffectiveMoveInput()
+    {
+        return hasCaptureMoveInput ? captureMoveInput : moveInput;
     }
 
     /// <summary>

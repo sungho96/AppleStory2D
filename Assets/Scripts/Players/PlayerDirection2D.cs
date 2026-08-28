@@ -59,6 +59,12 @@ public class PlayerDirection2D : MonoBehaviour
         SetDirection(dir);
     }
 
+    public void RefreshDirectionVisuals()
+    {
+        // [Codex Warrior Direct Clip 복구] 직접 재생한 클립이 Left/Right 활성값을 남겨도 현재 방향만 다시 보이게 정리합니다.
+        ApplyDirection();
+    }
+
     /// <summary>
     /// Returns the current horizontal facing value.
     /// - Left = -1

@@ -8,6 +8,7 @@ public class WarriorShieldBlock2D : MonoBehaviour
     [Header("Refs")]
     [SerializeField] private Animator animator;
     [SerializeField] private PlayerHealth2D playerHealth;
+    [SerializeField] private WarriorShieldBlockVisualFeedback shieldBlockVisualFeedback;
 
     [Header("Skill")]
     [SerializeField] private KeyCode fallbackKey = KeyCode.None;
@@ -34,6 +35,12 @@ public class WarriorShieldBlock2D : MonoBehaviour
             animator = GetComponent<Animator>();
         if (playerHealth == null)
             playerHealth = GetComponent<PlayerHealth2D>();
+        if (shieldBlockVisualFeedback == null)
+            shieldBlockVisualFeedback = GetComponent<WarriorShieldBlockVisualFeedback>();
+        if (shieldBlockVisualFeedback == null)
+            shieldBlockVisualFeedback = gameObject.AddComponent<WarriorShieldBlockVisualFeedback>();
+        if (shieldBlockVisualFeedback != null)
+            shieldBlockVisualFeedback.Initialize();
     }
 
     private void Update()
@@ -55,6 +62,24 @@ public class WarriorShieldBlock2D : MonoBehaviour
         blockRoutine = StartCoroutine(ShieldBlockRoutine());
     }
 
+    public void StartShieldBlockForCapture(float holdDuration)
+    {
+        // [Codex CaptureShieldBot] 촬영용 자동 방어도 기존 ShieldBlock 시작 흐름을 그대로 재사용합니다.
+        if (isBlocking || Time.time < nextUseTime)
+            return;
+
+        if (playerHealth != null && playerHealth.IsDead)
+            return;
+
+        blockRoutine = StartCoroutine(ShieldBlockRoutine(Mathf.Max(0f, holdDuration), true));
+    }
+
+    public void StopShieldBlockForCapture()
+    {
+        // [Codex CaptureShieldBot] 촬영 기능이 꺼질 때 기존 ShieldBlock 종료 정리만 안전하게 호출합니다.
+        StopShieldBlockImmediately();
+    }
+
     public int ReduceDamage(int rawDamage)
     {
         if (!isBlocking)
@@ -67,14 +92,36 @@ public class WarriorShieldBlock2D : MonoBehaviour
     private IEnumerator ShieldBlockRoutine()
     {
         isBlocking = true;
-        float blockDuration = PlayShieldBlockAnimation();
+        float animationDuration = PlayShieldBlockAnimation();
+        ShowShieldBlockBarrierVfx();
+
+        yield return new WaitForSeconds(Mathf.Max(duration, animationDuration));
+
+        FinishShieldBlock();
+    }
+
+    private IEnumerator ShieldBlockRoutine(float blockDuration, bool playAnimation)
+    {
+        isBlocking = true;
+        if (playAnimation)
+            PlayShieldBlockAnimation();
+        ShowShieldBlockBarrierVfx();
 
         yield return new WaitForSeconds(blockDuration);
 
-        isBlocking = false;
-        nextUseTime = Time.time + cooldown;
-        StopDirectClip();
-        blockRoutine = null;
+        FinishShieldBlock();
+    }
+
+    private void ShowShieldBlockBarrierVfx()
+    {
+        // [Codex ShieldBlock VFX] 기존 방어 상태 시작 지점에 로컬 Barrier 표시만 붙입니다.
+        shieldBlockVisualFeedback?.ShowShieldBlockBarrier();
+    }
+
+    private void HideShieldBlockBarrierVfx()
+    {
+        // [Codex ShieldBlock VFX] 방어 종료 시 데미지/쿨타임 로직과 분리해서 Barrier만 숨깁니다.
+        shieldBlockVisualFeedback?.HideShieldBlockBarrier();
     }
 
     private float PlayShieldBlockAnimation()
@@ -130,13 +177,28 @@ public class WarriorShieldBlock2D : MonoBehaviour
             shieldBlockGraph.Destroy();
     }
 
-    private void OnDisable()
+    private void FinishShieldBlock()
+    {
+        isBlocking = false;
+        HideShieldBlockBarrierVfx();
+        nextUseTime = Time.time + cooldown;
+        StopDirectClip();
+        blockRoutine = null;
+    }
+
+    private void StopShieldBlockImmediately()
     {
         if (blockRoutine != null)
             StopCoroutine(blockRoutine);
 
         StopDirectClip();
+        HideShieldBlockBarrierVfx();
         isBlocking = false;
         blockRoutine = null;
+    }
+
+    private void OnDisable()
+    {
+        StopShieldBlockImmediately();
     }
 }

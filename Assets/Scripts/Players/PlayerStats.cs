@@ -19,12 +19,12 @@ public class PlayerStats : MonoBehaviour
     [SerializeField] private int needExp = 10;
 
     /// <summary>
-    /// ╫╨ехюл ╧ы╡П ╤╖╦╤╢ы хёцБ╣г╢б юл╨╔ф╝ют╢о╢ы.
-    /// - HUD╢б юл юл╨╔ф╝╦╕ ╠╦╣╤гь╪╜ UI╦╕ ╟╩╫егу╢о╢ы.
+    /// О©╫О©╫О©╫О©╫О©╫О©╫ О©╫ы╡О©╫ О©╫О©╫О©╫О©╫О©╫О©╫ хёО©╫О©╫г╢О©╫ О©╫л╨О©╫ф╝О©╫т╢о╢О©╫.
+    /// - HUDО©╫О©╫ О©╫О©╫ О©╫л╨О©╫ф╝О©╫О©╫ О©╫О©╫О©╫О©╫О©╫ь╪О©╫ UIО©╫О©╫ О©╫О©╫О©╫О©╫О©╫у╢о╢О©╫.
     /// </summary>
     public event Action OnStatChanged;
 
-    // ===== юп╠Б юЭ©К га╥нфшф╪ =====
+    // ===== О©╫п╠О©╫ О©╫О©╫О©╫О©╫ О©╫О©╫О©╫О©╫О©╫О©╫ф╪ =====
     public int Level => level;
 
     public int HP => hp;
@@ -37,8 +37,8 @@ public class PlayerStats : MonoBehaviour
     public int NeedEXP => needExp;
 
     /// <summary>
-    /// HP╦╕ ╟╗╪р╫це╣╢о╢ы.
-    /// - 0 ╬ф╥║╥н Ё╩╥а╟║аЖ ╬й╣╣╥о Clamp гу╢о╢ы.
+    /// HPО©╫О©╫ О©╫О©╫О©╫р╫О©╫е╣О©╫о╢О©╫.
+    /// - 0 О©╫ф╥О©╫О©╫О©╫ О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫ О©╫й╣О©╫О©╫О©╫ Clamp О©╫у╢о╢О©╫.
     /// </summary>
     public void Damage(int amount)
     {
@@ -47,9 +47,16 @@ public class PlayerStats : MonoBehaviour
         OnStatChanged?.Invoke();
     }
 
+    public void SetHpFromNetwork(int currentHp)
+    {
+        // [Codex Network HP Sync] Л└°К╡└Л≈░Л└° К╟⌡Л²─ М≤└Л·╛ HPК╔╪ К║°Л╩╛ HUDЙ╟─ КЁ╢К┼■ PlayerStatsЛ≈░К▐└ Й╥╦К▄─К║° К╟≤Л≤│М∙╘К▀┬К▀╓.
+        hp = Mathf.Clamp(currentHp, 0, maxHp);
+        OnStatChanged?.Invoke();
+    }
+
     /// <summary>
-    /// HP╦╕ х╦╨╧гу╢о╢ы.
-    /// - MaxHP╦╕ ЁяаЖ ╬й╣╣╥о Clamp гу╢о╢ы.
+    /// HPО©╫О©╫ х╦О©╫О©╫О©╫у╢о╢О©╫.
+    /// - MaxHPО©╫О©╫ О©╫О©╫О©╫О©╫ О©╫й╣О©╫О©╫О©╫ Clamp О©╫у╢о╢О©╫.
     /// </summary>
     public void Heal(int amount)
     {
@@ -59,8 +66,8 @@ public class PlayerStats : MonoBehaviour
     }
 
     /// <summary>
-    /// MP╦╕ ╩Г©Кгу╢о╢ы.
-    /// - MP╟║ ╨на╥го╦И false╦╕ ╧щх╞гу╢о╢ы.
+    /// MPО©╫О©╫ О©╫О©╫О©╫О©╫у╢о╢О©╫.
+    /// - MPО©╫О©╫ О©╫О©╫О©╫О©╫О©╫о╦О©╫ falseО©╫О©╫ О©╫О©╫х╞О©╫у╢о╢О©╫.
     /// </summary>
     public bool UseMP(int amount)
     {
@@ -73,8 +80,8 @@ public class PlayerStats : MonoBehaviour
     }
 
     /// <summary>
-    /// MP╦╕ х╦╨╧гу╢о╢ы.
-    /// - MaxMP╦╕ ЁяаЖ ╬й╣╣╥о Clamp гу╢о╢ы.
+    /// MPО©╫О©╫ х╦О©╫О©╫О©╫у╢о╢О©╫.
+    /// - MaxMPО©╫О©╫ О©╫О©╫О©╫О©╫ О©╫й╣О©╫О©╫О©╫ Clamp О©╫у╢о╢О©╫.
     /// </summary>
     public void RecoverMP(int amount)
     {
@@ -84,8 +91,8 @@ public class PlayerStats : MonoBehaviour
     }
 
     /// <summary>
-    /// EXP╦╕ х╧╣Фгу╢о╢ы.
-    /// - NeedEXP╦╕ Ёяю╦╦И ╥╧╨╖╬Вю╩ ╧щ╨╧ цЁ╦╝гу╢о╢ы.
+    /// EXPО©╫О©╫ х╧О©╫О©╫О©╫у╢о╢О©╫.
+    /// - NeedEXPО©╫О©╫ О©╫О©╫О©╫О©╫О©╫О©╫ О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫ О©╫щ╨О©╫ цЁО©╫О©╫О©╫у╢о╢О©╫.
     /// </summary>
     public void AddEXP(int amount)
     {
@@ -102,22 +109,22 @@ public class PlayerStats : MonoBehaviour
     }
 
     /// <summary>
-    /// ╥╧╨╖╬В цЁ╦╝ют╢о╢ы.
-    /// - а╓╪╝юШю╦╥н цж╢Кд║ ╩С╫б + х╦╨╧ + ©Д╠╦ ╟ФгХд║ аУ╟║ ╣Ню╩ ╪ЖгЮгу╢о╢ы.
+    /// О©╫О©╫О©╫О©╫О©╫О©╫ цЁО©╫О©╫О©╫т╢о╢О©╫.
+    /// - О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫ О©╫ж╢О©╫д║ О©╫О©╫О©╫ + х╦О©╫О©╫ + О©╫Д╠╦ О©╫О©╫О©╫О©╫д║ О©╫О©╫О©╫О©╫ О©╫О©╫О©╫О©╫ О©╫О©╫О©╫О©╫О©╫у╢о╢О©╫.
     /// </summary>
     private void LevelUp()
     {
         level++;
 
-        // ©╧╫ц ╠тд╒(©Ьго╫ц╦И ╪Жд║ ╠тд╒╦╦ ╧ы╡ы╦И ╣к╢о╢ы)
+        // О©╫О©╫О©╫О©╫ О©╫О©╫д╒(О©╫О©╫О©╫о╫ц╦О©╫ О©╫О©╫д║ О©╫О©╫д╒О©╫О©╫ О©╫ы╡ы╦О©╫ О©╫к╢о╢О©╫)
         maxHp += 10;
         maxMp += 5;
 
-        // ╥╧╨╖╬В ╫ц г╝х╦╨╧(╦чюлгц ╢юЁ╕)
+        // О©╫О©╫О©╫О©╫О©╫О©╫ О©╫О©╫ г╝х╦О©╫О©╫(О©╫О©╫О©╫О©╫О©╫О©╫ О©╫О©╫О©╫О©╫)
         hp = maxHp;
         mp = maxMp;
 
-        // гй©Д ╟ФгХд║ аУ╟║(╟ё╢э ╧ЖюЭ)
+        // О©╫й©О©╫ О©╫О©╫О©╫О©╫д║ О©╫О©╫О©╫О©╫(О©╫О©╫О©╫О©╫ О©╫О©╫О©╫О©╫)
         needExp = Mathf.RoundToInt(needExp * 1.2f) + 1;
     }
 }

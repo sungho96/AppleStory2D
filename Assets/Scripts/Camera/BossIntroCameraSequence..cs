@@ -9,6 +9,10 @@ using UnityEngine.Playables;
 [RequireComponent(typeof(Camera))]
 public class BossIntroCameraSequence : MonoBehaviour
 {
+    public const string NetworkIntroStartMessageName = "GoblinBossIntroStart";
+
+    private const byte NetworkIntroStartSignal = 0;
+
     [Header("Targets")]
     [SerializeField] private Transform bossTarget;
     [SerializeField] private string playerTag = "Player";
@@ -57,6 +61,7 @@ public class BossIntroCameraSequence : MonoBehaviour
 
     [Header("Network")]
     [SerializeField] private float playerFindTimeout = 5f;
+    [SerializeField] private float networkIntroStartTimeout = 10f;
 
     private Camera targetCamera;
 
@@ -72,6 +77,9 @@ public class BossIntroCameraSequence : MonoBehaviour
     private bool bossClipLooping;
     private float bossClipLoopStartTime;
     private float bossClipLoopLength;
+    private NetworkManager networkManager;
+    private bool networkMessageRegistered;
+    private bool networkIntroStartReceived;
 
     // =============================================================
     // Awake
@@ -80,6 +88,7 @@ public class BossIntroCameraSequence : MonoBehaviour
     private void Awake()
     {
         targetCamera = GetComponent<Camera>();
+        RegisterNetworkIntroMessage();
     }
 
     private void LateUpdate()
@@ -101,6 +110,27 @@ public class BossIntroCameraSequence : MonoBehaviour
     {
         // �� �ʱ� ��ġ�� ���� ������ �� ������ ���
         yield return null;
+
+        RegisterNetworkIntroMessage();
+
+        if (ShouldWaitForNetworkIntroStart())
+        {
+            // [Codex Boss Intro Network Start] 호스트와 클라이언트가 플레이어 Spawn 완료 신호를 받은 뒤 같은 지점에서 인트로를 시작하게 합니다.
+            float waitTimer = 0f;
+            while (!networkIntroStartReceived &&
+                   waitTimer < networkIntroStartTimeout)
+            {
+                waitTimer += Time.unscaledDeltaTime;
+                yield return null;
+            }
+
+            if (!networkIntroStartReceived)
+            {
+                Debug.LogWarning(
+                    "[BossIntroCamera] 네트워크 인트로 시작 신호를 받지 못해 timeout 후 인트로를 시작합니다."
+                );
+            }
+        }
 
         gameplayCameraPosition = transform.position;
         gameplayCameraSize = targetCamera.orthographicSize;
@@ -299,6 +329,65 @@ public class BossIntroCameraSequence : MonoBehaviour
         Debug.Log(
             "[BossIntroCamera] Boss Facing Control Released"
         );
+    }
+
+    public static void BroadcastNetworkIntroStart(NetworkManager manager)
+    {
+        if (manager == null ||
+            !manager.IsServer ||
+            manager.CustomMessagingManager == null)
+        {
+            return;
+        }
+
+        using FastBufferWriter writer =
+            new FastBufferWriter(sizeof(byte), Unity.Collections.Allocator.Temp);
+
+        writer.WriteValueSafe(NetworkIntroStartSignal);
+        manager.CustomMessagingManager.SendNamedMessageToAll(
+            NetworkIntroStartMessageName,
+            writer
+        );
+    }
+
+    private void RegisterNetworkIntroMessage()
+    {
+        if (networkMessageRegistered)
+            return;
+
+        networkManager = NetworkManager.Singleton;
+        if (networkManager == null ||
+            networkManager.CustomMessagingManager == null)
+        {
+            return;
+        }
+
+        networkManager.CustomMessagingManager.RegisterNamedMessageHandler(
+            NetworkIntroStartMessageName,
+            OnNetworkIntroStartMessageReceived
+        );
+
+        networkMessageRegistered = true;
+    }
+
+    private void OnNetworkIntroStartMessageReceived(
+        ulong senderClientId,
+        FastBufferReader reader)
+    {
+        reader.ReadValueSafe(out byte messageType);
+        if (messageType != NetworkIntroStartSignal)
+            return;
+
+        // [Codex Boss Intro Network Start] 서버가 보낸 시작 신호를 받으면 로컬 카메라 인트로 대기를 해제합니다.
+        networkIntroStartReceived = true;
+    }
+
+    private bool ShouldWaitForNetworkIntroStart()
+    {
+        networkManager = NetworkManager.Singleton;
+        return networkManager != null &&
+               networkManager.IsListening &&
+               networkManager.SceneManager != null;
     }
 
     // =============================================================
@@ -674,6 +763,17 @@ public class BossIntroCameraSequence : MonoBehaviour
 
         if (bossCombat != null)
             bossCombat.SetIntroLocked(false);
+
+        if (networkMessageRegistered &&
+            networkManager != null &&
+            networkManager.CustomMessagingManager != null)
+        {
+            networkManager.CustomMessagingManager.UnregisterNamedMessageHandler(
+                NetworkIntroStartMessageName
+            );
+        }
+
+        networkMessageRegistered = false;
 
         StopBossCastClip();
     }

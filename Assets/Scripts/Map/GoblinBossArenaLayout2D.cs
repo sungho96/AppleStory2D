@@ -120,7 +120,7 @@
             // [Codex Platform Scene Scale] 씬에 이미 있는 발판은 직접 맞춘 Transform 값을 유지하고, 새 발판만 기본값으로 만듭니다.
             Vector3 platformDefaultScale = new Vector3(0.3f, 0.3f, 1f);
             CreateOrUpdatePlatform(source.gameObject, platformRoot.transform, "LeftPlatform", new Vector3(-6.6f, -5.65f, 0f), platformDefaultScale);
-            CreateOrUpdatePlatform(source.gameObject, platformRoot.transform, "RightPlatform", new Vector3(6.6f, -5.65f, 0f), platformDefaultScale);
+            // [Codex RightPlatform 자동 생성 제거] RightPlatform은 씬에서 자동 생성하지 않습니다.
 
             // [보스 맵 동선 개선] 기존의 작은 발판 조각을 재사용해 중앙에 두 번째 이동 단계를 만듭니다.
             Transform centerSource = sourceFloor.transform.Find("platform_10_0 (6)");
@@ -198,12 +198,24 @@
             effector.useSideBounce = false;
 
             BoxCollider2D landingCollider = null;
-            Collider2D[] colliders = platform.GetComponents<Collider2D>();
+            Collider2D[] colliders = platform.GetComponentsInChildren<Collider2D>(true);
             for (int i = 0; i < colliders.Length; i++)
             {
-                if (landingCollider == null && colliders[i] is BoxCollider2D box)
+                BoxCollider2D box = colliders[i] as BoxCollider2D;
+                if (box == null)
+                {
+                    colliders[i].enabled = false;
+                    continue;
+                }
+
+                // [Codex 발판 끼임 방지] 자식까지 포함해 가장 위쪽의 얇은 착지 콜라이더 하나만 남겨 캡슐이 옆면에 걸리지 않게 합니다.
+                if (landingCollider == null || box.bounds.max.y > landingCollider.bounds.max.y)
                     landingCollider = box;
-                else
+            }
+
+            for (int i = 0; i < colliders.Length; i++)
+            {
+                if (colliders[i] != landingCollider)
                     colliders[i].enabled = false;
             }
 

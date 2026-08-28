@@ -16845,6 +16845,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f4ad7dbf5f42b17499830164341f3619, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ShowTopMostFoldoutHeaderGroup: 1
   maxHp: 100
   currentHp: 0
   hitReaction: {fileID: 4910311054295029632}
@@ -16891,6 +16892,8 @@ MonoBehaviour:
   playerAttack: {fileID: 3197061422020926529}
   warriorAttack: {fileID: 0}
   playerStats: {fileID: 1684008500124945262}
+  enableDelayDebugLog: 0
+  delayDebugInterval: 1
 --- !u!114 &6124801938465720142
 MonoBehaviour:
   m_ObjectHideFlags: 0

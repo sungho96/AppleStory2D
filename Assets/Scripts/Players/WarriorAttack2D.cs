@@ -40,6 +40,10 @@ public class WarriorAttack2D : MonoBehaviour
     private float damageMultiplier = 1f;
     private Transform[] weaponScaleTargets;
 
+    public bool IsAttacking => isAttacking;
+    public bool CanUseBasicAttack => !isAttacking &&
+        (playerHealth == null || !playerHealth.IsDead);
+
     private void Awake()
     {
         if (animator == null)
@@ -60,10 +64,10 @@ public class WarriorAttack2D : MonoBehaviour
         if (!Input.GetKeyDown(attackKey))
             return;
 
-        if (isAttacking)
+        if (!CanUseBasicAttack)
             return;
 
-        StartCoroutine(BasicAttackRoutine());
+        StartBasicAttack();
     }
 
     private void LateUpdate()
@@ -94,6 +98,20 @@ public class WarriorAttack2D : MonoBehaviour
 
         ApplyAttackWeaponScale();
         isAttacking = false;
+    }
+
+    public void TriggerBasicAttackForCapture()
+    {
+        // [Codex CaptureShieldBot] 촬영용 자동 평타도 실제 입력과 같은 기본공격 시작 경로만 호출합니다.
+        if (!CanUseBasicAttack)
+            return;
+
+        StartBasicAttack();
+    }
+
+    private void StartBasicAttack()
+    {
+        StartCoroutine(BasicAttackRoutine());
     }
 
     public void FireArrow()

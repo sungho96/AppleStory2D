@@ -1,12 +1,13 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Netcode;
 using UnityEngine;
 
 /// <summary>
 /// 고블린 보스의 낙하 공격입니다.
 /// 플레이어 위치 예고 -> 다중 낙하물 -> 범위 피해 순서로 실행합니다.
 /// </summary>
-public class GoblinBossFallingAttack2D : MonoBehaviour
+public class GoblinBossFallingAttack2D : NetworkBehaviour
 {
     [Header("Attack Timing")]
     [SerializeField] private float firstAttackDelay = 2.5f;
@@ -46,6 +47,9 @@ public class GoblinBossFallingAttack2D : MonoBehaviour
     [SerializeField] private float phaseTwoPlayerMeteorSpacing = 1.05f;
     [SerializeField] private float safeZoneMinDistanceFromPlayer = 4.2f;
 
+    [Header("Network Skill Debug")]
+    [SerializeField] private bool enableSkillVfxDebugLog = true;
+
     private Transform player;
     private GoblinHealth2D bossHealth;
     private GoblinBossCombatController2D bossCombat;
@@ -72,6 +76,9 @@ public class GoblinBossFallingAttack2D : MonoBehaviour
 
     private IEnumerator Start()
     {
+        if (IsNetworkClientOnly())
+            yield break;
+
         yield return new WaitForSeconds(firstAttackDelay);
 
         while (bossHealth == null || !bossHealth.IsDead)
@@ -101,6 +108,10 @@ public class GoblinBossFallingAttack2D : MonoBehaviour
         List<Vector2> impactPoints = new List<Vector2>();
         List<GameObject> dangerWarnings = new List<GameObject>(meteorAreas.Count);
 
+        LogSkillVfxDebug(
+            "MeteorStart",
+            $"phaseTwo={phaseTwo} hardMode={hardMode} warningDuration={currentWarningDuration:F3}s damage={attackDamage}");
+
         for (int i = 0; i < meteorAreas.Count; i++)
         {
             List<Vector2> areaImpactPoints = new List<Vector2>();
@@ -111,6 +122,13 @@ public class GoblinBossFallingAttack2D : MonoBehaviour
 
         for (int i = 0; i < impactPoints.Count; i++)
             dangerWarnings.Add(CreateMeteorWarning(impactPoints[i]));
+
+        LogSkillVfxDebug(
+            "MeteorWarningsCreated",
+            $"count={dangerWarnings.Count} firstPoint={(impactPoints.Count > 0 ? impactPoints[0].ToString() : "none")}");
+
+        if (IsServer && IsSpawned)
+            PlayMeteorVisualClientRpc(impactPoints.ToArray(), currentWarningDuration);
 
         // [보스 시전 연결] 바닥 예고가 시작되는 순간 보스가 이동을 멈추고 스킬 동작을 재생합니다.
         if (bossCombat != null)
@@ -135,6 +153,8 @@ public class GoblinBossFallingAttack2D : MonoBehaviour
             // [Codex Meteor Safe Zone] 제한시간이 끝나면 위험지역 전체가 거의 동시에 떨어져 안전구역 선택이 정답이 되게 합니다.
             StartCoroutine(DropRock(impactPoints[i], null, attackDamage));
         }
+
+        LogSkillVfxDebug("MeteorDropStart", $"count={impactPoints.Count}");
 
         yield return new WaitForSeconds(fallDuration);
         ApplyMeteorImpactDamage(impactPoints, attackDamage);
@@ -189,6 +209,91 @@ public class GoblinBossFallingAttack2D : MonoBehaviour
 
         if (warning != null)
             Destroy(warning);
+        if (fallingObject != null)
+            yield return FadeOutFallingObject(fallingObject);
+    }
+
+    [ClientRpc]
+    private void PlayMeteorVisualClientRpc(Vector2[] impactPoints, float currentWarningDuration)
+    {
+        if (IsServer)
+            return;
+
+        // [Codex Boss Skill Sync] 서버가 계산한 메테오 위치를 클라이언트에서 판정 없이 이펙트만 재생합니다.
+        StartCoroutine(CoPlayMeteorVisualOnly(impactPoints, currentWarningDuration));
+    }
+
+    private IEnumerator CoPlayMeteorVisualOnly(Vector2[] impactPoints, float currentWarningDuration)
+    {
+        List<GameObject> dangerWarnings = new List<GameObject>(impactPoints.Length);
+        for (int i = 0; i < impactPoints.Length; i++)
+            dangerWarnings.Add(CreateMeteorWarning(impactPoints[i]));
+
+        LogSkillVfxDebug("MeteorClientReplayStart", $"count={impactPoints.Length} warningDuration={currentWarningDuration:F3}s");
+
+        float timer = 0f;
+        while (timer < currentWarningDuration)
+        {
+            timer += Time.deltaTime;
+            float warningAlphaPulse = 0.82f + Mathf.Sin(timer * 14f) * 0.18f;
+            for (int i = 0; i < dangerWarnings.Count; i++)
+            {
+                if (dangerWarnings[i] != null)
+                    SetWarningAlpha(dangerWarnings[i], (hardMode ? 0.72f : 0.58f) * warningAlphaPulse);
+            }
+            yield return null;
+        }
+
+        for (int i = 0; i < impactPoints.Length; i++)
+            StartCoroutine(DropRockVisualOnly(impactPoints[i]));
+
+        LogSkillVfxDebug("MeteorClientReplayDropStart", $"count={impactPoints.Length}");
+
+        yield return new WaitForSeconds(fallDuration);
+        for (int i = 0; i < dangerWarnings.Count; i++)
+        {
+            if (dangerWarnings[i] != null)
+                Destroy(dangerWarnings[i]);
+        }
+    }
+
+    private IEnumerator DropRockVisualOnly(Vector2 impactPoint)
+    {
+        GameObject fallingObject = CreateFallingObject(impactPoint);
+        float meteorDirection = impactPoint.x < 0f ? 1f : -1f;
+        Vector3 start = new Vector3(
+            impactPoint.x - meteorDirection * spawnHeight,
+            impactPoint.y + spawnHeight,
+            0f);
+        float meteorAngle = meteorDirection > 0f ? -45f : 45f;
+        fallingObject.transform.SetPositionAndRotation(start, Quaternion.Euler(0f, 0f, meteorAngle));
+        SpriteRenderer fallingRenderer = fallingObject.GetComponent<SpriteRenderer>();
+        float rockHalfHeight = fallingRenderer != null ? fallingRenderer.bounds.extents.y : 0.42f;
+        Vector3 end = new Vector3(impactPoint.x, impactPoint.y + rockHalfHeight * 0.4f, 0f);
+
+        float timer = 0f;
+        while (timer < fallDuration)
+        {
+            timer += Time.deltaTime;
+            float normalized = Mathf.Clamp01(timer / fallDuration);
+            float accelerated = normalized * normalized;
+            if (fallingObject != null)
+            {
+                fallingObject.transform.position = Vector3.Lerp(start, end, accelerated);
+                float spinAngle = normalized * 540f * meteorDirection;
+                fallingObject.transform.rotation = Quaternion.Euler(0f, 0f, meteorAngle + spinAngle);
+            }
+            yield return null;
+        }
+
+        if (fallingObject != null)
+        {
+            float finalAngle = meteorAngle + 540f * meteorDirection;
+            fallingObject.transform.SetPositionAndRotation(end, Quaternion.Euler(0f, 0f, finalAngle));
+        }
+
+        yield return ShowImpactFlash(impactPoint);
+
         if (fallingObject != null)
             yield return FadeOutFallingObject(fallingObject);
     }
@@ -482,6 +587,7 @@ public class GoblinBossFallingAttack2D : MonoBehaviour
             : new Color(1f, 0.12f, 0.03f, 0.58f);
         renderer.sortingOrder = 24;
         ApplyWarningSize(warning.transform, meteorWarningWidth, meteorWarningWidth * 0.28f);
+        LogSkillVfxDebug("MeteorWarningCreated", $"pos={impactPoint}");
         return warning;
     }
 
@@ -495,6 +601,7 @@ public class GoblinBossFallingAttack2D : MonoBehaviour
         renderer.sprite = fallingSprite;
         renderer.color = Color.white;
         renderer.sortingOrder = 30;
+        LogSkillVfxDebug("MeteorObjectCreated", $"impact={impactPoint} spawn={fallingObject.transform.position}");
         return fallingObject;
     }
 
@@ -559,10 +666,31 @@ public class GoblinBossFallingAttack2D : MonoBehaviour
 
                 // [Codex Meteor Hit Match] 실제 피해 X 범위를 바닥 경고 표시 폭과 동일하게 맞춥니다.
                 float direction = playerPosition.x >= impactPoint.x ? 1f : -1f;
+                LogSkillVfxDebug(
+                    "MeteorDamageApplied",
+                    $"target={playerHealth.name} point={impactPoint} playerPos={playerPosition} damage={attackDamage}");
                 playerHealth.TakeDamage(attackDamage, new Vector2(direction * knockbackX, knockbackY));
                 break;
             }
         }
+    }
+
+    private void LogSkillVfxDebug(string eventName, string detail)
+    {
+        if (!enableSkillVfxDebugLog)
+            return;
+
+        NetworkManager manager = NetworkManager.Singleton;
+        bool hasNetwork = manager != null && manager.IsListening;
+        string role = hasNetwork
+            ? (manager.IsServer ? "HostOrServer" : "Client")
+            : "Offline";
+        double serverTime = hasNetwork ? manager.ServerTime.Time : Time.timeAsDouble;
+
+        // [Codex Boss Skill VFX Debug] 보스 스킬 이펙트가 어느 피어에서 언제 생성되는지 비교하기 위한 Console 로그입니다.
+        Debug.Log(
+            $"[BossSkillVfxDebug][Meteor][{eventName}] role={role} " +
+            $"time={Time.time:F4}s serverTime={serverTime:F4}s bossPos={transform.position} {detail}");
     }
 
     private static bool TryFindHitArea(Vector3 playerPosition, List<MeteorArea> meteorAreas, out MeteorArea hitArea)
@@ -731,6 +859,13 @@ public class GoblinBossFallingAttack2D : MonoBehaviour
     private bool IsPhaseTwo()
     {
         return bossHealth != null && bossHealth.CurrentHp <= bossHealth.MaxHp * 0.5f;
+    }
+
+    private static bool IsNetworkClientOnly()
+    {
+        return NetworkManager.Singleton != null &&
+            NetworkManager.Singleton.IsListening &&
+            !NetworkManager.Singleton.IsServer;
     }
 
     private static Sprite CreateCircleSprite(int size, float filledRadius)

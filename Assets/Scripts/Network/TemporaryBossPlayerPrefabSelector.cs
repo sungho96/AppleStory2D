@@ -369,6 +369,9 @@ public class TemporaryBossPlayerPrefabSelector : MonoBehaviour
             SpawnBossPlayer(clientId);
         }
 
+        // [Codex Boss Intro Sync] 호스트와 클라이언트 PlayerObject가 모두 생성된 뒤 카메라 인트로 시작 신호를 보내 시작 타이밍을 맞춥니다.
+        yield return null;
+        BossIntroCameraSequence.BroadcastNetworkIntroStart(networkManager);
 
         Debug.Log(
             "[BossPlayerSelector] Boss Player Spawn 처리 완료."

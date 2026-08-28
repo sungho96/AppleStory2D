@@ -4,14 +4,25 @@ using UnityEngine.Animations;
 using UnityEngine.Playables;
 using UnityEngine;
 
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
+
 public class WarriorDownStrike2D : MonoBehaviour
 {
+    private const string RightDownStrikeClipEditorPath =
+        "Assets/_Project/Player/Common/Animation/Upper/downstrike.anim";
+    private const string LeftDownStrikeClipEditorPath =
+        "Assets/Art/Prefabs/Player/downStrike_L.anim";
+
     [Header("Refs")]
     [SerializeField] private Animator animator;
     [SerializeField] private PlayerController2D playerController;
     [SerializeField] private PlayerHealth2D playerHealth;
     [SerializeField] private PlayerLadder2D playerLadder;
     [SerializeField] private Rigidbody2D playerRigidbody;
+    [SerializeField] private PlayerDirection2D playerDirection;
+    [SerializeField] private WarriorDownStrikeVisualFeedback downStrikeVisualFeedback;
 
     [Header("Skill")]
     [SerializeField] private KeyCode fallbackKey = KeyCode.None;
@@ -24,9 +35,13 @@ public class WarriorDownStrike2D : MonoBehaviour
     [Header("Down Strike Motion")]
     [SerializeField] private float hopVelocity = 7.5f;
     [SerializeField] private float slamVelocity = -13f;
+    [SerializeField] private float maxLandingVfxWaitDuration = 1.2f;
+    [SerializeField] private float slashVfxDelay = 0.08f;
 
     [Header("Animator Blend")]
-    [SerializeField] private AnimationClip downStrikeClip;
+    [SerializeField, HideInInspector] private AnimationClip downStrikeClip;
+    [SerializeField] private AnimationClip rightDownStrikeClip;
+    [SerializeField] private AnimationClip leftDownStrikeClip;
     [SerializeField] private float directClipSpeed = 1f;
     [SerializeField] private string downStrikeStateName = "downstrike";
     [SerializeField] private string downStrikeTriggerName = "";
@@ -38,6 +53,9 @@ public class WarriorDownStrike2D : MonoBehaviour
     private bool isUsingSkill;
     private float nextUseTime;
     private PlayableGraph downStrikeGraph;
+    private Coroutine landingVfxRoutine;
+    private Coroutine slashVfxRoutine;
+    private AnimationClip activeDownStrikeClip;
 
     public bool IsUsingSkill => isUsingSkill;
 
@@ -53,6 +71,18 @@ public class WarriorDownStrike2D : MonoBehaviour
             playerLadder = GetComponent<PlayerLadder2D>();
         if (playerRigidbody == null)
             playerRigidbody = GetComponent<Rigidbody2D>();
+        if (playerDirection == null)
+            playerDirection = GetComponent<PlayerDirection2D>();
+        if (downStrikeVisualFeedback == null)
+            downStrikeVisualFeedback = GetComponent<WarriorDownStrikeVisualFeedback>();
+        if (downStrikeVisualFeedback == null)
+            downStrikeVisualFeedback = gameObject.AddComponent<WarriorDownStrikeVisualFeedback>();
+        if (downStrikeVisualFeedback != null)
+            downStrikeVisualFeedback.Initialize();
+
+#if UNITY_EDITOR
+        LoadDirectionalClipsInEditor();
+#endif
     }
 
     private void Update()
@@ -84,12 +114,85 @@ public class WarriorDownStrike2D : MonoBehaviour
         // [Codex Warrior DownStrike 1st] 새로 만든 downstrike 상태를 처음부터 끝까지 한 번 재생하고, 중간 타이밍에만 판정을 넣습니다.
         yield return WaitForDownStrikeHitTiming();
 
+        StartDownStrikeSlashVfxWatch();
         ForceDownStrikeFall();
         ApplyDownStrikeHit();
+        StartDownStrikeLandingVfxWatch();
         yield return WaitForDownStrikeAnimationEnd();
 
         nextUseTime = Time.time + cooldown;
         isUsingSkill = false;
+    }
+
+    private void PlayDownStrikeSlashVfx()
+    {
+        // [Codex DownStrike VFX] 기존 타격 타이밍을 그대로 사용하고, 판정과 무관한 로컬 검기만 재생합니다.
+        downStrikeVisualFeedback?.PlayDownStrikeSlashVfx();
+    }
+
+    private void StartDownStrikeSlashVfxWatch()
+    {
+        if (downStrikeVisualFeedback == null)
+            return;
+
+        if (slashVfxRoutine != null)
+            StopCoroutine(slashVfxRoutine);
+
+        slashVfxRoutine = StartCoroutine(WaitAndPlaySlashVfx());
+    }
+
+    private IEnumerator WaitAndPlaySlashVfx()
+    {
+        float delay = Mathf.Max(0f, slashVfxDelay);
+        if (delay > 0f)
+            yield return new WaitForSeconds(delay);
+
+        PlayDownStrikeSlashVfx();
+        slashVfxRoutine = null;
+    }
+
+    private void PlayDownStrikeDustVfx()
+    {
+        // [Codex DownStrike VFX] 착지 먼지는 네트워크 Spawn/RPC 없이 현재 클라이언트 화면에서만 재생합니다.
+        downStrikeVisualFeedback?.PlayDownStrikeDustVfx();
+    }
+
+    private void StartDownStrikeLandingVfxWatch()
+    {
+        if (downStrikeVisualFeedback == null || playerLadder == null)
+            return;
+
+        if (landingVfxRoutine != null)
+            StopCoroutine(landingVfxRoutine);
+
+        landingVfxRoutine = StartCoroutine(WaitForLandingAndPlayDustVfx());
+    }
+
+    private IEnumerator WaitForLandingAndPlayDustVfx()
+    {
+        float elapsed = 0f;
+        bool waitedForAirborneFrame = false;
+
+        while (elapsed < maxLandingVfxWaitDuration)
+        {
+            if (playerLadder == null || playerLadder.IsClimbing)
+                break;
+
+            if (!playerLadder.IsGrounded)
+            {
+                waitedForAirborneFrame = true;
+            }
+            else if (waitedForAirborneFrame || elapsed > 0.04f)
+            {
+                PlayDownStrikeDustVfx();
+                break;
+            }
+
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        landingVfxRoutine = null;
     }
 
     private void StartDownStrikeHop()
@@ -124,9 +227,11 @@ public class WarriorDownStrike2D : MonoBehaviour
         if (animator == null)
             return;
 
-        if (downStrikeClip != null)
+        activeDownStrikeClip = GetCurrentDownStrikeClip();
+        if (activeDownStrikeClip != null)
         {
-            PlayDirectClip(downStrikeClip, directClipSpeed);
+            PrepareDirectClipDirection(activeDownStrikeClip);
+            PlayDirectClip(activeDownStrikeClip, directClipSpeed);
             return;
         }
 
@@ -141,7 +246,7 @@ public class WarriorDownStrike2D : MonoBehaviour
 
     private IEnumerator WaitForDownStrikeHitTiming()
     {
-        if (downStrikeClip != null)
+        if (activeDownStrikeClip != null)
         {
             yield return new WaitForSeconds(GetDirectClipDuration() * hitNormalizedTime);
             yield break;
@@ -166,7 +271,7 @@ public class WarriorDownStrike2D : MonoBehaviour
 
     private IEnumerator WaitForDownStrikeAnimationEnd()
     {
-        if (downStrikeClip != null)
+        if (activeDownStrikeClip != null)
         {
             yield return new WaitForSeconds(GetDirectClipDuration() * (1f - hitNormalizedTime));
             StopDirectClip();
@@ -244,23 +349,69 @@ public class WarriorDownStrike2D : MonoBehaviour
         downStrikeGraph.Play();
     }
 
+    private void PrepareDirectClipDirection(AnimationClip clip)
+    {
+        if (playerDirection == null)
+            return;
+
+        float dir = playerController != null
+            ? playerController.GetHorizontalFacingDir()
+            : 1f;
+
+        // [Codex Warrior Directional DownStrike] 내려찍기 입력 순간 바라보는 방향에 맞는 오브젝트만 켠 뒤 방향별 클립을 재생합니다.
+        if (dir < 0f)
+            playerDirection.SetDirectionFromNetwork(PlayerDirection2D.FacingDir.Left);
+        else
+            playerDirection.SetDirectionFromNetwork(PlayerDirection2D.FacingDir.Right);
+
+        playerDirection.RefreshDirectionVisuals();
+    }
+
+    private void RestoreDirectionAfterDirectClip()
+    {
+        // [Codex Warrior Direct Clip 복구] 클립 종료 뒤에도 AnimationClip이 남긴 GameObject 활성값을 현재 방향 상태로 되돌립니다.
+        playerDirection?.RefreshDirectionVisuals();
+    }
+
     private float GetDirectClipDuration()
     {
-        if (downStrikeClip == null)
+        if (activeDownStrikeClip == null)
             return maxDownStrikeWaitDuration;
 
-        return downStrikeClip.length / Mathf.Max(0.01f, directClipSpeed);
+        return activeDownStrikeClip.length / Mathf.Max(0.01f, directClipSpeed);
+    }
+
+    private AnimationClip GetCurrentDownStrikeClip()
+    {
+        float dir = playerController != null
+            ? playerController.GetHorizontalFacingDir()
+            : 1f;
+
+        if (dir < 0f)
+            return leftDownStrikeClip != null ? leftDownStrikeClip : downStrikeClip;
+
+        return rightDownStrikeClip != null ? rightDownStrikeClip : downStrikeClip;
     }
 
     private void StopDirectClip()
     {
-        if (downStrikeGraph.IsValid())
-            downStrikeGraph.Destroy();
+        if (!downStrikeGraph.IsValid())
+            return;
+
+        downStrikeGraph.Destroy();
+        activeDownStrikeClip = null;
+        RestoreDirectionAfterDirectClip();
     }
 
     private void OnDisable()
     {
         StopDirectClip();
+        if (slashVfxRoutine != null)
+            StopCoroutine(slashVfxRoutine);
+        slashVfxRoutine = null;
+        if (landingVfxRoutine != null)
+            StopCoroutine(landingVfxRoutine);
+        landingVfxRoutine = null;
         isUsingSkill = false;
     }
 
@@ -307,4 +458,21 @@ public class WarriorDownStrike2D : MonoBehaviour
         Gizmos.color = new Color(1f, 0.2f, 0f, 0.8f);
         Gizmos.DrawWireCube(center, hitBoxSize);
     }
+
+#if UNITY_EDITOR
+    private void OnValidate()
+    {
+        LoadDirectionalClipsInEditor();
+    }
+
+    private void LoadDirectionalClipsInEditor()
+    {
+        if (rightDownStrikeClip == null)
+            rightDownStrikeClip =
+                AssetDatabase.LoadAssetAtPath<AnimationClip>(RightDownStrikeClipEditorPath);
+        if (leftDownStrikeClip == null)
+            leftDownStrikeClip =
+                AssetDatabase.LoadAssetAtPath<AnimationClip>(LeftDownStrikeClipEditorPath);
+    }
+#endif
 }
